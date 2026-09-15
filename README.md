@@ -2,312 +2,1060 @@
 
 <img src="logo.png" alt="ProAgents" width="140" />
 
-# ProAgents
+**Forge professional AI agents from existing coding agents.**
 
-**Forge specialized AI agents from incomplete ideas.**
+An open-source, agentic CLI + Agent Skill that **equips existing coding-agent harnesses with professional expertise, methods, skills, rules, tools, knowledge, and verification practices.**
 
-An open-source agentic CLI + Agent Skill that turns *"I want an agent that debugs production"*
-into a validated, buildable multi-agent system — through progressive questioning, pluggable
-context frameworks and deterministic architecture generation.
+ProAgents does not replace Claude Code, Codex, OpenCode, Gemini CLI, Cursor, or other coding-agent harnesses.
+
+**It gives them a profession.**
+
+```text
+Existing Coding Agent
+        +
+Professional Agent Profile
+        ↓
+Professional Agent
+```
+
+```text
+Intelligence
+     +
+Professional Profile
+     ├── Expertise
+     ├── Knowledge
+     ├── Methods
+     ├── Skills
+     ├── Rules
+     ├── Policies
+     ├── Tools
+     └── Verification
+        ↓
+Existing Harness
+        ↓
+Professional Agent
+```
 
 `npm i -g proagent` · [Documentation](https://enzovezzaro.github.io/proagents/) · [Marketplace](https://enzovezzaro.github.io/proagents/app/) · MIT
 
-[![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-%E2%9D%A4-db61a2?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/EnzoVezzaro)
-[![Ko-fi](https://img.shields.io/badge/Support%20on-Ko--fi-ff5e5b?logo=ko-fi&logoColor=white)](https://ko-fi.com/enzojuniorvezzaro)
+[![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-%E2%9D%A4-db61a2?logo=githubsponsors\&logoColor=white)](https://github.com/sponsors/EnzoVezzaro)
+
+[![Ko-fi](https://img.shields.io/badge/Support%20on-Ko--fi-ff5e5b?logo=ko-fi\&logoColor=white)](https://ko-fi.com/enzojuniorvezzaro)
 
 </div>
 
 ---
 
-## Why?
+## What is ProAgents?
 
-Modern coding agents can build almost anything — but when you ask one to build *an agent*,
-it guesses. It fills your vague intent with silent assumptions about environments,
-permissions, approval gates and tools, then hands you a prompt-shaped artifact nobody can
-validate.
+Modern coding agents already have powerful intelligence, tools, terminals, filesystems, MCP, and execution environments.
 
-ProAgents refuses to guess. It interrogates:
+What they often lack is a **professional operating model**.
 
+A generic coding agent can write code.
+
+A professional agent should know **how a professional in a particular discipline approaches the work**.
+
+ProAgents introduces a portable abstraction:
+
+## Professional Agent Profile
+
+A Professional Agent Profile defines the professional layer an agent operates under:
+
+```text
+Professional Profile
+│
+├── Identity
+├── Expertise
+├── Knowledge
+├── Methods
+├── Skills
+├── Rules
+├── Policies
+├── Standards
+├── Tool requirements
+└── Verification
 ```
-"I want an agent that helps developers debug production issues."
-        ↓
-Understand intent → identify unknowns → ask the highest-value question
-        ↓
-Process answer → derive NEW questions (Kubernetes? → production access?)
-        ↓
-Detect contradictions ("read-only" vs "auto-restart") → force resolution
-        ↓
-Sufficient confidence → agent specification → validate → build skills
-```
 
-Questions are **derived from your previous answers**, not pulled from a static
-questionnaire. The output is not a prompt — it's a validated, machine-readable architecture
-plus generated agent skills.
+A profile is not simply a prompt.
 
-## Install
+It is a structured, composable and versioned definition of **how an agent should operate within a profession**.
+
+For example:
 
 ```bash
-npm install -g proagent
-# or run without installing
-npx proagent --help
+proagent equip security-engineer
 ```
 
-Node.js 20+. Works on macOS, Linux and Windows.
+can equip an existing coding agent with:
+
+```text
+Security Engineering
+├── Threat modeling
+├── Attack-surface analysis
+├── Secure coding practices
+├── Security testing
+├── OWASP knowledge
+├── Security-specific skills
+├── Security rules
+└── Security verification
+```
+
+The underlying model does not change.
+
+**The agent's professional capabilities and operating discipline do.**
+
+---
+
+## The Architecture
+
+ProAgents sits above existing coding-agent harnesses.
+
+```text
+                       HUMAN
+                         │
+                         ▼
+                    PROAGENTS
+                         │
+                         ▼
+              PROFESSIONAL PROFILE
+                         │
+        ┌────────────────┼────────────────┐
+        ▼                ▼                ▼
+    KNOWLEDGE          METHODS           RULES
+        │                │                │
+        └────────────────┼────────────────┘
+                         ▼
+                       SKILLS
+                         │
+                       TOOLS
+                         │
+                   VERIFICATION
+                         │
+                         ▼
+                 PROFILE COMPILER
+                         │
+          ┌──────────────┼──────────────┐
+          ▼              ▼              ▼
+     Claude Code       Codex        OpenCode
+          │              │              │
+          └──────────────┼──────────────┘
+                         ▼
+                  CODING AGENT
+```
+
+ProAgents is therefore **not another coding-agent harness**.
+
+It is the **professional layer that can be worn by different harnesses**.
+
+---
+
+## Why?
+
+Today's coding agents are increasingly capable of reasoning, using tools, modifying repositories, running tests and coordinating work.
+
+But capability is not the same thing as professional practice.
+
+A generic agent might approach:
+
+```text
+"Find the authentication vulnerability."
+```
+
+as:
+
+```text
+read code → make change → run tests → done
+```
+
+A security-engineering profile can establish a professional workflow:
+
+```text
+Understand security boundary
+        ↓
+Reproduce the issue
+        ↓
+Identify attack surface
+        ↓
+Threat-model the vulnerability
+        ↓
+Determine root cause
+        ↓
+Assess impact
+        ↓
+Implement remediation
+        ↓
+Add regression coverage
+        ↓
+Run security verification
+        ↓
+Review adjacent attack surfaces
+        ↓
+Report evidence
+```
+
+The difference is not simply more context.
+
+It is **professional methodology + constraints + capabilities + verification**.
+
+---
+
+## Intelligence + Profile
+
+ProAgents separates the model from the professional layer.
+
+```text
+                  AGENT
+                    │
+          ┌─────────┴─────────┐
+          ▼                   ▼
+    INTELLIGENCE           PROFILE
+          │                   │
+       Model          ┌───────┼────────┐
+                      ▼       ▼        ▼
+                  Knowledge Methods  Rules
+                      │       │        │
+                      └───────┼────────┘
+                              ▼
+                            Skills
+                              │
+                            Tools
+                              │
+                        Verification
+```
+
+**Intelligence** provides reasoning.
+
+**Tools** provide capabilities.
+
+**Skills** provide reusable procedures.
+
+**Knowledge** provides reference material.
+
+**Methods** provide professional approaches to solving problems.
+
+**Rules and policies** establish constraints.
+
+**Verification** establishes evidence that work is correct.
+
+**The Professional Profile composes these into a coherent professional agent.**
+
+---
+
+## Professional Profiles
+
+Profiles are the core ProAgents primitive.
+
+Examples:
+
+```text
+senior-engineer
+staff-engineer
+principal-engineer
+backend-engineer
+frontend-engineer
+security-engineer
+performance-engineer
+database-engineer
+devops-engineer
+sre
+qa-engineer
+accessibility-engineer
+systems-architect
+```
+
+A profile can contain:
+
+```yaml
+version: "1"
+
+profile:
+  name: Security Engineer
+  slug: security-engineer
+  version: "1.0.0"
+
+identity:
+  title: Security Engineer
+
+expertise:
+  - application security
+  - threat modeling
+  - secure architecture
+
+knowledge:
+  - references/owasp/
+  - references/authentication/
+
+methods:
+  - threat-modeling
+  - root-cause-analysis
+  - attack-surface-analysis
+
+skills:
+  - security-audit
+  - secure-code-review
+  - vulnerability-analysis
+
+rules:
+  - never-expose-secrets
+  - require-security-verification
+
+standards:
+  - OWASP
+
+tools:
+  required:
+    - filesystem
+    - shell
+    - git
+
+verification:
+  required:
+    - tests
+    - security-scan
+```
+
+The schema is provider-agnostic and independent of any particular coding-agent harness.
+
+---
+
+## Skills Are Not Profiles
+
+A **Skill** answers:
+
+> How do I perform this particular class of task?
+
+A **Professional Profile** answers:
+
+> How should an agent operate as a professional in this discipline?
+
+For example:
+
+```text
+security-audit
+```
+
+is a skill.
+
+```text
+security-engineer
+```
+
+is a professional profile.
+
+The profile can compose:
+
+```text
+security-engineer
+│
+├── Expertise
+├── Methods
+├── Rules
+├── Standards
+├── Knowledge
+├── Skills
+├── Tools
+└── Verification
+```
+
+Skills remain reusable building blocks.
+
+Profiles are the professional system that composes them.
+
+---
+
+## Equip Any Coding Agent
+
+ProAgents is designed to work with existing coding-agent harnesses.
+
+```bash
+proagent detect
+```
+
+Example:
+
+```text
+Detected coding agents:
+
+✓ Claude Code
+✓ Codex
+✓ OpenCode
+
+Detected capabilities:
+
+✓ Project instructions
+✓ Skills
+✓ MCP
+✓ Shell
+✓ Git
+```
+
+Then:
+
+```bash
+proagent equip security-engineer
+```
+
+ProAgents determines how to express the profile using the target harness's supported mechanisms.
+
+Conceptually:
+
+```text
+Canonical Professional Profile
+              │
+              ▼
+       Profile Compiler
+              │
+       ┌──────┼──────┐
+       ▼      ▼      ▼
+    Claude   Codex  OpenCode
+```
+
+The canonical profile remains independent from any provider.
+
+---
 
 ## Quickstart
 
 ```bash
-# 1. start a session (interactive prompt, or pass --intent)
-proagent init --intent "I want an agent that helps developers debug production issues"
+# Install
+npm install -g proagent
 
-# 2. answer high-value questions, one at a time — each changes the next
-proagent question
-proagent answer q_001 "It diagnoses incidents in our TypeScript services and proposes patches for humans to approve"
+# Detect available coding agents
+proagent detect
 
-# 3. ground it in real context (optional)
-proagent context frameworks
-proagent context "incident runbooks" --context-framework filesystem
+# Browse professional profiles
+proagent list
 
-# 4. build it
-proagent status      # readiness: READY when high-impact coverage is sufficient
-proagent spec        # agent architecture: agents, graph, permissions
-proagent validate    # deterministic checks — errors block the build
-proagent build       # → .agents/skills/<agent>/SKILL.md + agent.json
+# Equip the current coding agent
+proagent equip security-engineer
+
+# Inspect what was equipped
+proagent inspect security-engineer
+
+# Validate the profile
+proagent validate
+
+# Compile for a specific harness
+proagent compile security-engineer --target claude-code
 ```
 
-## Working in an existing repo
+The intended experience is simple:
 
-Already have code? Just run `proagent init` **at the repo root** — no `--intent` needed.
-The session scans your repo first (deterministically, no model calls): manifests, README,
-directory structure, CI, tests, `.mcp.json`, existing `.agents/` skills. It then
-**proposes an intent** for you to confirm instead of asking "What are you trying to build?",
-and **pre-seeds the facts the repo already answers** — so the interview skips those and
-only asks what the code genuinely can't tell it (environments, write/approval policy, scope):
+```text
+I already use a coding agent.
+        ↓
+I want it to operate like a security engineer.
+        ↓
+proagent equip security-engineer
+        ↓
+My coding agent is equipped.
+```
+
+---
+
+## Profile Composition
+
+Professional profiles can be composed.
 
 ```bash
-cd my-existing-repo
+proagent equip staff-engineer security-engineer
+```
 
-# 1. start a session anchored to this repo — intent is proposed from the scan
+Or:
+
+```bash
+proagent equip \
+  staff-engineer \
+  security-engineer \
+  performance-engineer
+```
+
+Composition produces a single effective professional operating model.
+
+ProAgents must detect:
+
+* conflicting rules
+* conflicting policies
+* incompatible tools
+* duplicate skills
+* incompatible verification requirements
+* circular dependencies
+* capability gaps
+
+Serious conflicts must never be silently ignored.
+
+```text
+Profile A
+    │
+    ├── Rule A
+    └── Skill A
+
+Profile B
+    │
+    ├── Rule B
+    └── Skill B
+
+        ↓
+
+Composition Engine
+
+        ↓
+
+Effective Professional Profile
+```
+
+---
+
+## Progressive Disclosure
+
+Professional profiles may contain substantial knowledge and many skills.
+
+ProAgents does not dump everything into the model context.
+
+Instead:
+
+```text
+Task
+ ↓
+Understand intent
+ ↓
+Identify relevant profession
+ ↓
+Discover relevant skills
+ ↓
+Load relevant methods
+ ↓
+Retrieve relevant knowledge
+ ↓
+Activate required tools
+ ↓
+Apply rules
+ ↓
+Execute
+ ↓
+Verify
+```
+
+Only relevant capabilities should be loaded when needed.
+
+This keeps professional profiles scalable without turning them into giant prompt files.
+
+---
+
+## Progressive Agent Creation
+
+ProAgents also provides an agentic workflow for situations where the required professional system does not yet exist.
+
+Instead of guessing from an incomplete request:
+
+```text
+"I want an agent that debugs production."
+```
+
+ProAgents progressively derives the missing requirements:
+
+```text
+Understand intent
+        ↓
+Identify uncertainty
+        ↓
+Ask highest-value question
+        ↓
+Process answer
+        ↓
+Derive NEW questions
+        ↓
+Detect contradictions
+        ↓
+Resolve requirements
+        ↓
+Generate architecture
+        ↓
+Validate
+        ↓
+Build professional agent capabilities
+```
+
+Questions are derived from previous answers rather than pulled from a static questionnaire.
+
+This system can produce:
+
+* professional profiles
+* specialized agents
+* skills
+* tools
+* permissions
+* handoffs
+* verification requirements
+* machine-readable architecture
+
+---
+
+## Context
+
+Professional agents need context.
+
+ProAgents supports pluggable context frameworks:
+
+| Framework             | Origin   | Notes                                 |
+| --------------------- | -------- | ------------------------------------- |
+| `filesystem`          | builtin  | deterministic retrieval               |
+| `git`                 | builtin  | commit-history retrieval              |
+| `agents-code-context` | optional | architecture, dependencies and impact |
+| custom                | external | user-defined context framework        |
+
+Context remains separate from the professional profile.
+
+A profile defines **how the agent operates**.
+
+Context defines **what the agent knows about the environment**.
+
+---
+
+## Rules Are Enforced
+
+Rules are not merely suggestions embedded in Markdown.
+
+A professional profile can define normative constraints:
+
+```text
+Never expose secrets.
+Never modify production without approval.
+Preserve public API compatibility.
+Require tests after source changes.
+Require security verification for authentication changes.
+```
+
+Where the target harness supports enforcement mechanisms, ProAgents compiles these into them.
+
+Where it does not, ProAgents reports the limitation and provides the strongest available fallback.
+
+**Markdown informs. Runtime boundaries enforce whenever the harness allows it.**
+
+---
+
+## Verification
+
+Professional agents must establish evidence.
+
+They should not simply return:
+
+```text
+Done.
+```
+
+A profile can define verification requirements:
+
+```text
+Implementation
+      ↓
+Typecheck
+      ↓
+Tests
+      ↓
+Lint
+      ↓
+Build
+      ↓
+Runtime validation
+```
+
+The exact verification pipeline depends on the profile, repository and available capabilities.
+
+Verification is a first-class part of the professional definition.
+
+---
+
+## What Gets Generated
+
+A professional profile can compile into the native structure of the target coding agent.
+
+For example:
+
+```text
+.agents/
+├── profiles/
+│   └── security-engineer/
+│       ├── profile.json
+│       ├── rules/
+│       ├── methods/
+│       ├── knowledge/
+│       ├── skills/
+│       └── verification/
+│
+├── skills/
+│   ├── security-audit/
+│   ├── threat-modeling/
+│   └── secure-code-review/
+│
+└── agent-architecture.json
+```
+
+The exact generated structure depends on the target harness.
+
+The canonical professional profile remains portable.
+
+---
+
+## From Professional Agent to Specialized Agent Systems
+
+Profiles can also be used to create teams of specialized agents.
+
+For example:
+
+```text
+                Staff Engineer
+                     │
+        ┌────────────┼────────────┐
+        ▼            ▼            ▼
+     Backend      Security        QA
+     Engineer     Engineer      Engineer
+```
+
+Each worker can have its own:
+
+* professional profile
+* skills
+* tools
+* permissions
+* context
+* verification
+* artifact contracts
+
+Handoffs should pass **named artifacts**, not unrestricted shared context.
+
+This enables larger multi-agent systems without making multi-agent orchestration the core abstraction.
+
+---
+
+## Existing Repository
+
+ProAgents can derive professional-agent requirements from a real repository.
+
+```bash
+cd my-project
 proagent init
-#  note: no --intent given; using repo-derived proposal:
-#  "Processes orders over a REST API — an agent for this TypeScript project (Express, vitest, TypeScript)."
-#  detected: Language: TypeScript (package.json + tsconfig.json) · Framework: Express ·
-#            Tests: tests/ · CI: GitHub Actions · ...
-#  (pass --intent to override the proposal; --context to index extra dirs)
-proagent init --intent "An agent that reviews our PRs for security issues" --context src --context docs
+```
 
-# 2. answer the interview — every answer updates readiness and confidence
-proagent question                     # next highest-value question
+The deterministic repository scan can inspect:
+
+* package manifests
+* lockfiles
+* languages
+* frameworks
+* directory structure
+* CI
+* tests
+* MCP configuration
+* existing `.agents/` skills
+
+The scan can pre-seed known facts and avoid asking questions the repository already answers.
+
+Then:
+
+```bash
+proagent question
 proagent answer q_001 "Read-only reviewer; proposes patches, never pushes"
-
-# 3. (optional) pull scoped context from the repo into the session
-proagent context "auth & session handling" --context-framework filesystem --scope src/auth/**
-
-# 4. generate + build, right here in the repo
-proagent spec && proagent validate && proagent build
-# → .agents/skills/<agent>/SKILL.md (the agent's skill + normative permissions)
-# → .agents/agent-architecture.json (the full machine-readable contract)
 ```
 
-What the agent reads from your repo (deterministically — same tree, same questions):
+The progressive interview continues until the architecture reaches sufficient confidence.
 
-- **package manifests & lockfiles** → runtime, languages, frameworks
-- **directory structure** → context scopes the generated agent may request
-- **CI configs & tests** → validation steps the agent must respect
-- **existing `.agents/` skills** → team conventions the new agent should follow
-
-Prefer the GUI? `Build a crew → Start from your repo` in the
-[marketplace app](https://enzovezzaro.github.io/proagents/app/) does the same analysis
-visually and drafts an editable crew from your repo's shape.
-
-Handy follow-ups in the same repo:
+Then:
 
 ```bash
-proagent agents                 # list the generated team
-proagent improve                # self-improvement policy (propose/supervised/auto)
-proagent benchmark run <suite>  # evaluate the generated system (see Benchmarking)
-npx proagent crew install <id>  # or install a ready-made crew from the marketplace
+proagent spec
+proagent validate
+proagent build
 ```
 
-## For AI agents
+---
 
-ProAgents is agent-agnostic and JSON-first — every operation has deterministic
-`--json` output, so another agent (Claude Code, Codex, Cursor, …) can drive the whole
-flow:
+## Benchmarking
+
+Professional agents should be evaluated, not trusted blindly.
+
+ProAgents includes deterministic-first benchmarking for:
+
+* architecture
+* permissions
+* tool discipline
+* artifacts
+* verification
+* approval gates
+* patches
+* tests
+
+```text
+execute
+   ↓
+record trace
+   ↓
+deterministic checks
+   ↓
+independent evidence-based judges
+   ↓
+consensus
+   ↓
+adjudication
+   ↓
+metrics
+```
+
+Deterministic failures remain authoritative.
+
+Judges may explain failures but cannot erase them.
+
+Every result should expose its evidence and provenance.
+
+---
+
+## Self-Improvement
+
+Professional profiles can optionally improve over time.
 
 ```bash
-proagent init --intent "..." --non-interactive --json
-proagent answer q_001 "..." --json
-# repeat question/answer until readiness === "READY"
-proagent build --json
+proagent improve
 ```
 
-The repo ships a ready-made skill that teaches any agent this loop:
+or:
+
+```bash
+proagent self-improve --schedule weekly
+```
+
+The system can inspect:
+
+* new engineering practices
+* new tools
+* new standards
+* framework changes
+* security developments
+* verification failures
+* benchmark results
+* profile usage
+* agent feedback
+
+Updates must be:
+
+```text
+versioned
+auditable
+reviewable
+reversible
+```
+
+Profiles must never silently mutate in destructive ways.
+
+---
+
+## Marketplace & Crews
+
+ProAgents can distribute ready-made professional profiles and specialized multi-agent systems.
+
+A **profile** equips an agent with a profession.
+
+A **crew** composes multiple specialized agents into a larger system.
+
+```text
+Profile
+   ↓
+Professional Agent
+
+Crew
+   ↓
+Professional Agents
+   +
+Handoffs
+   +
+Permissions
+   +
+MCP
+   +
+Context
+```
+
+The marketplace is therefore an ecosystem for distributing reusable professional capabilities and complete agent systems.
+
+```bash
+proagent crew list
+proagent crew show <id>
+proagent crew install <id>
+```
+
+---
+
+## For AI Agents
+
+ProAgents is agent-agnostic and JSON-first.
+
+Every operation can expose deterministic machine-readable output:
+
+```bash
+proagent detect --json
+proagent list --json
+proagent inspect security-engineer --json
+proagent validate --json
+proagent equip security-engineer --json
+```
+
+Another coding agent can therefore operate ProAgents itself.
+
+The repository also ships an Agent Skill that teaches compatible agents how to use the ProAgents workflow:
 
 ```bash
 npx skills add EnzoVezzaro/proagents
 ```
 
-## What gets generated
+An agent should be able to:
 
-```
-.agents/skills/
-├── developers-debug-researcher/
-│   ├── SKILL.md                     # workflow + progressive disclosure
-│   ├── references/permissions.md    # normative permission model
-│   ├── references/escalation.md
-│   └── agent.json                   # machine-readable contract
-├── developers-debug-implementer/
-├── developers-debug-reviewer/       # team derived when concerns split
-└── agent-architecture.json          # full graph + runtime requirements
-```
-
-Handoffs pass **named artifacts** (research-findings, patches, review-verdict) — never a
-shared context pool. Permissions, human-approval gates and secret boundaries are validated
-before anything is generated. Markdown informs; runtime boundaries enforce.
-
-## Context frameworks
-
-| Framework | Origin | Notes |
-|---|---|---|
-| `filesystem` | builtin | deterministic keyword/IDF retrieval, always available |
-| `git` | builtin | commit-history retrieval |
-| `agents-code-context` | optional | [ACC](https://www.npmjs.com/package/acc-code-context) — architecture graph, dependencies, impact; used only if installed |
-| *yours* | external | `--context-framework ./my-framework.mjs` or a git URL — no core changes needed |
-
-See [writing an adapter](https://enzovezzaro.github.io/proagents/context/adapters).
-
-## Architecture
-
-```
-┌─────────────────────────────────────┐
-│           Agent Skill               │  how an agent should operate
-├─────────────────────────────────────┤
-│           CLI / Runtime             │  operations + enforcement boundaries
-├─────────────────────────────────────┤
-│         Question Engine             │  intent → uncertainty → questions (deterministic)
-├─────────────────────────────────────┤
-│      Context Framework API          │  pluggable retrieval
-├──────────┬──────────────┬───────────┤
-│   ACC    │    Git       │  Custom   │
-└──────────┴──────────────┴───────────┘
+```text
+identify required profession
+        ↓
+discover profiles
+        ↓
+inspect profile
+        ↓
+check compatibility
+        ↓
+equip profile
+        ↓
+verify configuration
+        ↓
+operate professionally
 ```
 
-Layers stay separate. The engine is deterministic and provider-agnostic: no model calls, no
-hidden randomness — the same session state always yields the same questions, confidence and
-readiness. Runtime capabilities (subagents, delegation, parallelism) are **detected**, never
-assumed, and gaps are reported honestly with CLI fallbacks in the generated skills.
+---
 
-## Benchmarking
+## Core Model
 
-Generate → then **prove it works**. The benchmark subsystem evaluates the generated agent
-system — architecture, permissions, tool discipline, artifacts — with **determinism first**:
+The ProAgents architecture can be summarized as:
 
-```
-execute → record trace → deterministic checks (authoritative)
-              → independent judges (gated, rubric-bound, evidence-required)
-              → consensus → adjudication → weighted score (provenance everywhere)
-```
-
-```bash
-proagent benchmark run production-debugger --runs 10   # flaky detection included
-proagent benchmark baseline create <run-id>            # store a baseline
-proagent benchmark regressions <run-id>                # per-metric regression gate
-```
-
-Four benchmark styles ship: **artifact**, **schema**, **predicate**, **test** (declared tests
-must actually run and pass — faked results fail deterministically), **patch** (recorded diffs
-must transform base fixtures into golden fixtures) and **approval gates** (gated tools require
-a human-approval event first). Four reference suites ship in-repo: `production-debugger`,
-`api-contract-validator` (schema-driven, judge-free), `migration-reviewer` (SQL fixtures +
-patch/test styles) and `incident-responder` (multi-agent handoffs + approval gates).
-
-Judges may explain a deterministic failure — never erase it. Every score exposes its raw
-metrics and evidence; judge confidence is tracked separately from scores. A built-in
-reference-agent suite (perfect / unsafe / flaky / cheating / …) tests the benchmark itself:
-the framework must classify GOOD from BAD from CHEATING — and its own tests prove it does
-(140 offline tests, zero network, zero API keys). See the
-[benchmark docs](https://enzovezzaro.github.io/proagents/guide/benchmarking).
-
-## Marketplace & crews
-
-Buy pre-built **crews** (workers + permissions + MCP + context), or build your own in the
-browser — then pull any of them into a repo with one command:
-
-```bash
-npx proagent crew install incidere-incident-response
+```text
+                  PROFESSIONAL AGENT
+                          │
+          ┌───────────────┴───────────────┐
+          │                               │
+     INTELLIGENCE                  PROFESSIONAL PROFILE
+          │                               │
+        Model                 ┌───────────┼───────────┐
+                              │           │           │
+                          Knowledge     Methods      Rules
+                              │           │           │
+                              └───────────┼───────────┘
+                                          │
+                                        Skills
+                                          │
+                                        Tools
+                                          │
+                                    Verification
+                                          │
+                                          ▼
+                                   EXISTING HARNESS
+                                          │
+                                          ▼
+                                     AGENT RUNTIME
 ```
 
-That writes the full crew into the repo: `.agents/crews/<id>/` (crew skill, per-worker
-skills + contracts) and a merged `.mcp.json` — ready for your agent runtime.
+The central abstraction is:
 
-The [marketplace app](https://enzovezzaro.github.io/proagents/app/) runs entirely in your
-browser on GitHub Pages:
+> **A Professional Agent Profile is a portable, structured definition of how an AI agent operates as a professional.**
 
-- **Catalog** — Git-as-database: the open repo is the data layer, every listing is a
-  reviewable JSON file, Pages serves reads
-- **Build your crew** — GUI counterpart of the CLI: workers with explicit permission
-  models (write/production/secrets + approval gates), MCP server bindings (stdio/http/sse
-  with tool allowlists), context scopes, artifact-passing handoff graph (must stay acyclic)
-- **Preview an agent on your repo** — sign in with GitHub (device flow, no secret), pick a
-  repo, run any crew on the fly with your own provider/model, then install it into the repo
-  via the GitHub API
-- **Fully free & open source** — every listing is MIT-licensed; support the project via
-  [GitHub Sponsors](https://github.com/sponsors/EnzoVezzaro) or [Ko-fi](https://ko-fi.com/enzojuniorvezzaro)
+ProAgents makes those profiles:
 
-```bash
-proagent crew list            # browse the catalog
-proagent crew show <id>       # workers, permissions, MCP
-proagent crew install <id> --dry-run
-proagent crew publish <file.json>   # publish your own (commits to the catalog)
+```text
+Portable
+Composable
+Versioned
+Inspectable
+Reproducible
+Provider-neutral
+Harness-aware
+Agentic
 ```
 
-See the [marketplace guide](https://enzovezzaro.github.io/proagents/guide/marketplace).
+---
 
 ## Development
 
 ```bash
 git clone https://github.com/EnzoVezzaro/proagents
+
 cd proagents
+
 npm install
 
-npm run build        # tsc → dist/
-npm test             # vitest
-npm run typecheck    # tsc --noEmit
+npm run build
 
-# docs (bun + vitepress)
+npm test
+
+npm run typecheck
+
+# docs
 bun --bun vitepress dev docs
 bun --bun vitepress build docs
 ```
 
 ### Project layout
 
-```
+```text
 ├── src/
-│   ├── cli/            # command surface (--json everywhere)
-│   ├── core/           # engine, session, specification, validation, runtime
-│   ├── context/        # framework API + adapters (filesystem, git, acc) + registry
-│   ├── benchmark/      # deterministic-first benchmarking (evaluators, judges, scoring)
-│   └── output/         # terminal rendering
-├── .agents/            # shipped proagent skill + benchmark suites + generated agents
-├── docs/               # vitepress site (deployed to GitHub Pages)
-├── tests/              # vitest suites (unit, integration, adversarial, e2e)
-└── examples/           # end-to-end session examples
+│   ├── cli/             # CLI surface
+│   ├── core/             # profiles, sessions, specifications, validation
+│   ├── profiles/         # professional profile system
+│   ├── skills/           # reusable skills
+│   ├── methods/          # professional methods
+│   ├── rules/            # rules and policies
+│   ├── context/          # context frameworks
+│   ├── compiler/         # profile → harness compilation
+│   ├── adapters/         # Claude Code, Codex, OpenCode, etc.
+│   ├── benchmark/        # deterministic-first benchmarking
+│   └── output/           # terminal rendering
+│
+├── .agents/              # ProAgents Agent Skill + examples
+├── profiles/             # built-in professional profiles
+├── skills/               # reusable skills
+├── docs/                 # VitePress documentation
+├── tests/                # unit, integration, adversarial, e2e
+└── examples/             # end-to-end examples
 ```
+
+---
 
 ## Contributing
 
-Contributions welcome — see [CONTRIBUTING.md](CONTRIBUTING.md). Good first issues: new
-context-framework adapters, question templates, validation rules, docs translations.
+Contributions welcome.
+
+Useful contributions include:
+
+* professional profiles
+* skills
+* methods
+* rules
+* verification strategies
+* harness adapters
+* context frameworks
+* benchmark suites
+* security improvements
+* documentation
+* profile tooling
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+---
 
 ## Support
 
-ProAgents is free, open-source software. If it saves you time, please consider sponsoring:
+ProAgents is free and open-source software.
 
-- ❤ [GitHub Sponsors — EnzoVezzaro](https://github.com/sponsors/EnzoVezzaro)
-- ☕ [Ko-fi — enzojuniorvezzaro](https://ko-fi.com/enzojuniorvezzaro)
+If it saves you time, consider supporting development:
 
-Sponsorships fund maintenance, new benchmark suites, and context-framework adapters.
+* ❤ [GitHub Sponsors — EnzoVezzaro](https://github.com/sponsors/EnzoVezzaro)
+* ☕ [Ko-fi — enzojuniorvezzaro](https://ko-fi.com/enzojuniorvezzaro)
+
+Sponsorships support maintenance, new professional profiles, benchmark suites, harness adapters and context frameworks.
+
+---
 
 ## License
 

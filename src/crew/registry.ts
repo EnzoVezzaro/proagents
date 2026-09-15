@@ -93,7 +93,8 @@ export interface GitHubCommitTarget {
   authorEmail?: string;
 }
 
-async function getRemoteFile(target: GitHubCommitTarget, filePath: string): Promise<{ sha: string | null; content: string | null }> {
+/** Low-level Contents-API helper, shared with the profile publisher. */
+export async function getRemoteFile(target: GitHubCommitTarget, filePath: string): Promise<{ sha: string | null; content: string | null }> {
   const url = `https://api.github.com/repos/${target.repo}/contents/${filePath}?ref=${encodeURIComponent(target.branch)}`;
   const res = await fetch(url, {
     headers: {
@@ -110,7 +111,8 @@ async function getRemoteFile(target: GitHubCommitTarget, filePath: string): Prom
   return { sha: body.sha, content };
 }
 
-async function putRemoteFile(target: GitHubCommitTarget, filePath: string, content: string, sha: string | null, message: string): Promise<void> {
+/** Low-level Contents-API helpers, shared with the profile publisher. */
+export async function putRemoteFile(target: GitHubCommitTarget, filePath: string, content: string, sha: string | null, message: string): Promise<void> {
   const url = `https://api.github.com/repos/${target.repo}/contents/${filePath}`;
   const res = await fetch(url, {
     method: "PUT",

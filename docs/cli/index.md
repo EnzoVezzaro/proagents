@@ -6,6 +6,23 @@ proagent <command> [options]
 
 ## Commands
 
+### Profiles (equip existing coding agents)
+
+| Command | Purpose |
+|---|---|
+| `detect` | Detect coding-agent harnesses and their capabilities |
+| `list` | List available professional profiles |
+| `inspect <profile>` | Inspect a professional profile (expertise, methods, rules) |
+| `equip <slug> [slug…]` | Equip the detected harness with one or more profiles |
+| `compile <slug> --target <id>` | Compile a profile for a specific harness |
+| `equip … --dry-run` | Show the compile plan without writing |
+| `equip … --target <id>` | Override harness detection |
+| `validate --profiles` | Validate every discoverable profile |
+
+Full details: [Professional profiles](/guide/profiles).
+
+### Agent building (progressive interview)
+
 | Command | Purpose |
 |---|---|
 | `init` | Start (or resume) an agent-building session |
@@ -28,6 +45,7 @@ proagent <command> [options]
 |---|---|
 | `--json` | Machine-readable output on stdout |
 | `--quiet` | Suppress decorations |
+| `--target <harness>` | Target harness for equip/compile (claude-code, codex, opencode, cursor, gemini-cli, generic-cli) |
 | `--intent "<text>"` | Provide intent without the interactive prompt |
 | `--context <path>` | Add a context source (repeatable / comma-separated) |
 | `--context-framework <id>` | Use a context framework (builtin, optional, or path/URL) |
@@ -59,6 +77,15 @@ proagent <command> [options]
 All support `--json`.
 
 ## Typical session (human, interactive)
+
+```bash
+proagent detect
+proagent equip security-engineer
+proagent inspect security-engineer
+proagent validate --profiles
+```
+
+Or the agent-building path:
 
 ```bash
 proagent init --intent "I want an agent that reviews PRs for security issues"

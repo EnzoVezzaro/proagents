@@ -1,7 +1,7 @@
 {
   "name": "proagent",
-  "version": "0.5.3",
-  "description": "ProAgents — an agentic CLI + skill that turns an incomplete idea into a well-defined, validated multi-agent system through progressive questioning. Provider-agnostic, context-framework pluggable.",
+  "version": "0.6.0",
+  "description": "ProAgents — professional profiles for existing coding agents. Equip Claude Code, Codex, OpenCode and friends with professional expertise, methods, rules and verification. Also builds new specialized agent systems from incomplete ideas through progressive questioning.",
   "type": "module",
   "license": "MIT",
   "author": "ProAgents contributors",
@@ -19,6 +19,10 @@
     "multi-agent",
     "agent-builder",
     "agent-skills",
+    "professional-profiles",
+    "profile",
+    "equip",
+    "security-engineer",
     "skill",
     "skills",
     "cli",
@@ -28,7 +32,8 @@
     "mcp",
     "claude",
     "codex",
-    "cursor"
+    "cursor",
+    "opencode"
   ],
   "engines": {
     "node": ">=20"
@@ -50,6 +55,7 @@
   },
   "files": [
     "dist",
+    "profiles",
     ".agents/skills/proagent",
     "README.md",
     "LICENSE",

@@ -10,47 +10,98 @@ npx proagent --help
 
 Requires Node.js 20+.
 
-## Your first interview
+## Equip a profile
+
+The core experience: give the coding agent you already use a profession.
+
+```bash
+# 1. What harnesses are set up in this repo, and what can they do?
+proagent detect
+# Detected coding agents:
+#   ✓ Claude Code  (primary)
+#       CLAUDE.md, .mcp.json
+# Detected capabilities:
+#   ✓ Project instructions   ✓ Skills   ✓ MCP   ✓ Shell   ✓ Git
+
+# 2. What professions are available?
+proagent list
+
+# 3. Equip the detected harness
+proagent equip security-engineer
+# ✓ Equipped Security Engineer → Claude Code
+#   • .agents/skills/security-engineer/SKILL.md  (agent-skill)
+#   • CLAUDE.md  (project-instructions)
+#   • .claude/settings.json  (rule-enforcement)
+
+# 4. Inspect what was equipped
+proagent inspect security-engineer
+
+# 5. Verify all profiles (including local ones)
+proagent validate --profiles
+```
+
+Open your coding agent and it now operates under the profile: threat modeling before
+fixing auth code, security verification before claiming completion, and the profile's
+rules as normative constraints.
+
+### Target a specific harness
+
+Detection picks the strongest harness present, but you can always be explicit:
+
+```bash
+proagent equip security-engineer --target codex
+proagent compile security-engineer --target claude-code   # same pipeline, explicit
+proagent equip senior-engineer --dry-run                  # plan without writing
+```
+
+### Compose professions
+
+```bash
+proagent equip staff-engineer security-engineer
+```
+
+Composition merges expertise, methods, skills, rules and verification into one effective
+professional operating model. Conflicts are detected deterministically — contradictory
+rules or incompatible tools **block** the equip with `PA02x` codes instead of being
+silently ignored. See [profiles](/guide/profiles#composition).
+
+## Profiles are plain JSON
+
+Every profile is a versioned, inspectable file:
+
+```yaml
+version: "1"
+profile:  { slug: security-engineer, version: 1.0.0 }
+identity: { title: Security Engineer }
+expertise: [application security, threat modeling]
+methods:  [threat-modeling, root-cause-analysis]
+rules:    [never expose secrets, require security verification…]
+tools:    { required: [filesystem, shell, git] }
+verification: { required: [tests, security-scan] }
+```
+
+Drop your own into `./profiles/*.json` in your repo — local profiles shadow built-ins and
+are flagged as local during validation.
+
+## The interview path: build a specialized agent
+
+When the professional system you need doesn't exist yet, ProAgents derives it from an
+incomplete idea through progressive questioning:
 
 ```bash
 proagent init --intent "I want an agent that helps developers debug production issues"
-```
-
-The engine seeds questions from your intent. Answer the highest-value one:
-
-```bash
 proagent question
-# ◇ Question 1/2  high-impact
-#   What should the agent do, in one or two sentences — and for whom?
-#   why: The objective drives every downstream decision...
-
 proagent answer q_001 "It diagnoses incidents in our TypeScript services and proposes patches for humans to approve"
+proagent status      # readiness + confidence
+proagent spec        # agent architecture
+proagent validate    # deterministic checks — must pass before build
+proagent build       # emits .agents/skills/<agent>/SKILL.md + agent.json
 ```
 
-Each answer changes the next derived question. Mentioning production unlocks the
-permissions probe; mentioning approval unlocks the approval-flow probe.
-
-## In an existing repo: `init` reads first, then asks
-
-Run `proagent init` **without `--intent`** at the root of an existing project and it
-scans the repo deterministically before anything else — manifests, README, directory
-structure, CI, tests, `.mcp.json`, existing `.agents/` skills:
-
-```bash
-cd my-existing-repo
-proagent init
-# note: no --intent given; using repo-derived proposal:
-#   "Processes orders over a REST API — an agent for this TypeScript project (Express, vitest, TypeScript)."
-#   detected: Language: TypeScript (package.json + tsconfig.json) · Framework: Express (package.json)
-#             Tests: tests/ · CI: GitHub Actions · ...
-```
-
-- The scan **proposes an intent** from your README — confirm it, or pass `--intent` to override.
-- Facts the repo already answers (language, frameworks, test suite, CI, MCP servers,
-  existing skills) are **pre-seeded into the session**, so the interview never asks about them.
-- Only genuine gaps remain: environments, read vs. write + approval gates, scope.
-
-The same rules power the GUI: marketplace → *Build a crew* → *Start from your repo*.
+Each answer changes the next derived question. In an existing repo, run `proagent init`
+without `--intent`: the repository is scanned deterministically (manifests, CI, tests,
+MCP config, existing skills), a repo-derived intent is proposed, and facts the repo
+already answers are pre-seeded so the interview only asks genuine gaps.
 
 ## Ground it in context
 
@@ -60,23 +111,7 @@ proagent context frameworks
 
 # scoped retrieval for a task (builtin, always available)
 proagent context "where are deployment runbooks" --context-framework filesystem
-
-# with ACC if installed (optional)
-npm i -g acc-code-context
-proagent context "auth architecture" --context-framework agents-code-context
 ```
-
-## Reach READY, then build
-
-```bash
-proagent status      # readiness + confidence
-proagent spec        # agent architecture (agents, edges, runtime requirements)
-proagent validate    # deterministic checks — must pass before build
-proagent build       # emits .agents/skills/<agent>/SKILL.md + agent.json
-```
-
-`build` refuses to emit skills when validation fails, and reports **runtime capability
-gaps** honestly (e.g. the architecture needs multi-agent but your runtime is single-agent).
 
 ## Installing the skill (for agent environments)
 
@@ -99,10 +134,9 @@ proagent status            # human view
 proagent inspect --json    # full state + architecture + runtime (for agents)
 ```
 
-Kill the process whenever you like; `init` resumes the session.
-
 ## Next steps
 
+- [Professional profiles](/guide/profiles) — schema, composition, validation codes
 - [The question engine](/guide/question-engine) — how derivation and confidence work
 - [JSON interface](/cli/json) — the machine contract
-- [Write a context adapter](/context/adapters) — plug in your own retrieval
+- [Marketplace](/guide/marketplace) — ready-made profiles and crews

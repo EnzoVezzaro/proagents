@@ -1,14 +1,28 @@
 # Agent operating guide
 
 ProAgents is built for **agents operating agents**. Another AI coding agent can drive the
-entire workflow without a terminal UI.
+entire workflow — equipping profiles or building specialized agents — without a terminal UI.
 
 > The CLI knows this: when a human runs it interactively (both stdin and stdout are a
 > terminal), it prints a one-time hint on stderr recommending delegation to an agent.
 > It never appears in `--json` output, so machine parsing is unaffected. Set
 > `PROAGENT_STANDALONE=1` to silence it entirely.
 
-## The loop
+## Equipping profiles
+
+```bash
+proagent detect --json                     # → { primary, harnesses[] }
+proagent list --json                       # → { profiles[] }
+proagent inspect <slug> --json             # → { profile: ProfileManifest }
+proagent equip <slug> [slug…] --json       # → { target, profile, files[], limitations[] }
+proagent validate --profiles --json        # → { reports[] }
+```
+
+Equipping is the default path when the user wants their existing coding agent to operate
+as a professional. Composition errors (`PA022`/`PA023`) exit non-zero with
+`status: "blocked"` — surface the conflict and the suggestion, never bypass it.
+
+## The interview loop
 
 ```bash
 proagent init --intent "..." --non-interactive --json

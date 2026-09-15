@@ -20,7 +20,7 @@ export function ItemCard(props: { item: MarketplaceItem }): React.JSX.Element {
       onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--line)")}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-        <span style={{ fontSize: 11, letterSpacing: 1.2, color: item.kind === "crew" ? "var(--lime)" : "var(--cream-dim)", textTransform: "uppercase" as const, fontWeight: 700 }}>
+        <span style={{ fontSize: 11, letterSpacing: 1.2, color: item.kind === "profile" ? "var(--lime)" : item.kind === "crew" ? "var(--cream)" : "var(--cream-dim)", textTransform: "uppercase" as const, fontWeight: 700 }}>
           {item.kind}
         </span>
         <span style={{ fontWeight: 700, color: "var(--lime)", fontSize: 13 }}>Free · MIT</span>

@@ -57,7 +57,7 @@ export function CatalogPage(_props: { ctx: AppCtx }): React.JSX.Element {
   return (
     <div>
       <div style={{ display: "flex", alignItems: "baseline", gap: 14, flexWrap: "wrap" }}>
-        <h1 style={{ margin: 0 }}>Agent & crew marketplace</h1>
+        <h1 style={{ margin: 0 }}>Profiles & crews marketplace</h1>
         <span style={{ color: "var(--cream-dim)", fontSize: 13 }}>Free · MIT · every listing is a JSON file in the open repo</span>
       </div>
 
@@ -65,7 +65,7 @@ export function CatalogPage(_props: { ctx: AppCtx }): React.JSX.Element {
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search crews, agents, tags…"
+          placeholder="Search profiles, crews, tags…"
           aria-label="Search the marketplace"
           style={{ flex: 1, minWidth: 240, background: "var(--ink-2)", color: "var(--cream)", border: "1px solid var(--line)", borderRadius: 10, padding: "10px 14px", fontSize: 14 }}
         />

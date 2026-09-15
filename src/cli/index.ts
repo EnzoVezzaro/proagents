@@ -33,6 +33,15 @@ import { scanRepo } from "../core/repo-scan.js";
 import { runBenchmarkCommand } from "./benchmark.js";
 import { runCrewCommand } from "./crew.js";
 import { promptLine, warnIfStandalone } from "./interactive.js";
+import {
+  printProfilesHelp,
+  runCompile,
+  runDetect,
+  runEquip,
+  runInspectProfile,
+  runListProfiles,
+  runValidateProfiles,
+} from "./profiles.js";
 
 interface ParsedArgs {
   command: string;
@@ -64,12 +73,19 @@ function parseArgs(argv: string[]): ParsedArgs {
 
 function printHelp(): void {
   console.log(`
-proagent ${VERSION} — forge specialized agents from incomplete ideas
+proagent ${VERSION} — professional profiles for existing coding agents
 
 Usage:
   proagent <command> [options]
 
-Commands:
+Profile commands:
+  detect                    Detect coding-agent harnesses and capabilities
+  list                      List available professional profiles
+  inspect <profile>         Inspect a professional profile
+  equip <slug> [slug…]      Equip the detected harness with professional profiles
+  compile <slug>            Compile a profile for a specific harness (--target)
+
+Agent-building commands:
   init                      Start (or resume) an agent-building session
   status                    Show knowledge state, confidence and readiness
   question                  Show the next high-value questions
@@ -77,18 +93,19 @@ Commands:
   context                   Retrieve scoped context for a task
   context frameworks        List available context frameworks
   spec                      Generate the agent architecture specification
-  validate                  Validate the architecture
+  validate                  Validate the architecture (or --profiles)
   build                     Generate deployable agent skills
   agents                    List agents in the generated architecture
   inspect                   Dump full session state (for agents/humans)
   improve                   Show or configure self-improvement
   benchmark                 Benchmark subcommands (proagent benchmark help)
-  crew                      Marketplace crews: list/show/validate/install/publish (proagent crew help)
+  crew                      Marketplace: profiles & crews (proagent crew help)
   help                      Show this help
 
 Global options:
   --json                    Machine-readable output on stdout
   --quiet                   Suppress decorations
+  --target <harness>        Target harness for equip/compile
   --intent "<text>"         Provide intent without the interactive prompt
   --context <path>          Add a context source (repeatable)
   --context-framework <id>  Use a context framework (e.g. agents-code-context)
@@ -527,7 +544,7 @@ async function cmdInspect(flags: Record<string, string | boolean>): Promise<void
 async function cmdImprove(args: string[], flags: Record<string, string | boolean>): Promise<void> {
   const store = new SessionStore();
   const state = await store.load();
-  if (!state) fail("No active session.");
+  if (!state) fail("No active session. Self-improvement configures an agent-building session — run `proagent init` first.");
 
   const sub = args[0] ?? "status";
   if (sub === "schedule" && typeof args[1] === "string") {
@@ -567,17 +584,33 @@ async function main(): Promise<void> {
   warnIfStandalone(command, isJson(flags));
 
   switch (command) {
+    case "detect": return runDetect(isJson(flags), flags.quiet === true);
+    case "list": return runListProfiles(isJson(flags));
+    case "equip": return runEquip(args, flags);
+    case "compile": return runCompile(args, flags);
     case "init": return cmdInit(flags, args);
     case "status": return cmdStatus(flags);
     case "question": return cmdQuestion(flags);
     case "answer": return cmdAnswer(args[0], args.slice(1), flags);
     case "context": return cmdContext(args, flags);
     case "spec": return cmdSpec(flags, args);
-    case "validate": return cmdValidate(flags, args);
+    case "validate":
+      if (flags.profiles === true) return runValidateProfiles(isJson(flags));
+      // No agent-building session → fall back to profile validation, so the
+      // equip quickstart (`detect → equip → validate`) works as documented.
+      if (!(await new SessionStore().load())) return runValidateProfiles(isJson(flags));
+      return cmdValidate(flags, args);
     case "build": return cmdBuild(flags, args);
     case "agents": return cmdAgents(flags);
-    case "inspect": return cmdInspect(flags);
+    case "inspect":
+      if (args[0]) return runInspectProfile(args[0], isJson(flags));
+      return cmdInspect(flags);
     case "improve": return cmdImprove(args, flags);
+    case "self-improve": {
+      // README alias: proagent self-improve --schedule weekly
+      const improveArgs = typeof flags.schedule === "string" && flags.schedule ? ["schedule", flags.schedule] : args;
+      return cmdImprove(improveArgs, flags);
+    }
     case "benchmark": return runBenchmarkCommand(args, flags);
     case "crew": return runCrewCommand(args, flags);
     case "--version":

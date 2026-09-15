@@ -286,7 +286,13 @@ describe("crew CLI (CREW-CLI)", () => {
 
   it("CREW-CLI-005: all shipped catalog items validate", () => {
     const itemsDir = path.resolve(".marketplace", "items");
+    const catalog = JSON.parse(fs.readFileSync(path.resolve(".marketplace", "catalog.json"), "utf8")) as {
+      items: Array<{ id: string; kind: string }>;
+    };
+    const crewKinds = new Set(catalog.items.filter((i) => i.kind !== "profile").map((i) => i.id));
     for (const file of fs.readdirSync(itemsDir)) {
+      // Profile items are validated by the profiles pipeline, not crew validate.
+      if (!crewKinds.has(file.replace(/\.json$/, ""))) continue;
       const { stdout } = cli(["crew", "validate", path.join(itemsDir, file), "--json"]);
       expect(JSON.parse(stdout).status).toBe("ok");
     }

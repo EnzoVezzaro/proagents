@@ -1,9 +1,12 @@
-# Marketplace & crews
+# Marketplace: profiles & crews
 
-The ProAgents marketplace is where pre-built **crews** live: a crew is a bundle of
-specialized workers (skill + permission model + tools + MCP servers + context bindings)
-wired together by a handoff graph. You can **buy one**, **build your own** in the GUI, or
-**pull any of them into a repo with one command**.
+The ProAgents marketplace distributes two kinds of reusable professional capability:
+
+- **Profiles** — a profession for your existing coding agent (`proagent equip security-engineer`)
+- **Crews** — a bundle of specialized workers (skill + permission model + tools + MCP servers + context bindings) wired together by a handoff graph
+
+Everything is free and MIT-licensed. Every listing is a reviewable JSON file in the open
+repo, and any item pulls into your repository with one command.
 
 ## The pieces
 
@@ -11,8 +14,36 @@ wired together by a handoff graph. You can **buy one**, **build your own** in th
 |---|---|---|
 | Marketplace app | [`/proagents/app/`](https://enzovezzaro.github.io/proagents/app/) | Static SPA (React + Vite) deployed to GitHub Pages — runs entirely in your browser |
 | Catalog | `.marketplace/catalog.json` + `.marketplace/items/*.json` | **Git-as-database**: the repo itself is the data layer; every listing is a reviewable JSON file, and Pages serves reads |
-| CLI | `proagent crew …` | list / show / validate / **install** / publish |
-| Installer | `.agents/crews/<id>/` + `.mcp.json` | the on-disk layout any agent runtime can execute |
+| CLI | `proagent equip <slug>` · `proagent crew …` | profiles: equip/compile; crews: list / show / validate / **install** / publish |
+| Installer | `.agents/skills/<profile>/` + instructions block · `.agents/crews/<id>/` + `.mcp.json` | the on-disk layout any agent runtime can execute |
+
+## Install a profile (the one-liner)
+
+```bash
+npx proagent equip security-engineer
+```
+
+That's it. The command resolves the profile (built-in, local, or the Git-backed catalog),
+validates it, detects your coding-agent harness, and compiles the profession into the
+harness's strongest mechanisms:
+
+```
+.agents/skills/security-engineer/SKILL.md   # skills mechanism (if supported)
+CLAUDE.md                                   # marked profile block (instructions)
+.claude/settings.json                       # native rule enforcement (if supported)
+```
+
+Useful variants:
+
+```bash
+proagent list                               # browse available profiles
+proagent inspect security-engineer          # deep view: expertise, methods, rules
+proagent equip security-engineer --dry-run  # see the plan, write nothing
+proagent equip staff-engineer security-engineer   # compose professions
+proagent compile security-engineer --target codex # explicit harness
+```
+
+## Install a crew (the one-liner)
 
 ## Install a crew (the one-liner)
 
@@ -46,9 +77,11 @@ proagent crew install <id> --repo owner/name --ref dev   # another catalog
 ## The web app
 
 ### Catalog & detail
-Browse crews and single agents, filter by tag, open one to see the full worker table with
-**permission badges** (write/production/secrets/approval gates/MCP). Everything is free
-and MIT-licensed — every item installs directly.
+Browse **profiles**, crews and single agents, filter by tag, and open any item for detail:
+profiles show expertise, methods, rules and verification with the one-line equip command;
+crews show the full worker table with **permission badges**
+(write/production/secrets/approval gates/MCP). Everything is free and MIT-licensed —
+every item installs directly.
 
 ### Build a crew (the main event)
 `Build a crew` opens a two-path entry — both end in the same builder and the same output:

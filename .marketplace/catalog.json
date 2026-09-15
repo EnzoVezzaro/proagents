@@ -3,6 +3,57 @@
   "updatedAt": "2026-09-15T00:00:00.000Z",
   "items": [
     {
+      "id": "security-engineer",
+      "name": "Security Engineer",
+      "version": "1.0.0",
+      "description": "Professional profile: threat modeling, attack-surface analysis, secure coding and security verification for your existing coding agent.",
+      "author": "proagents",
+      "tags": [
+        "profile",
+        "security",
+        "owasp",
+        "threat-modeling"
+      ],
+      "kind": "profile",
+      "downloads": 0,
+      "createdAt": "2026-09-15T00:00:00.000Z",
+      "updatedAt": "2026-09-15T00:00:00.000Z"
+    },
+    {
+      "id": "staff-engineer",
+      "name": "Staff Engineer",
+      "version": "1.0.0",
+      "description": "Professional profile: cross-team technical leadership, systems thinking, tradeoff analysis and architectural consistency.",
+      "author": "proagents",
+      "tags": [
+        "profile",
+        "engineering",
+        "leadership",
+        "architecture"
+      ],
+      "kind": "profile",
+      "downloads": 0,
+      "createdAt": "2026-09-15T00:00:00.000Z",
+      "updatedAt": "2026-09-15T00:00:00.000Z"
+    },
+    {
+      "id": "sre",
+      "name": "Site Reliability Engineer",
+      "version": "1.0.0",
+      "description": "Professional profile: SLOs, error budgets, incident response and observability discipline for your existing coding agent.",
+      "author": "proagents",
+      "tags": [
+        "profile",
+        "sre",
+        "reliability",
+        "on-call"
+      ],
+      "kind": "profile",
+      "downloads": 0,
+      "createdAt": "2026-09-15T00:00:00.000Z",
+      "updatedAt": "2026-09-15T00:00:00.000Z"
+    },
+    {
       "id": "incidere-incident-response",
       "name": "Incidere — Incident Response",
       "version": "1.0.0",

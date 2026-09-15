@@ -5,6 +5,54 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-09-15
+
+### Added
+
+- **GitHub community & CI support files** — dependabot config (npm + web + Actions), pull-
+  request template with the determinism/boundary/contract checklist, issue-template config
+  (discussions + docs links), and a **profile-proposal issue form** mirroring the crew form
+- **Profile marketplace publishing** — `publishProfile()` writes `items/<slug>.json` + a
+  `kind: "profile"` catalog entry through the GitHub Contents API (Git-as-database, same
+  two-commit reviewable flow as crews); `profileProblems()` is the deterministic CI gate
+- **Marketplace proposal pipeline accepts profiles** — the `crew-submission` workflow now
+  extracts CREW-JSON *or* PROFILE-JSON blocks, validates with the matching deterministic
+  validator, and publishes either kind on maintainer `/publish`
+- **Professional Agent Profiles** — the core new primitive: a portable, structured,
+  versioned definition of how an AI agent operates as a professional. Equip an existing
+  coding agent with a profession in one command:
+  `proagent detect` → `proagent list` → `proagent equip security-engineer`
+- **Profile compiler + harness adapters** (`src/adapters/`) — filesystem-driven detection
+  of Claude Code, Codex, OpenCode, Cursor, Gemini CLI (env signals promote the primary);
+  compilation into the target's strongest mechanisms: skills directory, marked project-
+  instructions block (idempotent, content-hashed markers), native rule enforcement via
+  hooks where supported. Limitations are reported, never papered over
+- **13 built-in profiles** (`profiles/*.json`) — senior/staff/principal engineer, backend,
+  frontend, security, performance, database, devops, SRE, QA, accessibility, systems
+  architect
+- **Deterministic composition engine** (`src/profiles/composition.ts`) — merge profiles
+  into one effective operating model; conflicting rules (PA022) and incompatible tools
+  (PA023) block; capability gaps (PA025) and duplicates (PA026) warn
+- **Profile validation** (`proagent validate --profiles`, PA03x codes) — required fields,
+  kebab-case slugs, semver, non-empty expertise/tools/verification, required-vs-forbidden
+  tool contradictions, duplicate slugs
+- **Marketplace profiles** — `kind: "profile"` catalog items; `equip` resolves slugs from
+  the registry or fetches them from the Git-backed catalog; profile detail renderer in
+  the marketplace SPA
+- **New CLI commands** — `detect`, `list`, `inspect <profile>`, `equip`, `compile
+  --target`, `validate --profiles`; all JSON-first (`--json`)
+- Skill (`proagent`) rewritten around the two product paths: equip-a-profile first,
+  build-a-specialized-agent second; new `references/profiles.md`
+- Docs: new Professional Profiles guide, rewritten hero/what-is/getting-started, CLI
+  reference split into profile and agent-building commands
+
+### Changed
+
+- Product framing: ProAgents equips existing coding agents with professions; the
+  progressive interview (init/question/answer/spec/build) is the second path for creating
+  new professional systems
+- `validate --profiles` extends (does not replace) architecture validation
+
 ## [0.5.3] - 2026-09-15
 
 ### Fixed

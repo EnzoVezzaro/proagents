@@ -5,7 +5,7 @@ export default defineConfig({
   lang: "en-US",
   title: "ProAgents",
   description:
-    "Forge specialized AI agents from incomplete ideas — progressive questioning, pluggable context frameworks and deterministic multi-agent architecture generation.",
+    "Professional profiles for existing coding agents — equip Claude Code, Codex, OpenCode and friends with professional expertise, methods, rules and verification.",
   head: [
     ["link", { rel: "icon", type: "image/png", href: "/favicon.png" }],
     ["meta", { property: "og:type", content: "website" }],
@@ -14,7 +14,7 @@ export default defineConfig({
       "meta",
       {
         property: "og:description",
-        content: "Forge specialized AI agents from incomplete ideas.",
+        content: "Professional profiles for existing coding agents.",
       },
     ],
     ["meta", { property: "og:image", content: "/og-image.png" }],
@@ -52,6 +52,12 @@ export default defineConfig({
             { text: "What is ProAgents?", link: "/guide/what-is-proagents" },
             { text: "Getting started", link: "/guide/getting-started" },
             { text: "Agent operating guide", link: "/guide/agent-guide" },
+          ],
+        },
+        {
+          text: "Profiles",
+          items: [
+            { text: "Professional profiles", link: "/guide/profiles" },
           ],
         },
         {

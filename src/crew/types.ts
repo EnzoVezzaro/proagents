@@ -136,7 +136,7 @@ export interface MarketplaceItem {
   description: string;
   author: string;
   tags: string[];
-  kind: "crew" | "agent";
+  kind: "profile" | "crew" | "agent";
   downloads: number;
   createdAt: string;
   updatedAt: string;

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import type { AppCtx } from "../AppShell.js";
 import { ErrorNote } from "../cards.js";
-import type { CrewDefinition } from "../../types.js";
+import type { CrewDefinition, MarketplaceCatalog, ProfileManifest } from "../../types.js";
 import { catalogUrl } from "../../catalog.js";
+import { ProfileDetail } from "./ProfileDetailPage.js";
 
 function itemUrl(id: string): string {
   return catalogUrl(`items/${id}.json`);
@@ -11,17 +12,28 @@ function itemUrl(id: string): string {
 export function CrewDetailPage(props: { id: string; ctx: AppCtx }): React.JSX.Element {
   const { id } = props;
   const [crew, setCrew] = useState<CrewDefinition | null>(null);
+  const [profile, setProfile] = useState<ProfileManifest | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    fetch(itemUrl(id))
-      .then((r) => {
+    // Kind dispatch: the catalog index names the kind; the item file may be a
+    // crew definition or a profile manifest. Sniff as a fallback for stale indexes.
+    Promise.all([
+      fetch(catalogUrl("catalog.json")).then((r) => (r.ok ? (r.json() as Promise<MarketplaceCatalog>) : null)),
+      fetch(itemUrl(id)).then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json() as Promise<CrewDefinition>;
-      })
-      .then((c) => {
-        if (!cancelled) setCrew(c);
+        return r.json() as Promise<CrewDefinition | ProfileManifest>;
+      }),
+    ])
+      .then(([catalog, item]) => {
+        if (cancelled) return;
+        const meta = catalog?.items.find((i) => i.id === id);
+        if (meta?.kind === "profile" || !(item as CrewDefinition).workers) {
+          setProfile(item as ProfileManifest);
+        } else {
+          setCrew(item as CrewDefinition);
+        }
       })
       .catch((err) => {
         if (!cancelled) setError(`Could not load "${id}" (${(err as Error).message}).`);
@@ -38,6 +50,14 @@ export function CrewDetailPage(props: { id: string; ctx: AppCtx }): React.JSX.El
         <div style={{ marginTop: 16 }}>
           <ErrorNote message={error} />
         </div>
+      </div>
+    );
+  }
+  if (profile) {
+    return (
+      <div>
+        <a href="#/catalog" style={{ color: "var(--lime)", fontSize: 13 }}>← back to catalog</a>
+        <ProfileDetail manifest={profile} />
       </div>
     );
   }

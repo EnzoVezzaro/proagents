@@ -3,8 +3,8 @@ layout: home
 
 hero:
   name: "ProAgents"
-  text: "Forge specialized AI agents"
-  tagline: From an incomplete idea to a validated multi-agent system — through progressive questioning, pluggable context frameworks and deterministic architecture generation.
+  text: "Professional profiles for coding agents"
+  tagline: Equip the coding agent you already use with professional expertise, methods, skills, rules and verification — a portable Professional Agent Profile, compiled to your harness. Not another harness.
   image:
     src: /logo.png
     alt: ProAgents
@@ -17,34 +17,34 @@ hero:
       link: /guide/what-is-proagents
 
 features:
-  - icon: ⚡
-    title: Progressive question engine
-    details: Deterministic derivation — every question is triggered by your previous answer. Highest information value first, contradictions detected, nothing asked without architectural impact.
-    link: /guide/question-engine
-    linkText: How questioning works
+  - icon: 🎓
+    title: Professional Agent Profiles
+    details: A structured, versioned definition of how an agent operates as a professional — identity, expertise, methods, rules, tools and verification. Equip one in a single command.
+    link: /guide/profiles
+    linkText: The profile schema
   - icon: 🔌
-    title: Pluggable context frameworks
-    details: Filesystem and git built in, ACC (agents-code-context) as an optional adapter, external frameworks loadable from a path or git URL — without touching the core engine.
-    link: /context/
-    linkText: Context frameworks
-  - icon: 🕸️
-    title: Multi-agent by design
-    details: Single agent or orchestrated team — researcher, implementer, reviewer, operator. Explicit handoffs with named artifacts, permission models and runtime capability checks.
-    link: /guide/architecture
-    linkText: Agent architecture
+    title: Equip any coding agent
+    details: Claude Code, Codex, OpenCode, Cursor, Gemini CLI — the profile compiler expresses the canonical profile using each harness's strongest mechanisms, and reports limitations honestly.
+    link: /guide/getting-started#equip-a-profile
+    linkText: Harness adapters
+  - icon: 🧩
+    title: Validated composition
+    details: Combine profiles (staff-engineer + security-engineer). Conflicting rules, incompatible tools and capability gaps are detected deterministically — serious conflicts are never silently ignored.
+    link: /guide/profiles#composition
+    linkText: How composition works
+  - icon: 🛡️
+    title: Rules are enforced
+    details: Where the target harness supports enforcement (hooks, policies), rules compile into runtime boundaries. Where it does not, ProAgents says so — Markdown informs; boundaries enforce.
+    link: /guide/profiles#rules-are-enforced
+    linkText: Enforcement model
   - icon: 🤖
     title: Agent-agnostic, JSON-first
-    details: Works from Claude Code, Codex, Cursor, or a bare terminal. Every operation has a deterministic --json output — no scraping terminal text.
+    details: Every operation has a deterministic --json output — detect, list, inspect, equip, compile, validate. Another coding agent can operate ProAgents itself.
     link: /cli/json
     linkText: JSON interface
-  - icon: 🛡️
-    title: Safety as architecture
-    details: Read/write/production permissions, human-approval gates, secret boundaries — validated before any skill is generated. Markdown informs; boundaries enforce.
-    link: /guide/architecture
-    linkText: Validation model
-  - icon: ♻️
-    title: Optional self-improvement
-    details: Scheduled, policy-gated improvement lifecycle with immutable security constraints, versioned agents and rollback. Off by default, propose-mode by default.
-    link: /guide/self-improvement
-    linkText: Self-improvement
+  - icon: 🕸️
+    title: Build specialized agents too
+    details: When the profession you need doesn't exist, the progressive question engine derives requirements and generates a validated multi-agent architecture — profiles, crews, handoffs.
+    link: /guide/question-engine
+    linkText: Progressive agent creation
 ---

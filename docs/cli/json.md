@@ -3,6 +3,96 @@
 Every important operation supports `--json`. Output is deterministic for a given session
 state — same state, same bytes. Agents must never scrape terminal prose.
 
+## Profile commands
+
+### detect
+
+```bash
+proagent detect --json
+```
+
+```json
+{
+  "status": "ok",
+  "command": "detect",
+  "primary": {
+    "id": "claude-code",
+    "name": "Claude Code",
+    "capabilities": {
+      "projectInstructions": true,
+      "skills": true,
+      "ruleEnforcement": "native",
+      "mcp": true,
+      "shell": true,
+      "git": true
+    },
+    "evidence": ["CLAUDE.md", ".mcp.json"]
+  },
+  "harnesses": ["…same shape as primary"]
+}
+```
+
+### list / inspect
+
+```bash
+proagent list --json
+proagent inspect security-engineer --json
+```
+
+`list` returns `{ status, command, profiles: [{ slug, name, version, description, origin, tags }] }`.
+`origin` is `builtin`, `local` or `marketplace`.
+
+`inspect` returns `{ status, command, profile: <full ProfileManifest>, origin }`.
+
+### equip / compile
+
+```bash
+proagent equip security-engineer --json
+proagent compile security-engineer --target claude-code --json
+```
+
+```json
+{
+  "status": "ok",
+  "command": "equip",
+  "target": "claude-code",
+  "profile": ["security-engineer"],
+  "files": [
+    { "path": ".agents/skills/security-engineer/SKILL.md", "mechanism": "agent-skill" },
+    { "path": "CLAUDE.md", "mechanism": "project-instructions" },
+    { "path": ".claude/settings.json", "mechanism": "rule-enforcement" }
+  ],
+  "limitations": []
+}
+```
+
+`limitations[]` is an honest report of what the target harness could not express or
+enforce — surface it, never hide it. With `--dry-run`, returns
+`{ status, dryRun: true, target, profile, effective }` and writes nothing.
+
+Blocked equips (profile validation errors, or composition errors `PA022`/`PA023`) exit
+non-zero:
+
+```json
+{ "status": "blocked", "command": "equip", "conflicts": [{ "code": "PA022", "severity": "error", "message": "…", "profiles": ["a", "b"], "suggestion": "…" }] }
+```
+
+### validate --profiles
+
+```bash
+proagent validate --profiles --json
+```
+
+```json
+{
+  "status": "ok",
+  "command": "validate",
+  "reports": [
+    { "ok": true, "errors": 0, "warnings": 0, "findings": [], "profile": "security-engineer", "checkedAt": "…" }
+  ]
+}
+```
+
 ## init
 
 ```bash

@@ -1,10 +1,11 @@
-name: Crew proposal pipeline
+name: Marketplace proposal pipeline (crews & profiles)
 
 # Marketplace submissions are GitHub issues, and this workflow is the gate:
 #
-#   1. VALIDATE — every crew-proposal issue (opened/edited/reopened) gets its
-#      CREW-JSON block extracted and run through the same deterministic
-#      validator the CLI and SPA use (src/crew/validate.ts). A comment
+#   1. VALIDATE — every crew-proposal or profile-proposal issue
+#      (opened/edited/reopened) gets its CREW-JSON or PROFILE-JSON block
+#      extracted and run through the same deterministic validators the CLI and
+#      SPA use (src/crew/validate.ts, src/profiles/validation.ts). A comment
 #      reports the verdict; editing the issue re-runs the check.
 #
 #   2. PUBLISH — a maintainer with write access comments `/publish` on a green
@@ -28,12 +29,14 @@ permissions:
   contents: write
 
 concurrency:
-  group: crew-${{ github.event.issue.number }}
+  group: proposal-${{ github.event.issue.number }}
   cancel-in-progress: false
 
 env:
   JSON_BEGIN: "<!-- CREW-JSON-BEGIN -->"
   JSON_END: "<!-- CREW-JSON-END -->"
+  PROFILE_JSON_BEGIN: "<!-- PROFILE-JSON-BEGIN -->"
+  PROFILE_JSON_END: "<!-- PROFILE-JSON-END -->"
 
 jobs:
   validate:
@@ -48,33 +51,40 @@ jobs:
           cache: npm
       - run: npm ci && npm run build
 
-      - name: Extract crew JSON
+      - name: Extract proposal JSON (crew or profile)
         id: extract
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('node:fs');
-            const { JSON_BEGIN, JSON_END } = process.env;
+            const { JSON_BEGIN, JSON_END, PROFILE_JSON_BEGIN, PROFILE_JSON_END } = process.env;
             const body = context.payload.issue?.body ?? '';
-            const i = body.indexOf(JSON_BEGIN);
-            const j = body.indexOf(JSON_END);
+            // Kind detection: profile markers win if present, else crew markers.
+            const pi = body.indexOf(PROFILE_JSON_BEGIN);
+            const pj = body.indexOf(PROFILE_JSON_END);
+            const isProfile = pi !== -1 && pj > pi;
+            const BEGIN = isProfile ? PROFILE_JSON_BEGIN : JSON_BEGIN;
+            const END = isProfile ? PROFILE_JSON_END : JSON_END;
+            const i = body.indexOf(BEGIN);
+            const j = body.indexOf(END);
+            core.setOutput('itemKind', isProfile ? 'profile' : 'crew');
             if (i === -1 || j === -1 || j <= i) {
-              fs.writeFileSync('/tmp/proposal-crew.json', '');
+              fs.writeFileSync('/tmp/proposal-item.json', '');
               core.setOutput('hasJson', 'false');
               core.setOutput('crewId', '?');
               core.setOutput('crewVersion', '');
               return;
             }
-            const fenced = body.slice(i + JSON_BEGIN.length, j).trim();
+            const fenced = body.slice(i + BEGIN.length, j).trim();
             const m = fenced.match(/```(?:json)?\s*([\s\S]*?)```/);
             const json = (m ? m[1] : fenced).trim();
-            fs.writeFileSync('/tmp/proposal-crew.json', json);
+            fs.writeFileSync('/tmp/proposal-item.json', json);
             core.setOutput('hasJson', 'true');
             let id = '?', version = '';
             try {
-              const crew = JSON.parse(json);
-              id = String(crew.id ?? '?');
-              version = String(crew.version ?? '');
+              const item = JSON.parse(json);
+              id = String(item.id ?? item.profile?.slug ?? '?');
+              version = String(item.version ?? item.profile?.version ?? '');
             } catch { /* keep defaults */ }
             core.setOutput('crewId', id);
             core.setOutput('crewVersion', version);
@@ -85,9 +95,11 @@ jobs:
         run: |
           if node --input-type=module -e "
             import { crewProblems } from './dist/crew/validate.js';
+            import { profileProblems } from './dist/profiles/marketplace.js';
             import fs from 'node:fs';
-            const crew = JSON.parse(fs.readFileSync('/tmp/proposal-crew.json', 'utf8'));
-            const problems = crewProblems(crew);
+            const item = JSON.parse(fs.readFileSync('/tmp/proposal-item.json', 'utf8'));
+            const kind = '${{ steps.extract.outputs.itemKind }}';
+            const problems = kind === 'profile' ? profileProblems(item) : crewProblems(item);
             for (const p of problems) console.error(p);
             process.exit(problems.length === 0 ? 0 : 1);
           " 2>/tmp/problems.txt; then
@@ -105,16 +117,17 @@ jobs:
           script: |
             const hasJson = '${{ steps.extract.outputs.hasJson }}' === 'true';
             const valid = '${{ steps.validate.outputs.valid }}' === 'true';
+            const kind = '${{ steps.extract.outputs.itemKind }}';
             const id = '${{ steps.extract.outputs.crewId }}';
             const version = '${{ steps.extract.outputs.crewVersion }}';
             const problems = `${{ steps.validate.outputs.problems }}`.trim();
             const L = [];
             if (!hasJson) {
-              L.push('❌ **No crew JSON found.** The issue body must contain a `' + process.env.JSON_BEGIN + '` … `' + process.env.JSON_END + '` block with a ```json fence.');
-              L.push('', 'The [builder](https://enzovezzaro.github.io/proagents/app/) generates this automatically.');
+              L.push('❌ **No proposal JSON found.** The issue body must contain a `' + process.env.JSON_BEGIN + '` … `' + process.env.JSON_END + '` block (crew) or `' + process.env.PROFILE_JSON_BEGIN + '` … `' + process.env.PROFILE_JSON_END + '` block (profile) with a ```json fence.');
+              L.push('', 'The [builder](https://enzovezzaro.github.io/proagents/app/) generates crew JSON automatically; profile proposals follow `profiles/security-engineer.json`.');
             } else if (valid) {
-              L.push('✅ **`' + id + '` v' + version + ' passes the deterministic crew validator.**');
-              L.push('', 'Next step: a maintainer reviews the design (permissions, handoffs, MCP), then comments **/publish** on this issue to commit it to the marketplace catalog. Nothing goes live without that review.');
+              L.push('✅ **`' + id + '` v' + version + ' passes the deterministic ' + kind + ' validator.**');
+              L.push('', 'Next step: a maintainer reviews the design' + (kind === 'profile' ? ' (rules, verification, tools)' : ' (permissions, handoffs, MCP)') + ', then comments **/publish** on this issue to commit it to the marketplace catalog. Nothing goes live without that review.');
             } else {
               L.push('❌ **`' + id + '` failed validation**');
               L.push('', '```', problems || 'unknown error — check the workflow log', '```');
@@ -128,12 +141,14 @@ jobs:
             });
 
   publish:
-    # /publish or /close (write access only) acts on a crew-proposal issue.
+    # /publish or /close (write access only) acts on a crew-proposal or
+    # profile-proposal issue.
     if: >-
       github.event_name == 'issue_comment' &&
       github.event.action == 'created' &&
       !github.event.issue.pull_request &&
-      contains(github.event.issue.labels.*.name, 'crew-proposal')
+      (contains(github.event.issue.labels.*.name, 'crew-proposal') ||
+       contains(github.event.issue.labels.*.name, 'profile-proposal'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -178,25 +193,31 @@ jobs:
               body: '🚫 `/' + '${{ steps.gate.outputs.commandName }}' + '` requires write access to this repository.',
             });
 
-      - name: Extract crew JSON
+      - name: Extract proposal JSON
         if: steps.gate.outputs.allowed == 'true' && steps.gate.outputs.command == 'publish'
         id: extract
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('node:fs');
-            const { JSON_BEGIN, JSON_END } = process.env;
+            const { JSON_BEGIN, JSON_END, PROFILE_JSON_BEGIN, PROFILE_JSON_END } = process.env;
             const body = context.payload.issue?.body ?? '';
-            const i = body.indexOf(JSON_BEGIN);
-            const j = body.indexOf(JSON_END);
+            const pi = body.indexOf(PROFILE_JSON_BEGIN);
+            const pj = body.indexOf(PROFILE_JSON_END);
+            const isProfile = pi !== -1 && pj > pi;
+            const BEGIN = isProfile ? PROFILE_JSON_BEGIN : JSON_BEGIN;
+            const END = isProfile ? PROFILE_JSON_END : JSON_END;
+            core.setOutput('itemKind', isProfile ? 'profile' : 'crew');
+            const i = body.indexOf(BEGIN);
+            const j = body.indexOf(END);
             if (i === -1 || j === -1 || j <= i) {
-              fs.writeFileSync('/tmp/proposal-crew.json', '');
+              fs.writeFileSync('/tmp/proposal-item.json', '');
               core.setOutput('hasJson', 'false');
               return;
             }
-            const fenced = body.slice(i + JSON_BEGIN.length, j).trim();
+            const fenced = body.slice(i + BEGIN.length, j).trim();
             const m = fenced.match(/```(?:json)?\s*([\s\S]*?)```/);
-            fs.writeFileSync('/tmp/proposal-crew.json', (m ? m[1] : fenced).trim());
+            fs.writeFileSync('/tmp/proposal-item.json', (m ? m[1] : fenced).trim());
             core.setOutput('hasJson', 'true');
 
       - name: Validate before publish
@@ -205,9 +226,11 @@ jobs:
         run: |
           if node --input-type=module -e "
             import { crewProblems } from './dist/crew/validate.js';
+            import { profileProblems } from './dist/profiles/marketplace.js';
             import fs from 'node:fs';
-            const crew = JSON.parse(fs.readFileSync('/tmp/proposal-crew.json', 'utf8'));
-            const problems = crewProblems(crew);
+            const item = JSON.parse(fs.readFileSync('/tmp/proposal-item.json', 'utf8'));
+            const kind = '${{ steps.extract.outputs.itemKind }}';
+            const problems = kind === 'profile' ? profileProblems(item) : crewProblems(item);
             for (const p of problems) console.error(p);
             process.exit(problems.length === 0 ? 0 : 1);
           " 2>/tmp/problems.txt; then
@@ -237,19 +260,24 @@ jobs:
         if: steps.validate.outputs.valid == 'true'
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          ITEM_KIND: ${{ steps.extract.outputs.itemKind }}
         run: |
           node --input-type=module <<'NODE' > /tmp/publish-out.txt
             import { publishCrew } from "./dist/crew/registry.js";
+            import { publishProfile } from "./dist/profiles/marketplace.js";
             import fs from "node:fs";
-            const crew = JSON.parse(fs.readFileSync("/tmp/proposal-crew.json", "utf8"));
-            const paths = await publishCrew(crew, {
+            const item = JSON.parse(fs.readFileSync("/tmp/proposal-item.json", "utf8"));
+            const kind = process.env.ITEM_KIND;
+            const publish = kind === "profile" ? publishProfile : publishCrew;
+            const paths = await publish(item, {
               repo: process.env.GITHUB_REPOSITORY,
               branch: "main",
               token: process.env.GITHUB_TOKEN,
               authorName: "proagents-marketplace-bot",
               authorEmail: "noreply@github.com",
             });
-            console.log(crew.id + "@" + crew.version);
+            const id = kind === "profile" ? item.profile.slug + "@" + item.profile.version : item.id + "@" + item.version;
+            console.log(id);
             console.log("committed " + paths.itemPath + " and " + paths.catalogPath);
           NODE
           echo "PUBLISHED=$(head -1 /tmp/publish-out.txt)" >> "$GITHUB_ENV"
@@ -276,7 +304,10 @@ jobs:
               repo: context.repo.repo,
               issue_number: context.issue.number,
               state: 'closed',
-              labels: ['crew-proposal', 'published'],
+              labels: [
+                ...context.payload.issue.labels.map((l) => l.name).filter((n) => n.endsWith('-proposal')),
+                'published',
+              ],
             });
 
       - name: Close rejected proposal

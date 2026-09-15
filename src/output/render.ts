@@ -25,9 +25,9 @@ function c(text: string, color: string, opts: RenderOpts): string {
 export function renderBanner(opts: RenderOpts = {}): string {
   return [
     "",
-    c("  ╭─────────────────────────────────────────╮", LIME, opts),
-    c("  │  ⬢ proagent — forge specialized agents  │", CREAM, opts),
-    c("  ╰─────────────────────────────────────────╯", LIME, opts),
+    c("  ╭──────────────────────────────────────────────────╮", LIME, opts),
+    c("  │ ⬢ proagent — professional agent profiles │", CREAM, opts),
+    c("  ╰──────────────────────────────────────────────────╯", LIME, opts),
     "",
   ].join("\n");
 }

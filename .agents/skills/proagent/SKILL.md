@@ -1,37 +1,93 @@
 ---
 name: proagent
-description: Turns an incomplete agent idea into a well-defined, validated multi-agent system through progressive questioning, scoped context retrieval and deterministic architecture generation. Use when the user wants to build, design, architect or improve a specialized AI agent or agent team (e.g. "build me a debugging agent", "create an agent that reviews PRs", "design an agent team for incident response"), when an agent request is vague and needs requirements discovery, or when the user mentions proagent, agent-builder, or asks to generate agent skills or agent specifications.
+description: Equips existing coding agents with professional expertise, methods, rules, tools and verification through Professional Agent Profiles (proagent equip security-engineer), and builds new specialized agent systems from incomplete ideas through progressive questioning. Use when the user wants to give their coding agent a profession or discipline (e.g. "make my agent operate like a security engineer", "equip this repo for accessibility work"), when the user wants to build, design or improve a specialized AI agent or agent team, when an agent request is vague and needs requirements discovery, or when the user mentions proagent, agent-builder, or professional profiles.
 ---
 
-# ProAgent — Building Specialized Agents
+# ProAgent — Professional Profiles & Specialized Agents
 
 ## Overview
 
-Most agent requests start incomplete: "build me a debugging agent" lacks the environment,
-permissions, tools, approval gates and validation criteria that make an agent real. This skill
-closes that gap the same way senior engineers do: ask the highest-value questions first,
-ground answers in real context, and only generate the architecture once the system can defend
-it.
+Coding agents already have intelligence, tools and terminals. What they often lack is a
+**professional operating model**: how a security engineer, an SRE or a staff engineer
+approaches the work, what they refuse to do, and what evidence they produce before
+claiming completion.
 
-The CLI (`proagent`) is the deterministic core: it persists the interview state, detects
-contradictions, scores confidence, validates the architecture and generates agent skills.
-You (the agent operating this skill) bring judgment: you answer its questions from evidence,
-and you decide when its output needs a human conversation instead.
+ProAgents provides two paths:
+
+1. **Equip a profile** (default) — the user's existing coding agent is fine; it needs a
+   profession. `proagent detect` → `proagent equip <slug>` compiles a Professional Agent
+   Profile into the harness's own mechanisms.
+2. **Build a specialized agent** — the professional system doesn't exist yet. The
+   interview (`init` → `question`/`answer` → `spec` → `validate` → `build`) derives it
+   progressively.
+
+The CLI (`proagent`) is the deterministic core: profile registry, composition conflicts,
+validation codes, compilation. You bring judgment: which profession fits, when to ask the
+user, and when its output needs human review.
 
 ## When to Use
 
-- The user asks to **build/design an agent or agent team** ("a debugging agent", "an agent that triages incidents", "a team of agents for code review")
+- The user wants their coding agent to **operate as a professional** ("like a security engineer", "with SRE discipline", "accessibility-first")
+- The user asks to **equip / install a profile** or mentions `proagent equip`
+- The user asks to **build/design an agent or agent team** ("a debugging agent", "a team for incident response")
 - An agent request is **underspecified** and would otherwise be filled with silent assumptions
-- The user wants **agent skills generated** from requirements (`.agents/skills/<name>/SKILL.md`)
-- The user wants to **validate or improve an existing agent setup** (permissions, approval gates, capability gaps)
 
 **When NOT to use:**
 
-- The task is ordinary software engineering with no agent component
-- The user just wants a prompt or persona written (no runtime contract, permissions, or validation)
+- Ordinary software engineering with no profession or agent component
+- The user just wants a prompt or persona written (no profile structure, rules, or verification)
 - Pure information requests about this repository
 
-## Core Workflow
+## Path 1 — Equip a profile (start here by default)
+
+### 1. Detect the environment
+
+```bash
+proagent detect --json
+```
+
+- Returns `{ primary, harnesses[] }` with per-harness `capabilities`
+  (projectInstructions, skills, mcp, ruleEnforcement, shell, git) and `evidence`.
+- Use `primary.id` as the compile target unless the user names a different harness.
+
+### 2. Pick the profession
+
+```bash
+proagent list --json                    # slugs + descriptions
+proagent inspect <slug> --json          # full manifest: expertise, methods, rules, verification
+```
+
+- Choose from what the user asked for ("security" → `security-engineer`), or inspect and
+  propose the closest match. If two professions apply, propose composing them (step 3).
+- If nothing fits, the user can drop a JSON into `./profiles/` — say so, don't improvise a
+  fake profile in the conversation.
+
+### 3. Equip
+
+```bash
+proagent equip <slug> [slug…] --json            # detected harness
+proagent equip <slug> --target codex --json     # explicit harness
+proagent equip <slug> --dry-run --json          # plan without writing
+```
+
+- The response reports `files[]` (path + mechanism), `limitations[]` and `profile`.
+- **Composition conflicts (`PA022`/`PA023`) block with non-zero exit and `status:"blocked"`.**
+  Surface the conflict and the suggestion to the user — never work around it by editing
+  profiles behind their back.
+- `limitations[]` are honest reports (e.g. no native rule enforcement). Repeat them to the
+  user; do not claim enforcement the harness cannot provide.
+
+### 4. Verify the equip
+
+```bash
+proagent validate --profiles --json
+```
+
+- All shipped profiles must pass. Local profiles appear with a local-source notice (PA037).
+- Then confirm in the target harness: instructions block present once (idempotent markers),
+  skill present under `.agents/skills/<slug>/SKILL.md`.
+
+## Path 2 — Build a specialized agent
 
 ### 1. Start (or resume) the interview
 
@@ -51,58 +107,64 @@ proagent answer q_001 "..." --json
 ```
 
 - **Answer from evidence, not invention**: look in the repository, docs, or ask the user.
-  If a question can be answered from the codebase (frameworks, environments, existing tools),
-  answer from what you find — cite it in the answer text.
 - **One question at a time**: each answer changes the next derived question. Batching breaks the derivation.
 - If a question is genuinely the user's to answer (risk tolerance, approval policy, scope),
   ask the user — do not guess on their behalf.
-- The engine flags contradictions (`CONFLICTING_REQUIREMENTS`); a resolution question appears.
-  Resolve it explicitly; never silently overwrite an earlier requirement.
+- Contradictions surface as `CONFLICTING_REQUIREMENTS`; resolve via the `q_resolve_*` question,
+  never silently.
 
 ### 3. Ground in context (information firewall)
 
 ```bash
 proagent context frameworks                                       # what's available
 proagent context "<task>" --context-framework filesystem --json   # scoped retrieval
-proagent context "<task>" --context-framework agents-code-context --json
 ```
 
-- Context responses carry `confidence`, `provenance` and `stale` metadata — treat them as
-  derived knowledge, not ground truth. The source code remains authoritative.
-- Prefer scoped retrieval over repository dumps. Raw source is an escalation, not a default.
+- Context responses carry `confidence`, `provenance` and `stale` metadata — derived
+  knowledge, not ground truth. The source code remains authoritative.
 
-### 4. Check readiness before generating
-
-```bash
-proagent status --json
-```
-
-- `NEEDS_INFORMATION` → keep answering (high-impact questions remain).
-- `CONFLICTING_REQUIREMENTS` → resolve via the `q_resolve_*` question.
-- `INSUFFICIENT_CONTEXT` → add context sources or answer more.
-- `READY` → proceed to spec.
-
-### 5. Generate, validate, build
+### 4. Reach READY, then generate
 
 ```bash
+proagent status --json        # NEEDS_INFORMATION → keep answering; READY → proceed
 proagent spec --json          # agent architecture (agents, graph, runtime requirements)
 proagent validate             # deterministic checks (cycles, orphans, permission conflicts)
 proagent build                # writes .agents/skills/<agent>/SKILL.md + agent.json
 ```
 
 - `build` refuses to emit skills when validation fails — fix findings first.
-- It also reports **runtime capability gaps** (e.g. multi-agent required but the current
-  runtime is single-agent). Surface these honestly; generated skills include fallbacks.
+- It reports **runtime capability gaps** honestly; surface them, never paper over them.
 
 ## Reading the Output
 
-- `spec --json` returns the full architecture: `agents[]`, `edges[]` (handoffs/delegation with
-  named artifacts), `team`, `runtime`, optional `selfImprovement`.
-- Generated skills follow progressive disclosure: `SKILL.md` (workflow) +
+- Profile commands are JSON-first: `detect`, `list`, `inspect`, `equip`, `compile`,
+  `validate --profiles` all accept `--json`.
+- Equipping writes real files: `.agents/skills/<profile>/SKILL.md` plus a marked
+  `proagent:profile` block in the harness's instructions file (`CLAUDE.md`, `AGENTS.md`, …).
+- Generated agent skills follow progressive disclosure: `SKILL.md` (workflow) +
   `references/permissions.md` (normative) + `agent.json` (machine contract).
-- Markdown is **not enforcement**. Permissions live in tool/runtime boundaries.
+- Markdown is **not enforcement**. Rules compile into runtime boundaries where the harness
+  supports it (hooks, policies); where it doesn't, `limitations[]` says so.
 
 ## Examples
+
+**"Make my agent work like a security engineer"**
+
+```
+→ proagent detect --json                       # claude-code, skills+hooks available
+→ proagent inspect security-engineer --json    # matches the ask
+→ proagent equip security-engineer --json
+→ files: SKILL.md + CLAUDE.md block + settings.json hooks
+→ tell the user: restart the harness session so the profile loads
+```
+
+**"We also care deeply about performance"**
+
+```
+→ proagent equip security-engineer performance-engineer --json
+→ PA025 warning (benchmark verification) reported, equip succeeds
+→ surface the warning; no silent composition
+```
 
 **Vague request → defined system**
 
@@ -111,42 +173,34 @@ User: "build me an agent that fixes bugs"
 → proagent init --intent "agent that fixes bugs" --json
 → engine derives: which environments? write access? approval gates?
 → answer from repo: TypeScript monorepo, Kubernetes, PR-based flow
-→ contradiction found: "auto-fix everything" vs "humans approve merges"
-→ resolved: auto-fix in working tree, human approval before merge
+→ contradiction: "auto-fix everything" vs "humans approve merges" → resolved explicitly
 → proagent spec/validate/build → researcher/implementer/reviewer skills
-```
-
-**Existing repo grounding**
-
-```
-proagent init --intent "incident triage agent" --context ./docs --context-framework filesystem --json
-proagent context "where do incident runbooks live" --context-framework filesystem --json
-→ answer questions from the runbooks found, citing them
 ```
 
 ## Anti-rationalization
 
 | Temptation | Reality |
 |---|---|
+| "The request is clear, skip detect" | Capabilities differ per harness; equipping blind writes weak fallbacks. |
+| "Compose profiles without checking conflicts" | Conflicting rules must block, not silently merge. `PA022` exists for a reason. |
 | "The intent is clear enough, skip the interview" | If you can't state the permission model and validation criteria, it isn't clear. |
-| "I'll answer questions myself to save time" | Guessing bakes wrong assumptions into a generated runtime contract. Ask the user when it's their call. |
-| "Answer three questions in one batch" | Question N+1 is derived from answer N. Batching destroys derivation quality. |
-| "Skip validate, the spec looks right" | Validation catches cycles, orphaned agents and unapproved production write — things prose review misses. |
+| "I'll answer questions myself to save time" | Guessing bakes wrong assumptions into a generated runtime contract. |
 | "Treat context output as fact" | Context is derived, possibly stale, probabilistic. Source code is authoritative. |
-| "Markdown permissions are enough" | Markdown informs; runtime boundaries enforce. Generated skills say this explicitly. |
+| "Markdown permissions are enough" | Markdown informs; runtime boundaries enforce. Limitations are reported, not hidden. |
 
 ## Verification
 
-- [ ] Session started with the user's intent captured near-verbatim in `status --json`
-- [ ] Questions answered one at a time, from evidence or the user — not invented
-- [ ] Any `CONFLICTING_REQUIREMENTS` resolved with an explicit resolution question
-- [ ] Context retrieved scoped (with provenance), not dumped wholesale
-- [ ] `proagent validate` passes before `build`
-- [ ] Runtime capability gaps surfaced to the user when present
-- [ ] Generated skills exist at `.agents/skills/<agent>/SKILL.md` with `agent.json` beside them
+- [ ] `detect --json` run before the first equip; target matches the user's harness
+- [ ] Profile chosen from `list`/`inspect`, or user-provided — not invented
+- [ ] `equip --json` output shown to the user, including `limitations[]` and any `PA02x` warnings
+- [ ] Composition conflicts (blocked equips) surfaced with suggestions, never bypassed
+- [ ] `validate --profiles` passes after equipping
+- [ ] Interview path (when used): questions answered one at a time from evidence or the user
+- [ ] `proagent validate` passes before `build`; runtime gaps surfaced when present
 
 ## References
 
+- `references/profiles.md` — profile schema, composition conflicts, validation codes
 - `references/questioning.md` — interview technique and question-value model
 - `references/context.md` — context frameworks, adapters, and the firewall principle
 - `references/architecture.md` — spec schema, agent graph, validation codes

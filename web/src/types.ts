@@ -1,4 +1,26 @@
-/** Marketplace SPA types — mirror src/crew/types.ts (kept in sync manually). */
+/** Marketplace SPA types — mirror src/crew/types.ts and src/profiles/types.ts (kept in sync manually). */
+
+/** Mirror of src/profiles/types.ts ProfileManifest — profile catalog items. */
+export interface ProfileManifest {
+  version: string;
+  profile: {
+    name: string;
+    slug: string;
+    version: string;
+    description?: string;
+    author?: string;
+    tags?: string[];
+  };
+  identity: { title: string; summary?: string };
+  expertise: string[];
+  knowledge?: string[];
+  methods?: string[];
+  skills?: string[];
+  rules?: string[];
+  standards?: string[];
+  tools: { required: string[]; optional?: string[]; forbidden?: string[] };
+  verification: { required: string[]; optional?: string[] };
+}
 
 export interface CrewPermissions {
   read: "none" | "repo" | "scoped" | "world";
@@ -66,7 +88,7 @@ export interface MarketplaceItem {
   description: string;
   author: string;
   tags: string[];
-  kind: "crew" | "agent";
+  kind: "profile" | "crew" | "agent";
   downloads: number;
   createdAt: string;
   updatedAt: string;

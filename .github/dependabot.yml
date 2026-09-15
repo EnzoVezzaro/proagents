@@ -1,0 +1,38 @@
+# Dependency audit — one PR per ecosystem, grouped to keep review noise low.
+# All dependencies are runtime-light by design (the CLI ships `yaml` only);
+# this watch keeps supply-chain risk visible without daily churn.
+
+version: 2
+updates:
+  # npm: production + tooling deps, weekly
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      npm-tooling:
+        applies-to: version-updates
+        dependency-type: "development"
+    labels:
+      - "dependencies"
+    open-pull-requests-limit: 5
+
+  # Marketplace SPA
+  - package-ecosystem: "npm"
+    directory: "/web"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "marketplace"
+    open-pull-requests-limit: 5
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "ci"
+    open-pull-requests-limit: 5
