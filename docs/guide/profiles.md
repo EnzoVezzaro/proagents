@@ -208,6 +208,17 @@ proagent equip my-profession
 Local profiles shadow built-ins with the same slug (last discovery wins) and are flagged
 during `validate --profiles` so you always know what is shipped vs. local.
 
+Or install a profile from the Git-backed marketplace catalog — the same resolver the CLI
+uses for built-ins, with catalog items filling gaps only:
+
+```bash
+proagent profile list                    # the profile slice of the catalog
+proagent profile install <id>            # resolve + validate + equip
+```
+
+`proagent equip <id>` is the same pipeline with a shorter name. To contribute a profile,
+see [Adding a listing to the catalog](/guide/marketplace#adding-a-listing-to-the-catalog).
+
 ## From professional agents to specialized agent systems
 
 Profiles also feed larger systems: a crew's workers can each carry their own professional
