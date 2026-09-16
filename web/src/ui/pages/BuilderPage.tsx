@@ -35,7 +35,9 @@ function newWorker(index: number, profile?: string): CrewWorker {
     description: "",
     permissions: { read: "repo", write: "none", production: "none", secrets: "none", tools: [], approvalGates: [] },
     mcpServers: [],
-    context: [{ framework: "filesystem", scope: "" }],
+    // Start with no context rows: an empty placeholder row ships as silent
+    // garbage (a filesystem binding with no scope). Add rows deliberately.
+    context: [],
     instructions: "",
     receivesFrom: [],
     emits: [],
@@ -51,7 +53,11 @@ function validate(crew: CrewDefinition): string[] {
   if (!crew.name) problems.push("Crew name is required.");
   if (!/^\d+\.\d+\.\d+/.test(crew.version)) problems.push("Version must be semver.");
   if (!crew.description) problems.push("Description is required.");
+  if (!crew.author) problems.push("Author is required (your GitHub handle).");
   if (crew.workers.length === 0) problems.push("Add at least one worker.");
+  const nameCount = new Map<string, number>();
+  for (const s of crew.mcpServers) nameCount.set(s.name, (nameCount.get(s.name) ?? 0) + 1);
+  for (const [n, c] of nameCount) if (c > 1) problems.push(`Duplicate MCP server name: "${n}".`);
   const ids = new Set<string>();
   for (const w of crew.workers) {
     if (!w.id || !idOk.test(w.id)) problems.push(`Worker "${w.id}": id must be a lowercase slug.`);
@@ -144,7 +150,18 @@ export function BuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
   };
 
   const exportJson = () => {
-    const blob = new Blob([JSON.stringify(crew, null, 2)], { type: "application/json" });
+    // Downloading an invalid spec just ships the problem downstream (the CLI
+    // rejects it on the next step) — validate first and surface problems.
+    const errs = validate(crew);
+    setProblems(errs);
+    if (errs.length > 0) return;
+    // Drop context bindings with no scope — an empty placeholder row would
+    // ship a meaningless binding (and older drafts still carry one).
+    const clean: CrewDefinition = {
+      ...crew,
+      workers: crew.workers.map((w) => ({ ...w, context: w.context.filter((c) => (c.scope ?? "").trim() !== "") })),
+    };
+    const blob = new Blob([JSON.stringify(clean, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -439,12 +456,25 @@ function McpTab(props: { crew: CrewDefinition; update: (p: Partial<CrewDefinitio
   const { crew, update } = props;
   const setServer = (name: string, patch: Partial<CrewMcpServer>) =>
     update({ mcpServers: crew.mcpServers.map((m) => (m.name === name ? { ...m, ...patch } : m)) });
+  // Renaming must move every worker reference too — the name IS the key
+  // workers bind to, and "server-1" leaking into .mcp.json is useless.
+  const renameServer = (oldName: string, raw: string) => {
+    const name = raw.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "");
+    if (!name || name === oldName) return;
+    update({
+      mcpServers: crew.mcpServers.map((m) => (m.name === oldName ? { ...m, name } : m)),
+      workers: crew.workers.map((w) => ({ ...w, mcpServers: w.mcpServers.map((s) => (s === oldName ? name : s)) })),
+    });
+  };
   return (
     <div style={{ display: "grid", gap: 14 }}>
       {crew.mcpServers.map((m) => (
         <Card key={m.name}>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <strong>{m.name}</strong>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 10, alignItems: "end" }}>
+            <div>
+              <label style={{ ...label, marginTop: 0 }}>Server name — workers bind to this (lowercase slug)</label>
+              <input style={field} value={m.name} onChange={(e) => renameServer(m.name, e.target.value)} aria-label={`MCP server name (${m.name})`} />
+            </div>
             <button onClick={() => update({ mcpServers: crew.mcpServers.filter((x) => x.name !== m.name) })} style={{ background: "none", border: "none", color: "#ff7b72", cursor: "pointer", fontSize: 13 }}>remove</button>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 10 }}>
@@ -540,7 +570,7 @@ function ShipTab(props: {
       setCopied("");
     }
   };
-  const cliCommand = `proagent crew build ./crew.json --file ${crew.id || "my-crew"}.json`;
+  const cliCommand = `proagent crew build . --file ${crew.id || "my-crew"}.json`;
   return (
     <div style={{ display: "grid", gap: 14 }}>
       {problems && problems.length > 0 && (
