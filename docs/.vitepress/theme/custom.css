@@ -33,7 +33,9 @@
   --vp-c-brand-3: var(--pa-blue);
   --vp-c-brand-soft: rgba(0, 72, 228, 0.12);
 
-  --vp-font-family-base: "Inter", ui-sans-serif, system-ui, -apple-system,
+  /* Same stack as the marketplace SPA (web/src/ui/AppShell.tsx) — one product,
+   * one voice; also drops VitePress's default Inter webfont. */
+  --vp-font-family-base: ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
   --vp-font-family-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo,
     Consolas, monospace;
@@ -156,13 +158,40 @@ html.dark {
 
 /* ---------------------------------------------------------------------------
  * Brand gradient on primary buttons (background-image slot — see token note
- * above). Hover lifts to the brighter gradient.
+ * above). Hover lifts to the brighter gradient. Radius + weight match the
+ * SPA's buttons (8–9px rounded rects, semibold) instead of VitePress pills.
  * ------------------------------------------------------------------------ */
+.VPButton {
+  border-radius: 9px;
+  font-weight: 600;
+}
 .VPButton.brand {
   background-image: var(--pa-grad);
 }
 .VPButton.brand:hover {
   background-image: linear-gradient(120deg, #2e6bff 0%, #5a3bea 55%, #6b35f2 100%);
+}
+
+/* Hero name is the wordmark: the brand gradient, as on the logo lockup and the
+ * SPA's gradText. Gradient text via background-clip, with solid blue as the
+ * no-clip fallback. */
+.VPHero .name {
+  color: var(--pa-blue);
+  background-image: var(--pa-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Feature cards share the SPA's card family: 10px radius, tinted hairline. */
+.VPFeature {
+  border-radius: 10px;
+}
+
+/* Keyboard focus ring — visible, brand cyan, same as the SPA's global rule. */
+:focus-visible {
+  outline: 2px solid var(--pa-cyan-bright);
+  outline-offset: 2px;
 }
 
 /* ---------------------------------------------------------------------------
