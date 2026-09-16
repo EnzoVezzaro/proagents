@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import type { AppCtx } from "../AppShell.js";
 import { ErrorNote } from "../cards.js";
 import { emptyProfile, slugify, type ProfileManifest } from "../../types.js";
@@ -37,10 +37,33 @@ function validate(p: ProfileManifest): string[] {
 
 export function ProfileBuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
   const { settings, navigate } = props.ctx;
-  const [profile, setProfile] = useState<ProfileManifest>(() => emptyProfile());
+  const [profile, setProfile] = useState<ProfileManifest>(() => {
+    // Restore an in-progress draft across reloads/accidental navigation.
+    try {
+      const raw = sessionStorage.getItem("proagents-profile-draft");
+      if (raw) return JSON.parse(raw) as ProfileManifest;
+    } catch { /* ignore */ }
+    return emptyProfile();
+  });
   const [tab, setTab] = useState<"identity" | "expertise" | "boundaries" | "ship">("identity");
   const [problems, setProblems] = useState<string[] | null>(null);
   const [publishState, setPublishState] = useState("");
+
+  const draftKey = "proagents-profile-draft";
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(draftKey, JSON.stringify(profile));
+    } catch { /* storage unavailable */ }
+  }, [profile]);
+
+  const startOver = () => {
+    if (!window.confirm("Discard this draft and start a new profile?")) return;
+    try { sessionStorage.removeItem(draftKey); } catch { /* ignore */ }
+    setProfile(emptyProfile());
+    setTab("identity");
+    setProblems(null);
+    setPublishState("");
+  };
 
   const update = (patch: Partial<ProfileManifest>) => setProfile((p) => ({ ...p, ...patch }));
 
@@ -90,12 +113,15 @@ export function ProfileBuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
         workers can carry it as their profession.
       </p>
 
-      <div style={{ display: "flex", gap: 6, margin: "20px 0", flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: 6, margin: "20px 0", flexWrap: "wrap", alignItems: "center" }}>
         {tabs.map(([id, label]) => (
           <button key={id} onClick={() => setTab(id)} style={{ ...(id === tab ? btn : btnGhost), background: id === tab ? "var(--lime)" : "transparent", color: id === tab ? "#000" : "var(--cream-dim)" }}>
             {label}
           </button>
         ))}
+        <button onClick={startOver} style={{ ...btnGhost, marginLeft: "auto", color: "#ff7b72", borderColor: "#ff7b72" }}>
+          Start over
+        </button>
       </div>
 
       {tab === "identity" && <IdentityTab profile={profile} update={update} />}
@@ -127,6 +153,10 @@ function IdentityTab(props: { profile: ProfileManifest; update: (p: Partial<Prof
         <div>
           <label style={label}>Tags (comma-separated)</label>
           <input style={field} value={(p.tags ?? []).join(", ")} onChange={(e) => update({ profile: { ...p, tags: e.target.value.split(",").map((t) => t.trim()).filter(Boolean) } })} />
+        </div>
+        <div>
+          <label style={label}>Author (GitHub handle)</label>
+          <input style={field} value={p.author ?? ""} onChange={(e) => update({ profile: { ...p, author: e.target.value } })} placeholder="your-github-handle" />
         </div>
       </div>
       <label style={label}>Identity summary — how should the agent operate?</label>

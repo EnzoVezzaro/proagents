@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import type { CrewDefinition } from "../crew/types.js";
 import { CrewError } from "../crew/types.js";
-import { crewProblems } from "../crew/validate.js";
+import { crewProblems, crewWarnings } from "../crew/validate.js";
 import { installCrew, planInstall, mergeMcpConfig, crewSkillMarkdown } from "../crew/install.js";
 import { readCatalogRemote, fetchCrewDefinition, publishCrew } from "../crew/registry.js";
 import type { GitHubCommitTarget } from "../crew/registry.js";
@@ -211,10 +211,12 @@ async function crewValidate(file: string | undefined, json: boolean): Promise<vo
     fail(`not valid JSON: ${(err as Error).message}`);
   }
   const problems = crewProblems(crew);
+  const warnings = crewWarnings(crew);
   if (problems.length > 0) process.exitCode = 1; // non-zero even in --json mode
-  if (json) return jsonOut({ status: problems.length === 0 ? "ok" : "invalid", crew: crew.id, version: crew.version, problems });
+  if (json) return jsonOut({ status: problems.length === 0 ? "ok" : "invalid", crew: crew.id, version: crew.version, problems, warnings });
   if (problems.length === 0) {
     console.log(`✓ Crew "${crew.id}" v${crew.version} is valid (${crew.workers.length} workers, ${crew.mcpServers.length} MCP servers).`);
+    for (const w of warnings) console.log(`  ⚠ ${w}`);
     return;
   }
   console.error(`✗ Crew "${crew.id}" is invalid:`);

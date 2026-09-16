@@ -10,6 +10,9 @@ import { CrewError } from "./types.js";
 const ID_PATTERN = /^[a-z0-9][a-z0-9-]*[a-z0-9]$/;
 const SEMVER_PATTERN = /^\d+\.\d+\.\d+(?:[-+][\w.-]+)?$/;
 
+/** Frameworks with builtin context adapters. Others are assumed external adapters. */
+export const BUILTIN_FRAMEWORKS = ["filesystem", "git", "acc"];
+
 const READ_LEVELS = ["none", "repo", "scoped", "world"];
 const WRITE_LEVELS = ["none", "repo", "scoped"];
 const PROD_LEVELS = ["none", "read", "write"];
@@ -83,6 +86,15 @@ export function crewProblems(crew: CrewDefinition): string[] {
       }
     }
     if (!Array.isArray(w.context)) problems.push(`worker ${w.id}: context must be an array`);
+    else {
+      for (const c of w.context) {
+        if (!c || typeof c !== "object") {
+          problems.push(`worker ${w.id}: context entries must be objects`);
+        } else if (!c.framework || !ID_PATTERN.test(c.framework)) {
+          problems.push(`worker ${w.id}: context.framework must be a lowercase slug (builtin: filesystem | git | acc, or an adapter id) — got "${c?.framework ?? ""}"`);
+        }
+      }
+    }
     if (!Array.isArray(w.receivesFrom)) problems.push(`worker ${w.id}: receivesFrom must be an array`);
     else {
       for (const upstream of w.receivesFrom) {
@@ -172,6 +184,24 @@ export function crewProblems(crew: CrewDefinition): string[] {
   }
 
   return problems;
+}
+
+/**
+ * Non-blocking findings: things that are syntactically valid but suspicious
+ * (e.g. a context.framework that is not a known builtin — allowed because
+ * frameworks are extensible via adapters, but worth a human look before
+ * publishing). Complements crewProblems, which is strictly blocking.
+ */
+export function crewWarnings(crew: CrewDefinition): string[] {
+  const warnings: string[] = [];
+  for (const w of crew.workers ?? []) {
+    for (const c of w.context ?? []) {
+      if (c?.framework && !BUILTIN_FRAMEWORKS.includes(c.framework)) {
+        warnings.push(`worker ${w.id}: context.framework "${c.framework}" is not a builtin (${BUILTIN_FRAMEWORKS.join(" | ")}) — make sure it names an installed context adapter, not an artifact or field name`);
+      }
+    }
+  }
+  return warnings;
 }
 
 export function validateCrewOrThrow(crew: CrewDefinition): void {

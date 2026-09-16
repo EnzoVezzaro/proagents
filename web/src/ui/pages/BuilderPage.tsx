@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import type { AppCtx } from "../AppShell.js";
 import { ErrorNote } from "../cards.js";
 import {
@@ -66,6 +66,11 @@ function validate(crew: CrewDefinition): string[] {
     for (const m of w.mcpServers) {
       if (!crew.mcpServers.some((s) => s.name === m)) problems.push(`Worker "${w.id}" references unknown MCP server "${m}".`);
     }
+    for (const c of w.context) {
+      if (c.framework && !["filesystem", "git", "acc"].includes(c.framework)) {
+        problems.push(`Worker "${w.id}": context framework "${c.framework}" is not a builtin (filesystem | git | acc). Did you mean an artifact or a scope? Frameworks name the retrieval adapter.`);
+      }
+    }
   }
   for (const w of crew.workers) {
     for (const up of w.receivesFrom) {
@@ -87,13 +92,20 @@ function validate(crew: CrewDefinition): string[] {
 export function BuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
   const { settings, navigate } = props.ctx;
   const [crew, setCrew] = useState<CrewDefinition>(() => {
-    // A draft from the build-entry (repo analysis) lands here via sessionStorage.
+    // A draft from the build-entry (repo analysis) lands here via sessionStorage;
+    // otherwise restore the in-progress draft so reloads don't lose work.
     try {
-      const raw = sessionStorage.getItem("proagents-builder-draft");
-      if (raw) {
+      const incoming = sessionStorage.getItem("proagents-builder-draft");
+      if (incoming) {
         sessionStorage.removeItem("proagents-builder-draft");
-        const parsed = JSON.parse(raw) as CrewDefinition;
+        sessionStorage.removeItem("proagents-crew-draft");
+        const parsed = JSON.parse(incoming) as CrewDefinition;
         if (parsed && Array.isArray(parsed.workers) && parsed.workers.length > 0) return parsed;
+      }
+      const saved = sessionStorage.getItem("proagents-crew-draft");
+      if (saved) {
+        const parsed = JSON.parse(saved) as CrewDefinition;
+        if (parsed && Array.isArray(parsed.workers)) return parsed;
       }
     } catch {
       /* fall through to empty */
@@ -110,9 +122,26 @@ export function BuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
   const [problems, setProblems] = useState<string[] | null>(null);
   const [publishState, setPublishState] = useState<string>("");
 
+  // Draft persistence — a reload or accidental navigation must not lose work.
+  const draftKey = "proagents-crew-draft";
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(draftKey, JSON.stringify(crew));
+    } catch { /* storage unavailable */ }
+  }, [crew]);
+
   const update = (patch: Partial<CrewDefinition>) => setCrew((c) => ({ ...c, ...patch, updatedAt: new Date().toISOString() }));
   const updateWorker = (id: string, patch: Partial<CrewWorker>) =>
     setCrew((c) => ({ ...c, workers: c.workers.map((w) => (w.id === id ? { ...w, ...patch } : w)) }));
+
+  const startOver = () => {
+    if (!window.confirm("Discard this draft and start a new crew?")) return;
+    try { sessionStorage.removeItem(draftKey); sessionStorage.removeItem("proagents-builder-draft"); } catch { /* ignore */ }
+    setCrew(emptyCrew(crew.author));
+    setTab("identity");
+    setProblems(null);
+    setPublishState("");
+  };
 
   const exportJson = () => {
     const blob = new Blob([JSON.stringify(crew, null, 2)], { type: "application/json" });
@@ -170,12 +199,15 @@ export function BuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
         (Claude Code, Codex, …) executes it. The CLI hands the spec over: <code>npx proagent crew install</code>.
       </p>
 
-      <div style={{ display: "flex", gap: 6, margin: "20px 0", flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: 6, margin: "20px 0", flexWrap: "wrap", alignItems: "center" }}>
         {tabs.map(([id, label]) => (
           <button key={id} onClick={() => setTab(id)} style={{ ...(id === tab ? btn : btnGhost), background: id === tab ? "var(--lime)" : "transparent", color: id === tab ? "#000" : "var(--cream-dim)" }}>
             {label}
           </button>
         ))}
+        <button onClick={startOver} style={{ ...btnGhost, marginLeft: "auto", color: "#ff7b72", borderColor: "#ff7b72" }}>
+          Start over
+        </button>
       </div>
 
       {tab === "identity" && <IdentityTab crew={crew} update={update} />}
@@ -345,15 +377,21 @@ function WorkersTab(props: {
             </div>
           </div>
 
-          <label style={label}>Emits (named artifacts, comma-separated)</label>
-          <input style={field} value={w.emits.join(", ")} onChange={(e) => updateWorker(w.id, { emits: e.target.value.split(",").map((t) => t.trim()).filter(Boolean) })} />
+          <label style={label}>Emits — artifacts this worker hands downstream (comma-separated)</label>
+          <input style={field} value={w.emits.join(", ")} onChange={(e) => updateWorker(w.id, { emits: e.target.value.split(",").map((t) => t.trim()).filter(Boolean) })} placeholder="e.g. draft-docs, review-notes" />
 
-          <label style={label}>Context bindings</label>
+          <label style={label}>Context bindings — where this worker retrieves knowledge (NOT artifacts)</label>
           {w.context.map((c, ci) => (
             <div key={ci} style={{ display: "grid", gridTemplateColumns: "160px 1fr 32px", gap: 8, marginBottom: 6 }}>
-              <input style={field} value={c.framework} onChange={(e) => updateWorker(w.id, { context: w.context.map((x, xi) => (xi === ci ? { ...x, framework: e.target.value } : x)) })} placeholder="filesystem | git | acc" />
-              <input style={field} value={c.scope ?? ""} onChange={(e) => updateWorker(w.id, { context: w.context.map((x, xi) => (xi === ci ? { ...x, scope: e.target.value } : x)) })} placeholder="scope, e.g. src/auth/**" />
-              <button onClick={() => updateWorker(w.id, { context: w.context.filter((_, xi) => xi !== ci) })} style={{ ...btnGhost, padding: "6px" }}>✕</button>
+              <div>
+                <label style={{ ...label, marginTop: 0 }}>Framework</label>
+                <input style={field} value={c.framework} onChange={(e) => updateWorker(w.id, { context: w.context.map((x, xi) => (xi === ci ? { ...x, framework: e.target.value } : x)) })} placeholder="filesystem | git | acc" aria-label={`Worker ${w.id} context framework ${ci + 1}`} />
+              </div>
+              <div>
+                <label style={{ ...label, marginTop: 0 }}>Scope</label>
+                <input style={field} value={c.scope ?? ""} onChange={(e) => updateWorker(w.id, { context: w.context.map((x, xi) => (xi === ci ? { ...x, scope: e.target.value } : x)) })} placeholder="scope, e.g. src/auth/**" aria-label={`Worker ${w.id} context scope ${ci + 1}`} />
+              </div>
+              <button onClick={() => updateWorker(w.id, { context: w.context.filter((_, xi) => xi !== ci) })} style={{ ...btnGhost, padding: "6px", alignSelf: "end" }}>✕</button>
             </div>
           ))}
           <button onClick={() => updateWorker(w.id, { context: [...w.context, { framework: "filesystem", scope: "" }] as CrewContext[] })} style={{ ...btnGhost, marginTop: 4 }}>
@@ -378,8 +416,8 @@ function WorkersTab(props: {
               </div>
             ))}
           </div>
-          <label style={label}>Tools (comma-separated)</label>
-          <input style={field} value={w.permissions.tools.join(", ")} onChange={(e) => updateWorker(w.id, { permissions: { ...w.permissions, tools: e.target.value.split(",").map((t) => t.trim()).filter(Boolean) } })} />
+          <label style={label}>Tools — allowlist for this worker (comma-separated)</label>
+          <input style={field} value={w.permissions.tools.join(", ")} onChange={(e) => updateWorker(w.id, { permissions: { ...w.permissions, tools: e.target.value.split(",").map((t) => t.trim()).filter(Boolean) } })} placeholder="e.g. filesystem, shell, git" aria-label={`Worker ${w.id} tool allowlist`} />
 
           <label style={label}>Extra instructions — optional with a profession (SKILL.md body)</label>
           <textarea
