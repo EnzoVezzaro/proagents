@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { crewProblems, validateCrewOrThrow } from "../../src/crew/validate.js";
+import { crewProblems, crewWarnings, validateCrewOrThrow } from "../../src/crew/validate.js";
 import { installCrew, planInstall, mergeMcpConfig, crewSkillMarkdown } from "../../src/crew/install.js";
 import { readCatalogLocal, emptyCatalog } from "../../src/crew/registry.js";
 import { CrewError } from "../../src/crew/types.js";
@@ -405,5 +405,69 @@ describe("CREW-PROFILE — profile-backed workers", () => {
     const skill = fs.readFileSync(path.join(root, ".agents", "crews", "plain", "workers", "sec", "SKILL.md"), "utf8");
     expect(skill).toContain("Do the job.");
     expect(skill).not.toContain("Profession:**");
+  });
+
+  it("CREW-PROFILE-006: an empty profile slug is treated as no profile (instructions still required)", () => {
+    const crew = {
+      id: "empty-slug", name: "Empty", version: "1.0.0", description: "d", author: "a", tags: [],
+      workers: [{ ...baseWorker, profile: "" }],
+      mcpServers: [], handoffs: [], entryPoints: ["sec"],
+      createdAt: "2026-01-01", updatedAt: "2026-01-01",
+    } as unknown as CrewDefinition;
+    expect(crewProblems(crew).join(" ")).toContain("instructions are required");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// CREW-WARN — non-blocking warnings (the dogfood context-framework guard)
+// ---------------------------------------------------------------------------
+
+describe("CREW-WARN — crewWarnings (non-blocking findings)", () => {
+  const baseWorker = {
+    id: "sec", name: "Security worker", role: "reviewer", description: "Reviews changes",
+    permissions: { read: "repo" as const, write: "none" as const, production: "none" as const, secrets: "none" as const, tools: [] },
+    mcpServers: [], context: [] as unknown[], receivesFrom: [], emits: [],
+  };
+
+  function crewWithContext(framework: string): CrewDefinition {
+    return {
+      id: "warn-crew", name: "Warn", version: "1.0.0", description: "d", author: "a", tags: [],
+      workers: [{ ...baseWorker, instructions: "Do the job.", context: [{ framework, scope: "src/**" }] }],
+      mcpServers: [], handoffs: [], entryPoints: ["sec"],
+      createdAt: "2026-01-01", updatedAt: "2026-01-01",
+    } as unknown as CrewDefinition;
+  }
+
+  it("CREW-WARN-001: a non-builtin context.framework is lexically valid but warns (artifact leak shape)", () => {
+    // The exact dogfood bug: an artifact name ("draft-docs") typed into the
+    // framework field. Must NOT block (frameworks are extensible via adapters)
+    // but must produce a warning naming the builtin alternatives.
+    const crew = crewWithContext("draft-docs");
+    expect(crewProblems(crew)).toEqual([]);
+    const warnings = crewWarnings(crew);
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain("worker sec");
+    expect(warnings[0]).toContain("draft-docs");
+    expect(warnings[0]).toContain("filesystem");
+    expect(warnings[0]).toContain("adapter");
+  });
+
+  it("CREW-WARN-002: builtin frameworks produce no warnings", () => {
+    expect(crewWarnings(crewWithContext("filesystem"))).toEqual([]);
+    expect(crewWarnings(crewWithContext("git"))).toEqual([]);
+    expect(crewWarnings(crewWithContext("acc"))).toEqual([]);
+  });
+
+  it("CREW-WARN-003: crew validate --json surfaces warnings in the machine contract (additive pin)", () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "crew-warn-"));
+    const crew = crewWithContext("draft-docs");
+    const file = path.join(root, "crew.json");
+    fs.writeFileSync(file, JSON.stringify(crew));
+    const { stdout } = cli(["crew", "validate", file, "--json"]);
+    const parsed = JSON.parse(stdout);
+    expect(parsed.status).toBe("ok");
+    expect(parsed.problems).toEqual([]);
+    expect(parsed.warnings).toHaveLength(1);
+    expect(parsed.warnings[0]).toContain("draft-docs");
   });
 });

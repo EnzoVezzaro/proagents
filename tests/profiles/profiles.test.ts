@@ -157,6 +157,38 @@ describe("profile validation (PROFILES-VAL)", () => {
   });
 });
 
+describe("shipped marketplace catalog (PROFILES-CATALOG)", () => {
+  it("PROFILES-CATALOG-001: every kind:\"profile\" catalog item passes the profile validator", async () => {
+    // The catalog is data, not code — a bad manifest can be committed without
+    // any type error. Gate the shipped items here so CI catches it.
+    const catalog = JSON.parse(await fs.readFile(path.resolve(".marketplace", "catalog.json"), "utf8")) as {
+      items: Array<{ id: string; kind: string }>;
+    };
+    const profileIds = catalog.items.filter((i) => i.kind === "profile").map((i) => i.id);
+    expect(profileIds.length).toBeGreaterThanOrEqual(13);
+    for (const id of profileIds) {
+      const raw = await fs.readFile(path.resolve(".marketplace", "items", `${id}.json`), "utf8");
+      const manifest = JSON.parse(raw) as ProfileManifest;
+      const problems = profileProblems(manifest);
+      expect(problems, `catalog item ${id} has problems: ${JSON.stringify(problems)}`).toEqual([]);
+    }
+  });
+
+  it("PROFILES-CATALOG-002: every catalog index entry has the identity fields the SPA renders", async () => {
+    const catalog = JSON.parse(await fs.readFile(path.resolve(".marketplace", "catalog.json"), "utf8")) as {
+      items: Array<{ id: string; name?: string; version?: string; description?: string; author?: string; tags?: string[]; kind: string }>;
+    };
+    expect(catalog.items.length).toBeGreaterThan(0);
+    for (const item of catalog.items) {
+      expect(item.name, `item ${item.id} missing name`).toBeTruthy();
+      expect(item.version, `item ${item.id} missing version`).toBeTruthy();
+      expect(item.description, `item ${item.id} missing description`).toBeTruthy();
+      expect(item.author, `item ${item.id} missing author`).toBeTruthy();
+      expect(Array.isArray(item.tags) && item.tags.length > 0, `item ${item.id} missing tags`).toBe(true);
+    }
+  });
+});
+
 describe("profile composition (PROFILES-COMP)", () => {
   it("PROFILES-COMP-001: composing two profiles merges and dedupes deterministically", () => {
     const a = manifest("senior-engineer", { rules: ["require tests after source changes"], skills: ["code-review"] });
