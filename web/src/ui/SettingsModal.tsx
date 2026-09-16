@@ -23,7 +23,16 @@ export function SettingsModal(props: { onClose: () => void }): React.JSX.Element
       setError("Clerk keys in a browser bundle must be the PUBLISHABLE key (pk_…). Secret keys (sk_…) can never be safely embedded — leave this empty if you only have a secret.");
       return;
     }
-    saveSettings({ provider, githubToken: githubToken.trim(), clerkPublishableKey: clerkKey.trim() });
+    const prev = loadSettings();
+    // A hand-pasted PAT replaces device-flow credentials (no expiry).
+    saveSettings({
+      provider,
+      githubToken: githubToken.trim(),
+      githubTokenExpiresAt: githubToken.trim() && githubToken.trim() !== prev.githubToken ? 0 : prev.githubTokenExpiresAt,
+      githubRefreshToken: githubToken.trim() && githubToken.trim() !== prev.githubToken ? "" : prev.githubRefreshToken,
+      githubRefreshExpiresAt: githubToken.trim() && githubToken.trim() !== prev.githubToken ? 0 : prev.githubRefreshExpiresAt,
+      clerkPublishableKey: clerkKey.trim(),
+    });
     setSaved(true);
     setError(null);
     setTimeout(props.onClose, 450);

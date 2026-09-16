@@ -1,11 +1,43 @@
 import { describe, expect, it } from "vitest";
 import { validateProfileDraft } from "./profile-draft.js";
 import { emptyProfile } from "./types.js";
+import { DEFAULT_SETTINGS, githubTokenNeedsRefresh, githubRefreshExpired } from "./settings.js";
 
 /**
  * PROFILE-DRAFT — regression tests for the profile builder wizard's
  * client-side PA03x mirror that gates the Ship tab.
  */
+
+describe("GitHub session helpers (GH-SESSION)", () => {
+  it("GH-SESSION-001: a token without expiry never needs refresh (PAT or legacy)", () => {
+    const s = { ...DEFAULT_SETTINGS, githubToken: "tok", githubTokenExpiresAt: 0 };
+    expect(githubTokenNeedsRefresh(s)).toBe(false);
+  });
+
+  it("GH-SESSION-002: expiry within the slack window triggers refresh", () => {
+    const now = Date.now();
+    const s = { ...DEFAULT_SETTINGS, githubToken: "tok", githubTokenExpiresAt: now + 2 * 60 * 1000 };
+    expect(githubTokenNeedsRefresh(s, 5 * 60 * 1000)).toBe(true);
+    const far = { ...DEFAULT_SETTINGS, githubToken: "tok", githubTokenExpiresAt: now + 60 * 60 * 1000 };
+    expect(githubTokenNeedsRefresh(far, 5 * 60 * 1000)).toBe(false);
+  });
+
+  it("GH-SESSION-003: refresh expiry forces re-auth; missing refresh token too", () => {
+    expect(githubRefreshExpired({ ...DEFAULT_SETTINGS })).toBe(true);
+    const dead = {
+      ...DEFAULT_SETTINGS,
+      githubRefreshToken: "r",
+      githubRefreshExpiresAt: Date.now() - 1000,
+    };
+    expect(githubRefreshExpired(dead)).toBe(true);
+    const alive = {
+      ...DEFAULT_SETTINGS,
+      githubRefreshToken: "r",
+      githubRefreshExpiresAt: Date.now() + 1000 * 60 * 60,
+    };
+    expect(githubRefreshExpired(alive)).toBe(false);
+  });
+});
 
 describe("validateProfileDraft (PROFILE-DRAFT-VAL)", () => {
   it("PROFILE-DRAFT-VAL-001: a minimal complete draft passes", () => {

@@ -10,7 +10,7 @@ import { checkMcpHealth } from "../../profile-draft.js";
  */
 
 const ctx: AppCtx = {
-  settings: { provider: { provider: "anthropic", model: "m", apiKey: "" }, githubToken: "", clerkPublishableKey: "" },
+  settings: { provider: { provider: "anthropic", model: "m", apiKey: "" }, githubToken: "", githubTokenExpiresAt: 0, githubRefreshToken: "", githubRefreshExpiresAt: 0, clerkPublishableKey: "" },
   navigate: () => {},
 };
 

@@ -196,6 +196,28 @@ for input-limited clients and, importantly for a static site, requiring **no cli
 secret**. Press *Sign in with GitHub*, enter the one-time code at
 `github.com/login/device`, done. The token stays in your browser.
 
+**Token lifetime.** GitHub App user tokens expire (8h by default). The SPA stores the
+refresh token issued alongside the access token and uses it to re-authenticate silently —
+proactively when the token nears expiry, and reactively after any 401 — so a session
+survives for about six months without a new device-flow round-trip. The CLI mirror is
+`npm run gh:token`, which refreshes silently on re-run and records
+`GITHUB_TOKEN_EXPIRES_AT` / `GITHUB_REFRESH_TOKEN` / `GITHUB_REFRESH_EXPIRES_AT` in
+`.env`. To disable expiry entirely, uncheck *Expire user authorization tokens* in the
+App's settings.
+
+**App settings checklist** (GitHub → Settings → Developer settings → GitHub Apps →
+`proagents`):
+
+- ✅ **Enable Device Flow** — required for the header sign-in button
+- ✅ **Request user authorization (OAuth) during installation** — identity is granted on
+  install
+- **Callback URL** `https://enzovezzaro.github.io/proagents/auth` — used by web
+  application flow, not device flow (harmless to keep)
+- **Permissions**: `repository metadata` (read) is enough for sign-in, previews and
+  proposal issues; PR-based publishing additionally needs **Contents** read & write on
+  the catalog repo (or works from a fork)
+- **No webhook needed** — leave it inactive unless you build server-side features
+
 ## Donations
 
 ProAgents is **fully open source** — there is nothing to buy. Every crew and agent in the

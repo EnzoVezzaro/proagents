@@ -15,7 +15,10 @@ export function GitHubAuth(props: { user: { login: string; avatar_url: string } 
 
   useEffect(() => {
     return () => {
-      if (timer.current) window.clearInterval(timer.current);
+      if (timer.current) {
+        window.clearInterval(timer.current);
+        window.clearTimeout(timer.current);
+      }
     };
   }, []);
 
@@ -25,7 +28,15 @@ export function GitHubAuth(props: { user: { login: string; avatar_url: string } 
         <img src={props.user.avatar_url} alt={props.user.login} width={24} height={24} style={{ borderRadius: "50%" }} />
         <span style={{ color: "var(--cream)" }}>{props.user.login}</span>
         <button
-          onClick={() => saveSettings({ ...loadSettings(), githubToken: "" })}
+          onClick={() =>
+            saveSettings({
+              ...loadSettings(),
+              githubToken: "",
+              githubTokenExpiresAt: 0,
+              githubRefreshToken: "",
+              githubRefreshExpiresAt: 0,
+            })
+          }
           style={{ background: "none", border: "none", color: "var(--cream-dim)", cursor: "pointer", fontSize: 12, textDecoration: "underline" }}
         >
           sign out
@@ -34,25 +45,44 @@ export function GitHubAuth(props: { user: { login: string; avatar_url: string } 
     );
   }
 
+  const stopPolling = () => {
+    if (timer.current) {
+      window.clearInterval(timer.current);
+      timer.current = null;
+    }
+  };
+
   const start = async () => {
     try {
       const f = await startDeviceFlow();
       setFlow(f);
       setStatus(`Enter code ${f.userCode} at github.com/login/device`);
       window.open(f.verificationUri, "_blank");
-      timer.current = window.setInterval(async () => {
+      let intervalMs = f.interval * 1000;
+      const tick = async () => {
         const result = await pollDeviceFlow(f);
         if (result.status === "granted") {
-          if (timer.current) window.clearInterval(timer.current);
-          saveSettings({ ...loadSettings(), githubToken: result.token });
+          stopPolling();
+          saveSettings({
+            ...loadSettings(),
+            githubToken: result.token,
+            githubTokenExpiresAt: result.expiresAt,
+            githubRefreshToken: result.refreshToken,
+            githubRefreshExpiresAt: result.refreshExpiresAt,
+          });
           setFlow(null);
           setStatus("");
         } else if (result.status === "denied") {
-          if (timer.current) window.clearInterval(timer.current);
+          stopPolling();
           setStatus(result.reason);
           setFlow(null);
+        } else {
+          // slow_down tells us to grow the interval by 5s per RFC 8628.
+          if (result.retryAfter) intervalMs += result.retryAfter * 1000;
+          timer.current = window.setTimeout(tick, intervalMs);
         }
-      }, f.interval * 1000);
+      };
+      timer.current = window.setTimeout(tick, intervalMs);
     } catch (err) {
       setStatus((err as Error).message);
     }
@@ -65,6 +95,18 @@ export function GitHubAuth(props: { user: { login: string; avatar_url: string } 
         <code style={{ background: "var(--ink-3)", border: "1px solid var(--cyan)", color: "var(--cyan)", padding: "3px 8px", borderRadius: 6, letterSpacing: 2 }}>
           {flow.userCode}
         </code>
+      )}
+      {flow && (
+        <button
+          onClick={() => {
+            stopPolling();
+            setFlow(null);
+            setStatus("");
+          }}
+          style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: 12, textDecoration: "underline" }}
+        >
+          cancel
+        </button>
       )}
       <button
         onClick={start}

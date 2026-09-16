@@ -30,7 +30,7 @@ export async function startDeviceFlow(): Promise<DeviceFlowStart> {
   const res = await fetch(DEVICE_CODE_URL, {
     method: "POST",
     headers: { "content-type": "application/json", accept: "application/json" },
-    body: JSON.stringify({ client_id: GITHUB_APP_CLIENT_ID, scope: "repo read:user" }),
+    body: JSON.stringify({ client_id: GITHUB_APP_CLIENT_ID }),
   });
   if (!res.ok) throw new Error(`device flow start failed: HTTP ${res.status}`);
   const body = (await res.json()) as {
@@ -50,8 +50,8 @@ export async function startDeviceFlow(): Promise<DeviceFlowStart> {
 }
 
 export type DeviceFlowResult =
-  | { status: "pending" }
-  | { status: "granted"; token: string }
+  | { status: "pending"; retryAfter?: number }
+  | { status: "granted"; token: string; refreshToken: string; expiresAt: number; refreshExpiresAt: number }
   | { status: "denied"; reason: string };
 
 export async function pollDeviceFlow(flow: DeviceFlowStart): Promise<DeviceFlowResult> {
@@ -65,12 +65,63 @@ export async function pollDeviceFlow(flow: DeviceFlowStart): Promise<DeviceFlowR
     }),
   });
   if (!res.ok) return { status: "pending" };
-  const body = (await res.json()) as { access_token?: string; error?: string; error_description?: string };
-  if (body.access_token) return { status: "granted", token: body.access_token };
-  if (body.error === "authorization_pending" || body.error === "slow_down") return { status: "pending" };
+  const body = (await res.json()) as {
+    access_token?: string;
+    refresh_token?: string;
+    expires_in?: number;
+    refresh_token_expires_in?: number;
+    error?: string;
+    error_description?: string;
+  };
+  if (body.access_token) {
+    return {
+      status: "granted",
+      token: body.access_token,
+      refreshToken: body.refresh_token ?? "",
+      expiresAt: Date.now() + (body.expires_in ?? 0) * 1000,
+      refreshExpiresAt: Date.now() + (body.refresh_token_expires_in ?? 0) * 1000,
+    };
+  }
+  // slow_down: GitHub demands the poll interval grow by 5s. Surface it so the
+  // caller can back off instead of hammering toward an authorization_blocked.
+  if (body.error === "slow_down") return { status: "pending", retryAfter: 5 };
+  if (body.error === "authorization_pending") return { status: "pending" };
   if (body.error === "expired_token") return { status: "denied", reason: "The device code expired — try again." };
   if (body.error) return { status: "denied", reason: body.error_description ?? body.error };
   return { status: "pending" };
+}
+
+/** Exchange a refresh token for a fresh user access token (silent re-auth). */
+export async function refreshAccessToken(refreshToken: string): Promise<DeviceFlowResult> {
+  if (!refreshToken) return { status: "denied", reason: "no refresh token stored" };
+  const res = await fetch(TOKEN_URL, {
+    method: "POST",
+    headers: { "content-type": "application/json", accept: "application/json" },
+    body: JSON.stringify({
+      client_id: GITHUB_APP_CLIENT_ID,
+      grant_type: "refresh_token",
+      refresh_token: refreshToken,
+    }),
+  });
+  if (!res.ok) return { status: "denied", reason: `refresh failed: HTTP ${res.status}` };
+  const body = (await res.json()) as {
+    access_token?: string;
+    refresh_token?: string;
+    expires_in?: number;
+    refresh_token_expires_in?: number;
+    error?: string;
+    error_description?: string;
+  };
+  if (body.access_token) {
+    return {
+      status: "granted",
+      token: body.access_token,
+      refreshToken: body.refresh_token ?? refreshToken,
+      expiresAt: Date.now() + (body.expires_in ?? 0) * 1000,
+      refreshExpiresAt: Date.now() + (body.refresh_token_expires_in ?? 0) * 1000,
+    };
+  }
+  return { status: "denied", reason: body.error_description ?? body.error ?? "refresh rejected" };
 }
 
 // ---------------------------------------------------------------------------

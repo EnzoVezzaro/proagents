@@ -18,6 +18,12 @@ export interface ProviderSettings {
 export interface AppSettings {
   provider: ProviderSettings;
   githubToken: string;
+ /** GitHub App user-token expiry (epoch ms). 0 = unknown/no expiry (PAT). */
+  githubTokenExpiresAt: number;
+  /** GitHub App refresh token — exchanges for a fresh access token silently. */
+  githubRefreshToken: string;
+  /** Refresh-token expiry (epoch ms). Refresh tokens live ~6 months. */
+  githubRefreshExpiresAt: number;
   /** Clerk publishable key (pk_...) — enables optional Clerk identity UI. */
   clerkPublishableKey: string;
 }
@@ -34,6 +40,9 @@ function envDefaults(): Partial<AppSettings> {
 export const DEFAULT_SETTINGS: AppSettings = {
   provider: { provider: "anthropic", model: "claude-sonnet-4-5", apiKey: "" },
   githubToken: "",
+  githubTokenExpiresAt: 0,
+  githubRefreshToken: "",
+  githubRefreshExpiresAt: 0,
   clerkPublishableKey: "",
 };
 
@@ -46,6 +55,9 @@ export function loadSettings(): AppSettings {
     return {
       provider: { ...DEFAULT_SETTINGS.provider, ...(parsed.provider ?? {}) },
       githubToken: parsed.githubToken ?? "",
+      githubTokenExpiresAt: parsed.githubTokenExpiresAt ?? 0,
+      githubRefreshToken: parsed.githubRefreshToken ?? "",
+      githubRefreshExpiresAt: parsed.githubRefreshExpiresAt ?? 0,
       clerkPublishableKey: parsed.clerkPublishableKey ?? defaults.clerkPublishableKey ?? "",
     };
   } catch {
@@ -56,6 +68,22 @@ export function loadSettings(): AppSettings {
 export function saveSettings(settings: AppSettings): void {
   localStorage.setItem(KEY, JSON.stringify(settings));
   window.dispatchEvent(new CustomEvent("proagents-settings-changed"));
+}
+
+/**
+ * True when the GitHub App user token is expired or expires within `slack` ms
+ * (GitHub App tokens expire — default 8h; PATs report no expiry → 0).
+ */
+export function githubTokenNeedsRefresh(s: AppSettings, slackMs = 5 * 60 * 1000): boolean {
+  if (!s.githubToken) return false;
+  if (!s.githubTokenExpiresAt) return false; // no expiry recorded (PAT or legacy)
+  return Date.now() >= s.githubTokenExpiresAt - slackMs;
+}
+
+/** True when the refresh token itself is gone/expired — re-auth is required. */
+export function githubRefreshExpired(s: AppSettings): boolean {
+  if (!s.githubRefreshToken) return true;
+  return s.githubRefreshExpiresAt !== 0 && Date.now() >= s.githubRefreshExpiresAt;
 }
 
 export const PROVIDER_PRESETS: Record<Exclude<LlmProvider, "custom">, { label: string; models: string[] }> = {

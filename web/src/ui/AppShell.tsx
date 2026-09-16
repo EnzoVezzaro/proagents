@@ -7,8 +7,8 @@ import { BuilderPage } from "./pages/BuilderPage.js";
 import { ProfileBuilderPage } from "./pages/ProfileBuilderPage.js";
 import { PreviewPage } from "./pages/PreviewPage.js";
 import { SettingsModal } from "./SettingsModal.js";
-import { loadSettings, type AppSettings } from "../settings.js";
-import { getAuthenticatedUser } from "../github.js";
+import { loadSettings, saveSettings, githubTokenNeedsRefresh, githubRefreshExpired, type AppSettings } from "../settings.js";
+import { getAuthenticatedUser, refreshAccessToken } from "../github.js";
 import { GitHubAuth } from "./GitHubAuth.js";
 
 export interface AppCtx {
@@ -28,18 +28,59 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
     return () => window.removeEventListener("proagents-settings-changed", onChange);
   }, []);
 
+  // Session ensure: verify the stored GitHub token, refresh it proactively
+  // when it is near/past expiry (GitHub App user tokens expire — default 8h),
+  // and recover silently via the refresh token after any 401. Only a missing
+  // or expired refresh token forces a fresh device-flow sign-in.
   useEffect(() => {
     let cancelled = false;
-    if (settings.githubToken) {
-      getAuthenticatedUser(settings.githubToken)
+    const s = loadSettings();
+    if (!s.githubToken) {
+      setUser(null);
+      return;
+    }
+    const verify = (token: string): Promise<void> =>
+      getAuthenticatedUser(token)
         .then((u) => {
           if (!cancelled) setUser({ login: u.login, avatar_url: u.avatar_url });
         })
-        .catch(() => {
+        .catch(async (err: Error) => {
+          if (cancelled) return;
+          const unauthorized = /HTTP 40[13]/.test(err.message);
+          if (unauthorized && !githubRefreshExpired(s)) {
+            const refreshed = await refreshAccessToken(s.githubRefreshToken);
+            if (refreshed.status === "granted" && !cancelled) {
+              saveSettings({
+                ...loadSettings(),
+                githubToken: refreshed.token,
+                githubTokenExpiresAt: refreshed.expiresAt,
+                githubRefreshToken: refreshed.refreshToken,
+                githubRefreshExpiresAt: refreshed.refreshExpiresAt,
+              });
+              return verify(refreshed.token);
+            }
+          }
           if (!cancelled) setUser(null);
         });
+    if (githubTokenNeedsRefresh(s) && !githubRefreshExpired(s)) {
+      // Proactive: swap in a fresh token before the old one dies.
+      refreshAccessToken(s.githubRefreshToken)
+        .then((r) => {
+          if (r.status !== "granted" || cancelled) return;
+          saveSettings({
+            ...loadSettings(),
+            githubToken: r.token,
+            githubTokenExpiresAt: r.expiresAt,
+            githubRefreshToken: r.refreshToken,
+            githubRefreshExpiresAt: r.refreshExpiresAt,
+          });
+          return verify(r.token);
+        })
+        .catch(() => {
+          if (!cancelled) verify(s.githubToken);
+        });
     } else {
-      setUser(null);
+      verify(s.githubToken);
     }
     return () => {
       cancelled = true;
@@ -99,9 +140,7 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
         }}
       >
         <a href="#/catalog" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", color: "var(--cream)" }}>
-          <img src="/proagents/app/logo.png" alt="ProAgents" width={34} height={15} style={{ borderRadius: 4, display: "block" }} />
-          <strong style={{ fontSize: 16 }}>ProAgents</strong>
-          <span style={{ background: "var(--grad)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent", WebkitTextFillColor: "transparent", fontSize: 12, fontWeight: 700, letterSpacing: 1 }}>MARKETPLACE</span>
+          <img src="/proagents/app/logo.png" alt="ProAgents" width={34} height={15} style={{ borderRadius: 4, display: "block", minWidth: 150, height: 'auto' }} />
         </a>
         <nav aria-label="Primary" style={{ display: "flex", gap: 18, fontSize: 14 }}>
           {nav("catalog", "Catalog")}
