@@ -307,13 +307,18 @@ export async function compileForHarness(
   const limitations: string[] = [];
   const caps = target.capabilities;
 
-  // 1. Skills directory (highest-fidelity mechanism).
+  // 1. Skills directory (highest-fidelity mechanism). The canonical manifest
+  // is preserved beside the compiled skill so the portable profile stays
+  // inspectable in the target repo.
   if (caps.skills) {
     const dir = path.join(".agents", "skills", profile.slugs.join("-"));
     await fs.mkdir(path.join(root, dir), { recursive: true });
     const skillPath = path.join(dir, "SKILL.md");
     await fs.writeFile(path.join(root, skillPath), profileSkillMarkdown(profile, manifest), "utf8");
     files.push({ path: skillPath, mechanism: "agent-skill" });
+    const manifestPath = path.join(dir, "profile.json");
+    await fs.writeFile(path.join(root, manifestPath), JSON.stringify(manifest, null, 2) + "\n", "utf8");
+    files.push({ path: manifestPath, mechanism: "canonical-manifest" });
   } else {
     limitations.push("target has no skills directory — profile expressed as project instructions only");
   }

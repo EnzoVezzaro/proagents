@@ -86,8 +86,43 @@ harness, using the strongest mechanism available:
 | Gemini CLI | `.agents/skills/<profile>/SKILL.md` | `GEMINI.md` block | instructions fallback |
 | generic CLI | — (instructions only) | `AGENTS.md` block | none (reported) |
 
+Every skill-directory compile also writes the canonical manifest beside the skill
+(`profile.json`), so the portable profile stays inspectable in the target repo.
+
 Equipping is idempotent: re-running replaces the marked `proagent:profile` block instead
 of duplicating it, and never touches the rest of your instructions file.
+
+## Progressive disclosure
+
+Professional profiles may contain substantial knowledge and many skills. ProAgents does
+not dump everything into the model context:
+
+```text
+Task
+ ↓
+Understand intent
+ ↓
+Identify relevant profession
+ ↓
+Discover relevant skills
+ ↓
+Load relevant methods
+ ↓
+Retrieve relevant knowledge
+ ↓
+Activate required tools
+ ↓
+Apply rules
+ ↓
+Execute
+ ↓
+Verify
+```
+
+Only relevant capabilities load when needed. The compiled artifacts follow the same
+principle: `SKILL.md` stays a lean operating summary; the canonical manifest sits beside
+it (`profile.json`) so tools can load structured detail on demand instead of parsing
+prose.
 
 ## Rules are enforced
 
@@ -172,6 +207,14 @@ proagent equip my-profession
 
 Local profiles shadow built-ins with the same slug (last discovery wins) and are flagged
 during `validate --profiles` so you always know what is shipped vs. local.
+
+## From professional agents to specialized agent systems
+
+Profiles also feed larger systems: a crew's workers can each carry their own professional
+profile, skills, tools, permissions, context and verification, with handoffs passing
+named artifacts. See the [marketplace guide](/guide/marketplace) for crews — bundles of
+specialized workers wired together by a handoff graph — and the
+[question engine](/guide/question-engine) for deriving a new system when no profile fits.
 
 ## JSON interface
 

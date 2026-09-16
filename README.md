@@ -1000,24 +1000,21 @@ bun --bun vitepress build docs
 
 ```text
 ├── src/
-│   ├── cli/             # CLI surface
-│   ├── core/             # profiles, sessions, specifications, validation
-│   ├── profiles/         # professional profile system
-│   ├── skills/           # reusable skills
-│   ├── methods/          # professional methods
-│   ├── rules/            # rules and policies
-│   ├── context/          # context frameworks
-│   ├── compiler/         # profile → harness compilation
-│   ├── adapters/         # Claude Code, Codex, OpenCode, etc.
-│   ├── benchmark/        # deterministic-first benchmarking
-│   └── output/           # terminal rendering
+│   ├── cli/             # CLI surface (init/equip/crew/profile/…)
+│   ├── core/            # interview engine, sessions, architecture, validation
+│   ├── profiles/        # profile registry, composition, validation, publishing
+│   ├── adapters/        # harness detection + profile → harness compilation
+│   ├── context/         # context frameworks (filesystem, git, ACC)
+│   ├── crew/            # crew definitions, validation, install, publishing
+│   ├── benchmark/       # deterministic-first benchmarking
+│   └── output/          # terminal rendering
 │
-├── .agents/              # ProAgents Agent Skill + examples
+├── .agents/              # ProAgents Agent Skill + generated skills
 ├── profiles/             # built-in professional profiles
-├── skills/               # reusable skills
+├── .marketplace/         # Git-backed catalog: profiles & crews
 ├── docs/                 # VitePress documentation
-├── tests/                # unit, integration, adversarial, e2e
-└── examples/             # end-to-end examples
+├── web/                  # marketplace SPA
+└── tests/                # unit, integration, e2e
 ```
 
 ---

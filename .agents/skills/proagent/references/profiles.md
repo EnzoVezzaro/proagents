@@ -63,6 +63,7 @@ For a harness with skills + native enforcement (Claude Code):
 
 ```text
 .agents/skills/<slug>/SKILL.md      # agent-skill mechanism
+.agents/skills/<slug>/profile.json  # canonical manifest (portable, inspectable)
 CLAUDE.md                           # project-instructions (marked block)
 .claude/settings.json               # rule-enforcement (PreToolUse hook)
 ```

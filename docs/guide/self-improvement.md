@@ -8,8 +8,12 @@ periodically evaluate and improve itself — **without ever bypassing its permis
 ```bash
 proagent init --intent "..." --self-improving weekly --improvement-policy supervised
 proagent improve schedule monthly
+proagent self-improve --schedule weekly   # alias documented in the README
 proagent improve status --json
 ```
+
+`self-improve` is an alias for `improve` (README spelling); both configure an
+agent-building session — run `proagent init` first.
 
 Frequencies: `daily`, `weekly`, `monthly`, `quarterly`, `manual`.
 
