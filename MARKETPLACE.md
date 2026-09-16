@@ -6,7 +6,8 @@
 > issue-based publishing with CI validation, the profile compiler and runtime adapters —
 > while the in-browser resource-discovery layer (npm/MCP/skill search inside the builder),
 > connection testing, completeness scoring and benchmarking-from-the-builder are roadmap.
-> Each section below notes what works now vs. what is specified.
+> Every section below carries a status marker: **Ships today**, **Partially shipped**, or
+> **Specified, not yet shipped** — so the spec cannot silently drift from the product.
 
 The marketplace is not just a catalog of downloadable skills or pre-built crews.
 
@@ -59,6 +60,13 @@ The marketplace should **not merely store references**. It should understand the
 ---
 
 ## Marketplace Builder UX
+
+> **Partially shipped.** The SPA ships a progressive **crew** builder today (repo-grounded
+> starter crew or custom, permission models, MCP bindings, handoff graph, one-click
+> proposal) and the CLI ships the profile pipeline (`profile install` with composition,
+> validation and compilation). The 15-step profile builder UX below is the roadmap target
+> the crew builder already follows structurally: choose path → define → configure →
+> validate → preview → publish/install.
 
 The experience is designed as a progressive builder rather than a configuration form.
 
@@ -244,6 +252,10 @@ A marketplace profile should never claim an MCP integration works without actual
 
 ## npm & Package Integration
 
+> **Specified, not yet shipped.** Profiles today declare `tools.required/optional`
+> (validated against verification needs by the PA025 check); the package discovery and
+> capability-graph resolution below is roadmap.
+
 npm is treated as an ecosystem source, not simply an installation command.
 
 When a profile requires a capability, ProAgents can discover relevant packages and determine:
@@ -339,6 +351,12 @@ Validation should detect:
 ---
 
 ## Test Before You Install
+
+> **Partially shipped.** Before installing you can inspect (`profile show`), dry-run
+> (`profile install --dry-run`, `crew install --dry-run`) and validate everything the
+> validators check; crews additionally have a browser preview-on-your-repo flow and the
+> deterministic benchmark system (`proagent benchmark`). The full connect → test →
+> benchmark environment below is roadmap.
 
 The marketplace should provide a **profile test environment**.
 
@@ -442,6 +460,11 @@ Benchmarks
 ```
 
 ### Components
+
+> **Specified, not yet shipped.** The catalog supports two kinds today — `profile` and
+> `crew`/`agent` (a single worker). Standalone component listings below are roadmap;
+> composition within a profile set (`equip staff-engineer security-engineer`) is the
+> shipped equivalent for rules/skills/verification reuse.
 
 Profiles can also publish reusable components:
 
