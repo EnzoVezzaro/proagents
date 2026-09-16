@@ -9,11 +9,17 @@
 > Every section below carries a status marker: **Ships today**, **Partially shipped**, or
 > **Specified, not yet shipped** — so the spec cannot silently drift from the product.
 
-The marketplace is not just a catalog of downloadable skills or pre-built crews.
+The marketplace is not an agent, and it does not build agents. It is a **repository of
+specs**: profile specs (professions) and crew specs (teams of workers wired by a handoff
+graph). Execution needs a harness — Claude Code, Codex, whatever coding agent you run —
+and the `proagent` CLI is the courier that fetches a spec from here (or reads it locally)
+and hands it to that harness as native artifacts.
 
-It is a **Professional Agent Builder**: a complete UX for designing, assembling, testing, validating, publishing, and installing everything an agent needs to operate professionally in a specific domain.
+It is a **Professional Agent Spec Builder**: a complete UX for designing, assembling,
+testing, validating, publishing, and installing the specs an agent needs to operate
+professionally in a specific domain.
 
-### Build a complete professional agent
+### Build a complete professional spec
 
 A marketplace profile can be assembled from multiple sources:
 
@@ -61,12 +67,14 @@ The marketplace should **not merely store references**. It should understand the
 
 ## Marketplace Builder UX
 
-> **Partially shipped.** The SPA ships a progressive **crew** builder today (repo-grounded
-> starter crew or custom, permission models, MCP bindings, handoff graph, one-click
-> proposal) and the CLI ships the profile pipeline (`profile install` with composition,
-> validation and compilation). The 15-step profile builder UX below is the roadmap target
-> the crew builder already follows structurally: choose path → define → configure →
-> validate → preview → publish/install.
+> **Partially shipped.** The SPA ships a **profile builder** (identity → expertise &
+> rules → tools & verification → ship, emits the canonical ProfileManifest) and a
+> progressive **crew** builder (repo-grounded starter crew or custom, workers that
+> reference profile specs as their profession, permission scoping, MCP bindings, handoff
+> graph, one-click proposal). The CLI ships the pipeline (`profile install` / `crew build`
+> with composition, validation and compilation). The 15-step profile builder UX below is
+> the roadmap target both builders already follow structurally: choose path → define →
+> configure → validate → preview → publish/install.
 
 The experience is designed as a progressive builder rather than a configuration form.
 
@@ -481,7 +489,9 @@ Tool adapters
 
 Components can be composed into larger profiles.
 
-This creates an ecosystem where developers can publish both **professional agents** and the building blocks used to create them.
+This creates an ecosystem where developers can publish both **complete professional specs**
+and the building blocks used to compose them — and because workers can declare a profile
+as their profession, profile specs and crew specs feed each other.
 
 ---
 
@@ -492,7 +502,7 @@ This creates an ecosystem where developers can publish both **professional agent
 > detects the harness and compiles the profile with reported limitations. Dependency
 > graphs, MCP connection testing and interactive fallback choice are specified below.
 
-Installing a profile should produce the complete agent configuration required by the target environment.
+Installing a profile should produce the complete configuration the target harness needs to operate as that profession — the CLI translates the spec into the harness's native artifacts.
 
 ```bash
 npx proagent profile install security-engineer
@@ -606,7 +616,7 @@ The marketplace is therefore not:
 
 It is:
 
-> **"Build, equip, test and distribute a professional AI agent."**
+> **"Build, equip, test and distribute professional specs — your harness builds the agent."**
 
 A user should be able to start with:
 

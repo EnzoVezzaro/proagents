@@ -1,9 +1,14 @@
-# Marketplace: profiles & crews
+# Marketplace: the spec repository
 
-The ProAgents marketplace distributes two kinds of reusable professional capability:
+The marketplace is a **repository of specs, not agents**: profile specs (professions) and
+crew specs (teams of workers wired by a handoff graph). A harness — Claude Code, Codex,
+whatever coding agent you run — does the executing. The proagent CLI is the courier: it
+pulls a spec from here and hands it to your harness as native artifacts.
 
-- **Profiles** — a profession for your existing coding agent (`proagent equip security-engineer`)
-- **Crews** — a bundle of specialized workers (skill + permission model + tools + MCP servers + context bindings) wired together by a handoff graph
+It distributes two kinds of reusable professional capability:
+
+- **Profile specs** — a profession for your existing coding agent (`proagent equip security-engineer`)
+- **Crew specs** — a bundle of workers, each optionally carrying a profile as its profession, wired together by a handoff graph
 
 Everything is free and MIT-licensed. Every listing is a reviewable JSON file in the open
 repo, and any item pulls into your repository with one command.
@@ -14,7 +19,7 @@ repo, and any item pulls into your repository with one command.
 |---|---|---|
 | Marketplace app | [`/proagents/app/`](https://enzovezzaro.github.io/proagents/app/) | Static SPA (React + Vite) deployed to GitHub Pages — runs entirely in your browser |
 | Catalog | `.marketplace/catalog.json` + `.marketplace/items/*.json` | **Git-as-database**: the repo itself is the data layer; every listing is a reviewable JSON file, and Pages serves reads |
-| CLI | `proagent equip <slug>` · `proagent crew …` | profiles: equip/compile; crews: list / show / validate / **install** / publish |
+| CLI | `proagent equip <slug>` · `proagent crew …` | the courier: pulls a spec (profile or crew) and hands it to your harness |
 | Installer | `.agents/skills/<profile>/` + instructions block · `.agents/crews/<id>/` + `.mcp.json` | the on-disk layout any agent runtime can execute |
 
 ## Install a profile (the one-liner)

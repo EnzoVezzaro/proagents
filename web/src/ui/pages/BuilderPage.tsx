@@ -9,7 +9,9 @@ import {
   type CrewMcpServer,
   type CrewPermissions,
   type CrewWorker,
+  type MarketplaceCatalog,
 } from "../../types.js";
+import { CATALOG_URL } from "../../catalog.js";
 import { issueBody, issueTitle } from "../../proposal.js";
 
 /**
@@ -25,8 +27,8 @@ const btnGhost: React.CSSProperties = { background: "transparent", color: "var(-
 const field: React.CSSProperties = { width: "100%", boxSizing: "border-box", background: "var(--ink)", color: "var(--cream)", border: "1px solid var(--line)", borderRadius: 8, padding: "8px 10px", fontSize: 13 };
 const label: React.CSSProperties = { display: "block", fontSize: 11, color: "var(--cream-dim)", marginBottom: 4, marginTop: 10, textTransform: "uppercase" as const, letterSpacing: 0.4 };
 
-function newWorker(index: number): CrewWorker {
-  return {
+function newWorker(index: number, profile?: string): CrewWorker {
+  const base: CrewWorker = {
     id: `worker-${index + 1}`,
     name: `Worker ${index + 1}`,
     role: "researcher",
@@ -38,6 +40,7 @@ function newWorker(index: number): CrewWorker {
     receivesFrom: [],
     emits: [],
   };
+  return profile ? { ...base, profile } : base;
 }
 
 /** Client-side mirror of crewProblems (src/crew/validate.ts). */
@@ -54,7 +57,12 @@ function validate(crew: CrewDefinition): string[] {
     if (!w.id || !idOk.test(w.id)) problems.push(`Worker "${w.id}": id must be a lowercase slug.`);
     if (ids.has(w.id)) problems.push(`Duplicate worker id: ${w.id}`);
     ids.add(w.id);
-    if (!w.instructions.trim()) problems.push(`Worker "${w.id}": instructions are required.`);
+    if (w.profile) {
+      // Profile-backed worker: profession supplies the operating model;
+      // instructions are optional extras.
+    } else if (!w.instructions.trim()) {
+      problems.push(`Worker "${w.id}": instructions are required (or assign a profile).`);
+    }
     for (const m of w.mcpServers) {
       if (!crew.mcpServers.some((s) => s.name === m)) problems.push(`Worker "${w.id}" references unknown MCP server "${m}".`);
     }
@@ -157,7 +165,9 @@ export function BuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
     <div>
       <h1 style={{ margin: "0 0 6px" }}>Build your crew</h1>
       <p style={{ color: "var(--cream-dim)", maxWidth: 720, lineHeight: 1.6 }}>
-        The same contract the CLI produces — workers with explicit permissions, MCP servers, context scopes and a handoff graph — built visually. Export the JSON, install it anywhere with <code>npx proagent crew install</code>, or publish it to the marketplace.
+        You are building a <strong>crew spec</strong> — workers with a profession, permissions,
+        MCP servers, context scopes and a handoff graph. Not the agent itself: your harness
+        (Claude Code, Codex, …) executes it. The CLI hands the spec over: <code>npx proagent crew install</code>.
       </p>
 
       <div style={{ display: "flex", gap: 6, margin: "20px 0", flexWrap: "wrap" }}>
@@ -217,8 +227,34 @@ function WorkersTab(props: {
   updateWorker: (id: string, p: Partial<CrewWorker>) => void;
 }): React.JSX.Element {
   const { crew, update, updateWorker } = props;
+
+  // Load the catalog once so workers can pick a profession (profile spec)
+  // from the marketplace. Profiles are the atoms; workers reference them.
+  const [catalog, setCatalog] = React.useState<MarketplaceCatalog | null>(null);
+  React.useEffect(() => {
+    let cancelled = false;
+    fetch(CATALOG_URL)
+      .then((r) => (r.ok ? (r.json() as Promise<MarketplaceCatalog>) : null))
+      .then((c) => {
+        if (!cancelled) setCatalog(c);
+      })
+      .catch(() => {
+        /* offline: chips stay empty, free-text input still works */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const profileSpecs = (catalog?.items ?? []).filter((i) => i.kind === "profile");
+
   return (
     <div style={{ display: "grid", gap: 14 }}>
+      <p style={{ color: "var(--cream-dim)", fontSize: 13, lineHeight: 1.6, margin: 0 }}>
+        A worker is a role in the pipeline plus a <strong>profession</strong>. Pick a profile spec
+        from the marketplace (or type a built-in slug like <code>security-engineer</code>) and the
+        profession's expertise, methods, rules and verification are wired in at install time —
+        no hand-crafted agent config needed.
+      </p>
       {crew.workers.map((w, i) => (
         <Card key={w.id}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -249,32 +285,38 @@ function WorkersTab(props: {
             </div>
           </div>
           <label style={label}>Description</label>
-          <input style={field} value={w.description} onChange={(e) => updateWorker(w.id, { description: e.target.value })} />
+          <input style={field} value={w.description} onChange={(e) => updateWorker(w.id, { description: e.target.value })} placeholder="What does this worker do in the pipeline?" />
 
-          <label style={label}>Permissions</label>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
-            {([
-              ["read", ["none", "repo", "scoped", "world"]],
-              ["write", ["none", "repo", "scoped"]],
-              ["production", ["none", "read", "write"]],
-              ["secrets", ["none", "named", "all"]],
-            ] as const).map(([key, levels]) => (
-              <div key={key}>
-                <label style={label}>{key}</label>
-                <select style={field} value={w.permissions[key]} onChange={(e) => updateWorker(w.id, { permissions: { ...w.permissions, [key]: e.target.value } as CrewPermissions })}>
-                  {levels.map((l) => (
-                    <option key={l}>{l}</option>
-                  ))}
-                </select>
-              </div>
+          <label style={label}>Profession (profile spec)</label>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 6 }}>
+            {profileSpecs.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => updateWorker(w.id, { profile: p.id })}
+                style={{
+                  ...btnGhost,
+                  padding: "5px 10px",
+                  fontSize: 12,
+                  ...(w.profile === p.id ? { borderColor: "var(--lime)", color: "var(--lime)" } : {}),
+                }}
+              >
+                {p.id}{w.profile === p.id ? " ✓" : ""}
+              </button>
             ))}
           </div>
-          <label style={label}>Tools (comma-separated)</label>
-          <input style={field} value={w.permissions.tools.join(", ")} onChange={(e) => updateWorker(w.id, { permissions: { ...w.permissions, tools: e.target.value.split(",").map((t) => t.trim()).filter(Boolean) } })} />
-          <label style={label}>Approval gates (tools needing human approval)</label>
-          <input style={field} value={(w.permissions.approvalGates ?? []).join(", ")} onChange={(e) => updateWorker(w.id, { permissions: { ...w.permissions, approvalGates: e.target.value.split(",").map((t) => t.trim()).filter(Boolean) } })} />
+          <input
+            style={field}
+            value={w.profile ?? ""}
+            onChange={(e) => updateWorker(w.id, { profile: slugify(e.target.value) || undefined })}
+            placeholder="or type a profile slug — built-in (security-engineer), marketplace, or local profiles/"
+          />
+          {w.profile && (
+            <p style={{ color: "var(--lime)", fontSize: 12, margin: "8px 0 0" }}>
+              Operates as <strong>{w.profile}</strong> — expertise, methods, rules and verification come from the profile spec at install time.
+            </p>
+          )}
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 10 }}>
             <div>
               <label style={label}>MCP servers</label>
               <select
@@ -318,8 +360,34 @@ function WorkersTab(props: {
             + context binding
           </button>
 
-          <label style={label}>Instructions (the worker's SKILL.md body)</label>
-          <textarea style={{ ...field, minHeight: 110, fontFamily: "ui-monospace, monospace" }} value={w.instructions} onChange={(e) => updateWorker(w.id, { instructions: e.target.value })} placeholder={"1. Read the inputs.\n2. Do the bounded job.\n3. Emit the named artifacts."} />
+          <label style={label}>Permissions (scope the profession to this worker's job)</label>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
+            {([
+              ["read", ["none", "repo", "scoped", "world"]],
+              ["write", ["none", "repo", "scoped"]],
+              ["production", ["none", "read", "write"]],
+              ["secrets", ["none", "named", "all"]],
+            ] as const).map(([key, levels]) => (
+              <div key={key}>
+                <label style={label}>{key}</label>
+                <select style={field} value={w.permissions[key]} onChange={(e) => updateWorker(w.id, { permissions: { ...w.permissions, [key]: e.target.value } as CrewPermissions })}>
+                  {levels.map((l) => (
+                    <option key={l}>{l}</option>
+                  ))}
+                </select>
+              </div>
+            ))}
+          </div>
+          <label style={label}>Tools (comma-separated)</label>
+          <input style={field} value={w.permissions.tools.join(", ")} onChange={(e) => updateWorker(w.id, { permissions: { ...w.permissions, tools: e.target.value.split(",").map((t) => t.trim()).filter(Boolean) } })} />
+
+          <label style={label}>Extra instructions — optional with a profession (SKILL.md body)</label>
+          <textarea
+            style={{ ...field, minHeight: 90, fontFamily: "ui-monospace, monospace" }}
+            value={w.instructions}
+            onChange={(e) => updateWorker(w.id, { instructions: e.target.value })}
+            placeholder={w.profile ? "Optional — the profession supplies the operating model. Add only pipeline-specific steps." : "Required without a profession: 1. Read inputs. 2. Do the bounded job. 3. Emit artifacts."}
+          />
         </Card>
       ))}
       <button onClick={() => update({ workers: [...crew.workers, newWorker(crew.workers.length)] })} style={{ ...btn, justifySelf: "start" }}>

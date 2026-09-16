@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added — profiles are the atoms; marketplace is a spec repository
+
+- **Crew workers can carry a profession**: `CrewWorker.profile` references a profile spec
+  (built-in, local `profiles/`, or the marketplace catalog). At install time the
+  profession's expertise, methods, rules, standards and verification are compiled into
+  the worker's SKILL.md; hand-written instructions become optional. Missing profiles fail
+  the install with an actionable error ("equip it first"). The resolver is injected, so
+  the deterministic core stays provider-agnostic.
+- **Profile builder in the marketplace app** (`Build a profile`): a deliberately simple
+  4-step flow — identity → expertise & rules → tools & verification → ship — emitting the
+  canonical ProfileManifest JSON, downloadable and publishable as a `PROFILE-JSON`
+  proposal issue with client-side PA03x validation.
+- **Crew builder is profession-first**: workers pick a profile spec from the catalog
+  (chips) or type a built-in/local slug instead of hand-crafting every agent config
+  field; permissions are framed as scoping the profession to the pipeline role.
+- **Spec-repository framing** across MARKETPLACE.md, docs and both builders: the
+  marketplace builds and hosts *specs* (profile specs + crew specs); it never builds the
+  agent itself — your harness does that, fed by the `proagent` CLI as the courier.
+
+### Changed
+
+- Profile-less workers are unchanged: instructions still required, installs identical
+  (regression-tested). CLI JSON contracts remain additive.
+
 ## [0.6.0] - 2026-09-15
 
 ### Added

@@ -8,6 +8,32 @@ import { readCatalogRemote, fetchCrewDefinition, publishCrew } from "../crew/reg
 import type { GitHubCommitTarget } from "../crew/registry.js";
 import { jsonOut } from "./json.js";
 import { getEnvConfig } from "../env.js";
+import { listProfiles, loadProfileFile, fetchProfileManifest } from "../profiles/registry.js";
+import type { ProfileManifest } from "../profiles/types.js";
+
+/**
+ * Profile resolver for crew installs: local profiles dir + built-ins first,
+ * then the marketplace catalog (same precedence as equip). Returns null so
+ * installCrew can raise a precise, actionable error.
+ */
+function crewProfileResolver(): (slug: string) => Promise<ProfileManifest | null> {
+  return async (slug) => {
+    const local = await listProfiles();
+    const hit = local.find((e) => e.manifest.profile?.slug === slug);
+    if (hit) return hit.manifest;
+    try {
+      return await loadProfileFile(path.join("profiles", `${slug}.json`));
+    } catch {
+      /* fall through to the catalog */
+    }
+    try {
+      const env = getEnvConfig();
+      return await fetchProfileManifest(slug, env.marketRepo ?? "EnzoVezzaro/proagents", "main");
+    } catch {
+      return null;
+    }
+  };
+}
 
 // Proposal markers — kept in sync with web/src/proposal.ts and
 // .github/workflows/crew-submission.yml (single source of truth is the SPA
@@ -91,7 +117,7 @@ async function crewBuild(file: string | undefined, flags: Record<string, string 
     for (const e of plan.entries) console.log(`  + ${e.path} (${e.bytes} bytes)`);
     return;
   }
-  const result = await installCrew(crew, root);
+  const result = await installCrew(crew, root, crewProfileResolver());
   if (json) return jsonOut({ status: "ok", installed: result });
   console.log(`✓ Built ${crew.id}@${crew.version}:`);
   for (const f of result.filesWritten) console.log(`  + ${f}`);
@@ -222,7 +248,7 @@ async function crewInstall(id: string | undefined, flags: Record<string, string 
     return;
   }
 
-  const result = await installCrew(crew, root);
+  const result = await installCrew(crew, root, crewProfileResolver());
   if (json) return jsonOut({ status: "ok", installed: result });
   console.log(`✓ Installed ${crew.id}@${crew.version}:`);
   for (const f of result.filesWritten) console.log(`  + ${f}`);

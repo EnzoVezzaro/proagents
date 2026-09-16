@@ -80,10 +80,18 @@ export interface CrewWorker {
   name: string;
   role: string;
   description: string;
+  /**
+   * Optional profession: the slug of a Professional Profile this worker
+   * operates as (marketplace or built-in). When set, expertise, methods,
+   * rules and verification come from the profile and per-worker hand
+   * configuration (permissions, instructions) becomes optional — the crew
+   * builder composes professions instead of crafting every field.
+   */
+  profile?: string;
   permissions: CrewPermissions;
   mcpServers: string[]; // names into crew.mcpServers
   context: CrewContext[];
-  /** Workflow instructions (markdown body of the generated SKILL.md). */
+  /** Workflow instructions (markdown body of the generated SKILL.md). Optional when a profile is set. */
   instructions: string;
   /** Upstream workers this one receives named artifacts from. */
   receivesFrom: string[];

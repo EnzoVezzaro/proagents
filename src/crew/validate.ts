@@ -60,7 +60,19 @@ export function crewProblems(crew: CrewDefinition): string[] {
     if (!w.name) problems.push(`worker ${w.id}: name is required`);
     if (!w.role) problems.push(`worker ${w.id}: role is required`);
     if (!w.description) problems.push(`worker ${w.id}: description is required`);
-    if (!w.instructions || typeof w.instructions !== "string") problems.push(`worker ${w.id}: instructions are required`);
+    // A worker carrying a profile gets expertise/methods/rules/verification
+    // (and the operating model) from that profession; hand-written
+    // instructions become optional — the pipeline role is what's left to set.
+    if (w.profile !== undefined && w.profile !== null && w.profile !== "") {
+      if (!ID_PATTERN.test(w.profile)) {
+        problems.push(`worker ${w.id}: profile "${w.profile}" must be a lowercase slug`);
+      }
+      if (w.instructions !== undefined && typeof w.instructions !== "string") {
+        problems.push(`worker ${w.id}: instructions must be a string`);
+      }
+    } else {
+      if (!w.instructions || typeof w.instructions !== "string") problems.push(`worker ${w.id}: instructions are required`);
+    }
     validatePermissions(w.permissions, w.id, problems);
     if (!Array.isArray(w.mcpServers)) problems.push(`worker ${w.id}: mcpServers must be an array`);
     else {

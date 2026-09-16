@@ -52,6 +52,8 @@ export interface CrewWorker {
   name: string;
   role: string;
   description: string;
+  /** Optional profession: slug of a Professional Profile this worker operates as. */
+  profile?: string;
   permissions: CrewPermissions;
   mcpServers: string[];
   context: CrewContext[];
@@ -120,4 +122,16 @@ export function emptyCrew(author: string): CrewDefinition {
 
 export function slugify(text: string): string {
   return text.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 48);
+}
+
+/** Minimal ProfileManifest for new profile drafts (validator defaults fill the rest). */
+export function emptyProfile(): ProfileManifest {
+  return {
+    version: "1",
+    profile: { name: "", slug: "", version: "1.0.0" },
+    identity: { title: "" },
+    expertise: [],
+    tools: { required: ["filesystem", "shell", "git"] },
+    verification: { required: ["tests"] },
+  };
 }

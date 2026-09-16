@@ -4,6 +4,7 @@ import { CrewDetailPage } from "./pages/CrewDetailPage.js";
 import { DashboardPage } from "./pages/DashboardPage.js";
 import { BuildEntryPage } from "./pages/BuildEntryPage.js";
 import { BuilderPage } from "./pages/BuilderPage.js";
+import { ProfileBuilderPage } from "./pages/ProfileBuilderPage.js";
 import { PreviewPage } from "./pages/PreviewPage.js";
 import { SettingsModal } from "./SettingsModal.js";
 import { loadSettings, type AppSettings } from "../settings.js";
@@ -59,6 +60,8 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
     page = <BuildEntryPage ctx={ctx} navigate={navigate} />;
   } else if (route === "builder") {
     page = <BuilderPage ctx={ctx} />;
+  } else if (route === "build-profile") {
+    page = <ProfileBuilderPage ctx={ctx} />;
   } else {
     page = <CatalogPage ctx={ctx} />;
   }
@@ -99,6 +102,7 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
         <nav style={{ display: "flex", gap: 18, fontSize: 14 }}>
           {nav("catalog", "Catalog")}
           {nav("dashboard", "Dashboard")}
+          {nav("build-profile", "Build a profile")}
           {nav("build", "Build a crew")}
         </nav>
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 14 }}>

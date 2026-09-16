@@ -7,6 +7,50 @@ import type {
 } from "./types.js";
 import { CrewError } from "./types.js";
 import { validateCrewOrThrow } from "./validate.js";
+import type { ProfileManifest } from "../profiles/types.js";
+
+/**
+ * Resolve a worker's profession manifest by slug. Optional: crews without
+ * profiles install exactly as before. The resolver is injected so the core
+ * stays deterministic and provider-agnostic (the CLI wires it to the
+ * profile registry / marketplace; tests pass stubs).
+ */
+export type ProfileResolver = (slug: string) => Promise<ProfileManifest | null>;
+
+/**
+ * Profile-derived operating model for a worker, as markdown body sections.
+ * Deterministic: same manifest → same sections, always.
+ */
+export function profileSections(manifest: ProfileManifest): string[] {
+  const lines: string[] = [];
+  const profile = manifest.profile;
+  if (profile) lines.push(`**Profession:** ${profile.name} v${profile.version} (profile: \`${profile.slug}\`)`);
+  const identity = manifest.identity;
+  if (identity?.summary) {
+    lines.push("");
+    lines.push(identity.summary.trim());
+  }
+  const list = (title: string, items: string[] | undefined) => {
+    if (items && items.length > 0) {
+      lines.push("");
+      lines.push(`### ${title}`);
+      lines.push("");
+      for (const item of items) lines.push(`- ${item}`);
+    }
+  };
+  list("Expertise", manifest.expertise);
+  list("Methods", manifest.methods);
+  list("Rules (normative)", manifest.rules);
+  list("Standards", manifest.standards);
+  const verification = manifest.verification?.required;
+  if (verification && verification.length > 0) {
+    lines.push("");
+    lines.push(`### Verification (required before completion)`);
+    lines.push("");
+    for (const v of verification) lines.push(`- ${v}`);
+  }
+  return lines;
+}
 
 /**
  * Crew installer — writes a crew into a repo root, deterministically:
@@ -60,7 +104,11 @@ export function crewSkillMarkdown(crew: CrewDefinition): string {
   return lines.join("\n");
 }
 
-export function workerSkillMarkdown(crew: CrewDefinition, worker: CrewDefinition["workers"][number]): string {
+export function workerSkillMarkdown(
+  crew: CrewDefinition,
+  worker: CrewDefinition["workers"][number],
+  profile?: ProfileManifest | null,
+): string {
   const lines: string[] = [];
   lines.push("---");
   lines.push(`name: ${crew.id}-${worker.id}`);
@@ -72,11 +120,29 @@ export function workerSkillMarkdown(crew: CrewDefinition, worker: CrewDefinition
   lines.push(`**Role:** ${worker.role}`);
   lines.push("");
   lines.push(worker.description);
+  if (profile) {
+    lines.push(...profileSections(profile));
+  }
   lines.push("");
-  lines.push("## Instructions");
-  lines.push("");
-  lines.push(worker.instructions.trim());
-  lines.push("");
+  if (worker.instructions && worker.instructions.trim()) {
+    lines.push("## Instructions");
+    lines.push("");
+    lines.push(worker.instructions.trim());
+    lines.push("");
+  } else if (profile) {
+    lines.push("## Instructions");
+    lines.push("");
+    lines.push(
+      `Operate as a ${profile.profile.name} (\`${profile.profile.slug}\`): follow the profession's rules and standards above, work within the permission model below, and satisfy the verification requirements before reporting completion.`,
+    );
+    lines.push("");
+  } else {
+    // Validation requires instructions for profile-less workers, so this is
+    // only reachable for hand-built crews that skip validation.
+    lines.push("## Instructions");
+    lines.push("");
+    lines.push("");
+  }
   lines.push("## Permissions (normative)");
   lines.push("");
   lines.push("| Boundary | Value |");
@@ -185,8 +251,38 @@ export function mergeMcpConfig(existingJson: string | null, crew: CrewDefinition
  * crew + same root state → same result. Never clobbers unrelated .mcp.json
  * entries.
  */
-export async function installCrew(crew: CrewDefinition, root: string): Promise<InstallResult> {
+/**
+ * Install a crew into `root` on the local filesystem. Deterministic: same
+ * crew + same root state → same result. Never clobbers unrelated .mcp.json
+ * entries. Workers declaring a `profile` slug get the profession's
+ * expertise/methods/rules/verification compiled into their SKILL.md; the
+ * resolver maps slugs → manifests (missing profiles fail the install with a
+ * clear error — never silently skipped).
+ */
+export async function installCrew(
+  crew: CrewDefinition,
+  root: string,
+  resolveProfile?: ProfileResolver,
+): Promise<InstallResult> {
   validateCrewOrThrow(crew);
+
+  // Resolve worker profiles once (deterministic order = worker order).
+  const profiles = new Map<string, ProfileManifest>();
+  if (resolveProfile) {
+    for (const w of crew.workers) {
+      const slug = w.profile;
+      if (!slug) continue;
+      const manifest = await resolveProfile(slug);
+      if (!manifest) {
+        throw new CrewError(
+          "CREW_INSTALL_ERROR",
+          `worker "${w.id}" references profile "${slug}" which could not be resolved ` +
+            `(equip it first: proagent equip ${slug}, or reference a built-in/marketplace profile)`,
+        );
+      }
+      profiles.set(w.id, manifest);
+    }
+  }
 
   const plan = planInstall(crew);
   const filesWritten: string[] = [];
@@ -203,7 +299,7 @@ export async function installCrew(crew: CrewDefinition, root: string): Promise<I
       const workerId = path.basename(path.dirname(entry.path));
       const worker = crew.workers.find((w) => w.id === workerId);
       if (!worker) throw new CrewError("CREW_INSTALL_ERROR", `worker not found for ${entry.path}`);
-      content = workerSkillMarkdown(crew, worker);
+      content = workerSkillMarkdown(crew, worker, profiles.get(workerId) ?? null);
     } else {
       const workerId = path.basename(path.dirname(entry.path));
       const worker = crew.workers.find((w) => w.id === workerId);

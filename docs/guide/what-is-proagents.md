@@ -94,7 +94,7 @@ mechanisms: project instructions, skills directories, rules and hooks.
 | Path | When | How |
 |---|---|---|
 | **Equip a profile** | Your coding agent is fine, but it should operate like a professional in a discipline | `proagent detect` → `proagent equip security-engineer` |
-| **Build a specialized agent** | The professional system you need doesn't exist yet | `proagent init --intent "…"` → progressive interview → `spec`/`validate`/`build` |
+| **Build a crew spec** | The professional system you need doesn't exist yet — as a spec your harness executes | `proagent init --intent "…"` → progressive interview → `spec`/`validate`/`build` |
 
 Both paths share the same primitives: skills, rules, verification, context frameworks,
 validation codes, and the marketplace.

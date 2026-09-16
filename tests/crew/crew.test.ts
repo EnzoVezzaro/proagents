@@ -310,3 +310,100 @@ describe("crew CLI (CREW-CLI)", () => {
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// CREW-PROFILE — workers referencing profile specs (profiles are the atoms)
+// ---------------------------------------------------------------------------
+
+describe("CREW-PROFILE — profile-backed workers", () => {
+  const baseWorker = {
+    id: "sec",
+    name: "Security worker",
+    role: "reviewer",
+    description: "Reviews changes",
+    permissions: { read: "repo" as const, write: "none" as const, production: "none" as const, secrets: "none" as const, tools: [] },
+    mcpServers: [],
+    context: [],
+    receivesFrom: [],
+    emits: [],
+  };
+
+  const securityProfile = {
+    version: "1",
+    profile: { name: "Security Engineer", slug: "security-engineer", version: "1.0.0" },
+    identity: { title: "Security Engineer", summary: "You operate as a security engineer." },
+    expertise: ["application security"],
+    tools: { required: ["filesystem", "shell", "git"] },
+    verification: { required: ["tests"] },
+    rules: ["Never expose secrets."],
+    methods: ["threat-modeling"],
+    standards: ["OWASP"],
+  };
+
+  it("CREW-PROFILE-001: profile-backed worker needs no hand-written instructions", () => {
+    const crew = {
+      id: "profiled", name: "Profiled", version: "1.0.0", description: "d", author: "a", tags: [],
+      workers: [{ ...baseWorker, profile: "security-engineer" }],
+      mcpServers: [], handoffs: [], entryPoints: ["sec"],
+      createdAt: "2026-01-01", updatedAt: "2026-01-01",
+    } as unknown as CrewDefinition;
+    expect(crewProblems(crew)).toEqual([]);
+  });
+
+  it("CREW-PROFILE-002: profile-less worker still requires instructions", () => {
+    const crew = {
+      id: "plain", name: "Plain", version: "1.0.0", description: "d", author: "a", tags: [],
+      workers: [{ ...baseWorker }],
+      mcpServers: [], handoffs: [], entryPoints: ["sec"],
+      createdAt: "2026-01-01", updatedAt: "2026-01-01",
+    } as unknown as CrewDefinition;
+    expect(crewProblems(crew).join(" ")).toContain("instructions are required");
+  });
+
+  it("CREW-PROFILE-003: install compiles profession sections from the resolved profile", async () => {
+    const crew = {
+      id: "profiled", name: "Profiled", version: "1.0.0", description: "d", author: "a", tags: [],
+      workers: [{ ...baseWorker, profile: "security-engineer" }],
+      mcpServers: [], handoffs: [], entryPoints: ["sec"],
+      createdAt: "2026-01-01", updatedAt: "2026-01-01",
+    } as unknown as CrewDefinition;
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "crew-profile-"));
+    const { installCrew } = await import("../../src/crew/install.js");
+    const result = await installCrew(crew, root, async (slug) =>
+      slug === "security-engineer" ? (securityProfile as never) : null,
+    );
+    const skill = fs.readFileSync(path.join(root, ".agents", "crews", "profiled", "workers", "sec", "SKILL.md"), "utf8");
+    expect(skill).toContain("Profession:** Security Engineer v1.0.0");
+    expect(skill).toContain("Never expose secrets.");
+    expect(skill).toContain("threat-modeling");
+    expect(skill).toContain("Operate as a Security Engineer");
+    expect(result.filesWritten.length).toBeGreaterThan(0);
+  });
+
+  it("CREW-PROFILE-004: missing profile fails the install with an actionable error", async () => {
+    const crew = {
+      id: "profiled", name: "Profiled", version: "1.0.0", description: "d", author: "a", tags: [],
+      workers: [{ ...baseWorker, profile: "no-such-profession" }],
+      mcpServers: [], handoffs: [], entryPoints: ["sec"],
+      createdAt: "2026-01-01", updatedAt: "2026-01-01",
+    } as unknown as CrewDefinition;
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "crew-profile-"));
+    const { installCrew } = await import("../../src/crew/install.js");
+    await expect(installCrew(crew, root, async () => null)).rejects.toThrow(/no-such-profession.*equip it first/s);
+  });
+
+  it("CREW-PROFILE-005: profile-less install path is unchanged (no resolver needed)", async () => {
+    const crew = {
+      id: "plain", name: "Plain", version: "1.0.0", description: "d", author: "a", tags: [],
+      workers: [{ ...baseWorker, instructions: "Do the job." }],
+      mcpServers: [], handoffs: [], entryPoints: ["sec"],
+      createdAt: "2026-01-01", updatedAt: "2026-01-01",
+    } as unknown as CrewDefinition;
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "crew-profile-"));
+    const { installCrew } = await import("../../src/crew/install.js");
+    await installCrew(crew, root);
+    const skill = fs.readFileSync(path.join(root, ".agents", "crews", "plain", "workers", "sec", "SKILL.md"), "utf8");
+    expect(skill).toContain("Do the job.");
+    expect(skill).not.toContain("Profession:**");
+  });
+});
