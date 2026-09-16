@@ -43,7 +43,7 @@ export function DashboardPage(props: { ctx: AppCtx; user: { login: string } | nu
             >
               Sign in with GitHub
             </button>
-            <span style={{ color: "var(--cream-dim)", fontSize: 12 }}>opens ⚙ Settings → GitHub account</span>
+            <span style={{ color: "var(--cream-dim)", fontSize: 12 }}>opens Settings → GitHub account</span>
           </div>
           <ErrorNote message="Not signed in — publishing crews requires a token with repo write access." />
         </>

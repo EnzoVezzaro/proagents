@@ -103,7 +103,6 @@ export function BuildEntryPage(props: { ctx: AppCtx; navigate: (to: string) => v
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginTop: 22 }}>
         {/* Path 1 — from repo */}
         <div style={phase === "analyzing" ? pathCardActive : pathCard}>
-          <div style={{ fontSize: 22, marginBottom: 6 }}>🏛</div>
           <h3 style={{ margin: "0 0 6px", fontSize: 16 }}>Start from your repo</h3>
           <p style={{ color: "var(--cream-dim)", fontSize: 13, lineHeight: 1.6, margin: "0 0 14px" }}>
             Pick a repository. ProAgents analyzes its shape — languages, tests, CI, docs — and
@@ -112,7 +111,7 @@ export function BuildEntryPage(props: { ctx: AppCtx; navigate: (to: string) => v
 
           {!token ? (
             <p style={{ color: "var(--cream-dim)", fontSize: 13 }}>
-              <a href="#/catalog" style={{ color: "var(--cyan)", textDecoration: "none" }}>Sign in with GitHub</a> in ⚙ Settings to list your repositories.
+              <a href="#/catalog" style={{ color: "var(--cyan)", textDecoration: "none" }}>Sign in with GitHub</a> in Settings to list your repositories.
             </p>
           ) : (
             <div style={{ display: "grid", gap: 10 }}>

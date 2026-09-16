@@ -37,7 +37,24 @@ Intent** (designwithintent.ai) for UX strategy.
 Docs mirrors these as `--pa-*` vars in both light (ice paper + navy text) and
 dark (the native world) variants: `docs/.vitepress/theme/custom.css`.
 
-## Grammar
+## Cross-surface unity
+
+The docs site (VitePress) and the marketplace SPA are **one product**: same palette,
+same gradient discipline, same voice. Every surface links to its sibling (SPA nav →
+Docs; docs hero → marketplace; footer cross-links), and both share the branding
+assets from `branding/`. A visitor moving between them must never feel like they left
+the product.
+
+## Anti-slop rules (audited with yetone/kill-ai-slop)
+
+- **No atmosphere.** No radial/ambient background glows, no hero halos, no decorative
+  grids. Depth comes from hairlines and elevation tokens, not colored fog.
+- **No emoji in product copy.** Buttons, nav, errors and status text are words. The
+  only permitted glyphs are functional ones quoting a real external UI (GitHub's ✓
+  checklist, CI bot ✅/❌ comments) or diagram arrows inside mermaid blocks.
+- **One gradient, already defined in Grammar — never add a decorative second.**
+- Re-audit after UI work: install once with `npx skills add yetone/kill-ai-slop`,
+  then run its scanner over `web/src` and `docs` (excluding `dist`).
 
 - **One gradient, used with discipline.** Primary action buttons, the
   wordmark glow, hero numerals. If a gradient appears anywhere the user can't

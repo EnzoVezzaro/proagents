@@ -179,7 +179,7 @@ export function GitHubUserMenu(props: { user: GitHubUser; compact?: boolean }): 
       {open && (
         <div role="menu" aria-label="GitHub account" className="gh-menu">
           <a role="menuitem" href={`https://github.com/${props.user.login}`} target="_blank" rel="noreferrer">
-            ↗ View GitHub profile
+            View GitHub profile
           </a>
           <hr />
           <button
@@ -189,7 +189,7 @@ export function GitHubUserMenu(props: { user: GitHubUser; compact?: boolean }): 
               clearGithubSession();
             }}
           >
-            ⎋ Sign out
+            Sign out
           </button>
           <button
             role="menuitem"
@@ -200,7 +200,7 @@ export function GitHubUserMenu(props: { user: GitHubUser; compact?: boolean }): 
               clearAllAppCache();
             }}
           >
-            ⌫ Sign out & clear cache
+            Sign out & clear cache
           </button>
         </div>
       )}

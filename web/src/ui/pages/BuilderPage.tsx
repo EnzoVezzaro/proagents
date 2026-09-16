@@ -113,7 +113,7 @@ export function BuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
     setProblems(errs);
     if (errs.length > 0) return;
     if (!settings.githubToken) {
-      setPublishState("Sign in with GitHub in ⚙ Settings to publish — publishing files a proposal issue on the catalog repo.");
+      setPublishState("Sign in with GitHub in Settings to publish — publishing files a proposal issue on the catalog repo.");
       return;
     }
     setPublishState("Filing marketplace proposal…");
@@ -551,8 +551,8 @@ function ShipTab(props: {
           </p>
         )}
         <div style={{ display: "flex", gap: 14, fontSize: 12, marginTop: 14 }}>
-          <a href="https://github.com/sponsors/EnzoVezzaro" target="_blank" rel="noreferrer" style={{ color: "var(--cream-dim)" }}>♥ Sponsor the project</a>
-          <a href="https://ko-fi.com/enzojuniorvezzaro" target="_blank" rel="noreferrer" style={{ color: "var(--cream-dim)" }}>☕ Ko-fi</a>
+          <a href="https://github.com/sponsors/EnzoVezzaro" target="_blank" rel="noreferrer" style={{ color: "var(--cream-dim)" }}>Sponsor the project</a>
+          <a href="https://ko-fi.com/enzojuniorvezzaro" target="_blank" rel="noreferrer" style={{ color: "var(--cream-dim)" }}>Ko-fi</a>
         </div>
       </Card>
     </div>

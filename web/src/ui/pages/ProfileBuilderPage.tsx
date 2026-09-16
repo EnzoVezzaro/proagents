@@ -99,7 +99,7 @@ export function ProfileBuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
     setProblems(errs);
     if (errs.length > 0) return;
     if (!settings.githubToken) {
-      setPublishState("Sign in with GitHub in ⚙ Settings to publish — publishing opens a pull request on the marketplace repo.");
+      setPublishState("Sign in with GitHub in Settings to publish — publishing opens a pull request on the marketplace repo.");
       return;
     }
     setPublishState("Opening a publish PR on the marketplace repo…");
@@ -134,7 +134,7 @@ export function ProfileBuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
     setProblems(errs);
     if (errs.length > 0) return;
     if (!settings.githubToken) {
-      setPublishState("Sign in with GitHub in ⚙ Settings to file a proposal issue.");
+      setPublishState("Sign in with GitHub in Settings to file a proposal issue.");
       return;
     }
     setPublishState("Filing marketplace proposal issue…");
@@ -245,7 +245,7 @@ function IdentityTab(props: { profile: ProfileManifest; update: (p: Partial<Prof
           <input style={field} value={p.slug} onChange={(e) => update({ profile: { ...p, slug: slugify(e.target.value) } })} placeholder="security-engineer" aria-invalid={slugTaken} />
           {slugTaken && (
             <p style={{ color: "var(--danger)", fontSize: 12, margin: "4px 0 0" }}>
-              ⛔ “{p.slug}” already exists in the marketplace — pick another (PA038).
+              “{p.slug}” already exists in the marketplace — pick another (PA038).
             </p>
           )}
         </div>

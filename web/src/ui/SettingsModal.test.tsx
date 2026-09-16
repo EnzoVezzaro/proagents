@@ -31,7 +31,7 @@ describe("SettingsModal GitHub account (SETTINGS-AUTH)", () => {
     const trigger = screen.getByRole("button", { name: /octocat/ });
     fireEvent.click(trigger);
     expect(screen.getByRole("menuitem", { name: /Sign out & clear cache/ })).toBeTruthy();
-    expect(screen.getByRole("menuitem", { name: "⎋ Sign out" })).toBeTruthy();
+    expect(screen.getByRole("menuitem", { name: "Sign out" })).toBeTruthy();
   });
 
   it("SETTINGS-AUTH-003: PAT field left empty keeps the existing session on save", () => {
@@ -54,7 +54,7 @@ describe("GitHubUserMenu actions (SETTINGS-MENU)", () => {
     const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false); // not the clear-cache path
     render(<GitHubUserMenu user={user} />);
     fireEvent.click(screen.getByRole("button", { name: /octocat/ }));
-    fireEvent.click(screen.getByRole("menuitem", { name: "⎋ Sign out" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Sign out" }));
     const s = loadSettings();
     expect(s.githubToken).toBe("");
     expect(s.githubRefreshToken).toBe("");

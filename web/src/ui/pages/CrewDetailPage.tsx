@@ -92,7 +92,7 @@ export function CrewDetailPage(props: { id: string; ctx: AppCtx }): React.JSX.El
             rel="noreferrer"
             style={{ display: "block", textAlign: "center", marginTop: 10, border: "1px solid var(--line)", color: "var(--cream)", borderRadius: 10, padding: "10px 0", textDecoration: "none", fontSize: 13 }}
           >
-            ♥ Support the project
+            Support the project
           </a>
         </div>
       </div>

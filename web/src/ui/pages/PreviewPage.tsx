@@ -123,7 +123,7 @@ export function PreviewPage(props: { id?: string; ctx: AppCtx }): React.JSX.Elem
       </p>
 
       {!token ? (
-        <ErrorNote message="Sign in with GitHub first (⚙ Settings → GitHub account) to list your repositories." />
+        <ErrorNote message="Sign in with GitHub first (Settings, GitHub account) to list your repositories." />
       ) : (
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center", margin: "20px 0" }}>
           <select value={repo} onChange={(e) => setRepo(e.target.value)} style={select}>
@@ -147,7 +147,7 @@ export function PreviewPage(props: { id?: string; ctx: AppCtx }): React.JSX.Elem
           </button>
           {!repo && <span style={{ color: "var(--cream-dim)", fontSize: 12 }}>pick a repository first</span>}
           {repo && !crew && <span style={{ color: "var(--cream-dim)", fontSize: 12 }}>pick a crew</span>}
-          {repo && crew && !providerReady && <span style={{ color: "var(--cream-dim)", fontSize: 12 }}>add a model API key in ⚙ Settings</span>}
+          {repo && crew && !providerReady && <span style={{ color: "var(--cream-dim)", fontSize: 12 }}>add a model API key in Settings</span>}
         </div>
       )}
 

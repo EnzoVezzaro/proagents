@@ -44,11 +44,7 @@
 
 html, body {
   margin: 0;
-  background:
-    radial-gradient(1100px 500px at 80% -10%, rgba(84, 36, 228, 0.25), transparent 60%),
-    radial-gradient(900px 420px at -10% 0%, rgba(0, 72, 228, 0.28), transparent 55%),
-    var(--ink);
-  background-attachment: fixed;
+  background: var(--ink);
   color: var(--cream);
 }
 

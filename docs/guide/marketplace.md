@@ -191,7 +191,7 @@ Everything user-specific lives in the browser's localStorage — there is no ser
 ### Auth: GitHub device flow
 The app signs in with the **ProAgents GitHub App** using the OAuth Device Flow — designed
 for input-limited clients and, importantly for a static site, requiring **no client
-secret**. Open **⚙ Settings → GitHub account** and press *Sign in with GitHub*, enter the
+secret**. Open **Settings → GitHub account** and press *Sign in with GitHub*, enter the
 one-time code at `github.com/login/device`, done. The token stays in your browser.
 
 **Why a proxy?** `github.com/login/*` sends no CORS headers, so the browser cannot call
@@ -228,7 +228,7 @@ ProAgents is **fully open source** — there is nothing to buy. Every crew and a
 marketplace is free and MIT-licensed, and the project itself has no paid tier. If the tool
 saves you time, support development through the donation channels:
 
-- **GitHub Sponsors** — <https://github.com/sponsors/EnzoVezzaro> (the ♥ Donate button in
+- **GitHub Sponsors** — <https://github.com/sponsors/EnzoVezzaro> (the Donate button in
   the marketplace header and the Sponsor button on the repo)
 - **Ko-fi** — <https://ko-fi.com/enzojuniorvezzaro>
 

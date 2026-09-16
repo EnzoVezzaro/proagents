@@ -151,6 +151,14 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
         <nav aria-label="Primary" style={{ display: "flex", gap: 18, fontSize: 14 }}>
           {nav("catalog", "Catalog")}
           {nav("dashboard", "Dashboard")}
+          <a
+            href="https://enzovezzaro.github.io/proagents/"
+            target="_blank"
+            rel="noreferrer"
+            style={{ color: "var(--cream-dim)", textDecoration: "none" }}
+          >
+            Docs
+          </a>
         </nav>
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 14 }}>
           <a
@@ -159,7 +167,7 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
             rel="noreferrer"
             style={{ color: "var(--cream)", textDecoration: "none", border: "1px solid var(--line)", borderRadius: 8, padding: "6px 12px", fontSize: 13 }}
           >
-            ♥ <span style={{ color: "var(--cyan)", fontWeight: 700 }}>Donate</span>
+            <span style={{ color: "var(--cyan)", fontWeight: 700 }}>Donate</span>
           </a>
           <button
             onClick={openSettings}
@@ -173,18 +181,21 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
               fontSize: 13,
             }}
           >
-            ⚙ Settings
+            Settings
           </button>
         </div>
       </header>
       <main style={{ maxWidth: 1180, margin: "0 auto", padding: "32px 24px 88px" }}>{page}</main>
       <footer style={{ borderTop: "1px solid var(--line)", padding: "22px 28px", color: "var(--cream-dim)", fontSize: 12, textAlign: "center", background: "rgba(0, 0, 24, 0.5)" }}>
         ProAgents Marketplace · fully open source (MIT) · runs entirely in your browser on GitHub Pages ·{" "}
+        <a href="https://enzovezzaro.github.io/proagents/" style={{ color: "var(--cyan)", textDecoration: "none" }}>
+          docs
+        </a>{" "}·{" "}
         <a href="https://github.com/EnzoVezzaro/proagents" style={{ color: "var(--cyan)", textDecoration: "none" }}>
           source
         </a>{" "}·{" "}
-        <a href="https://github.com/sponsors/EnzoVezzaro" style={{ color: "var(--cyan)", textDecoration: "none" }}>♥ Sponsor</a>{" "}·{" "}
-        <a href="https://ko-fi.com/enzojuniorvezzaro" style={{ color: "var(--cyan)", textDecoration: "none" }}>☕ Ko-fi</a>
+        <a href="https://github.com/sponsors/EnzoVezzaro" style={{ color: "var(--cyan)", textDecoration: "none" }}>Sponsor</a>{" "}·{" "}
+        <a href="https://ko-fi.com/enzojuniorvezzaro" style={{ color: "var(--cyan)", textDecoration: "none" }}>Ko-fi</a>
       </footer>
       {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} user={user} />}
     </div>
