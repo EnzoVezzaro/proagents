@@ -23,7 +23,9 @@ export default defineConfig({
   base: "/proagents/",
   cleanUrls: true,
   themeConfig: {
-    logo: "/logo.png",
+    // Light navbar gets the dark-ink lockup; dark mode swaps to the white-text
+    // lockup via `.dark img.VPImage` in theme/custom.css.
+    logo: "/logo-dark.png",
     siteTitle: "ProAgents",
     nav: [
       { text: "Docs", link: "/guide/what-is-proagents", activeMatch: "/guide/" },

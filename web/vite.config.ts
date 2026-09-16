@@ -55,6 +55,19 @@ export default defineConfig({
   envDir: "..",
   envPrefix: "VITE_",
   plugins: [react(), marketplaceDevServer()],
+  server: {
+    proxy: {
+      // github.com sends no CORS headers, so the SPA reaches the OAuth device
+      // flow through this dev proxy. Production uses a Worker instead — see
+      // workers/github-oauth-proxy.mjs + VITE_OAUTH_PROXY_URL (.env.example).
+      "/github-oauth": {
+        target: "https://github.com",
+        changeOrigin: true,
+        secure: true,
+        rewrite: (p) => p.replace(/^\/github-oauth/, ""),
+      },
+    },
+  },
   build: {
     outDir: "dist",
     sourcemap: false,

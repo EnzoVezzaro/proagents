@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProAgents — Next-Gen Autonomous AI Agent Platform</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        pa: {
+                            bgDark: '#070913',
+                            surfaceDark: '#0D111D',
+                            cardDark: '#131929',
+                            borderDark: '#1E293B',
+                            blue: '#2A48FF',
+                            purple: '#7C3AED',
+                            cyan: '#00E5D1',
+                        }
+                    },
+                    animation: {
+                        'spin-slow': 'spin 18s linear infinite',
+                        'spin-reverse': 'spin-reverse 22s linear infinite',
+                        'float': 'float 5s ease-in-out infinite',
+                        'pulse-glow': 'pulseGlow 4s ease-in-out infinite alternate',
+                        'beam': 'beam 3s linear infinite',
+                    },
+                    keyframes: {
+                        'spin-reverse': {
+                            '0%': { transform: 'rotate(0deg)' },
+                            '100%': { transform: 'rotate(-360deg)' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
+                            '50%': { transform: 'translateY(-12px) rotate(1deg)' },
+                        },
+                        pulseGlow: {
+                            '0%': { opacity: '0.4', transform: 'scale(1)' },
+                            '100%': { opacity: '0.8', transform: 'scale(1.08)' },
+                        },
+                        beam: {
+                            '0%': { transform: 'translateX(-100%)' },
+                            '100%': { transform: 'translateX(100%)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            /* Light Theme Tokens */
+            --bg-page: #F8FAFC;
+            --bg-surface: #FFFFFF;
+            --bg-card: #F1F5F9;
+            --bg-glass: rgba(255, 255, 255, 0.75);
+            --border-color: rgba(226, 232, 240, 0.8);
+            --border-glow: rgba(42, 72, 255, 0.3);
+            --text-main: #0F172A;
+            --text-muted: #64748B;
+            --grid-line: rgba(15, 23, 42, 0.04);
+            --nav-bg: rgba(248, 250, 252, 0.8);
+            --shadow-card: 0 10px 30px -5px rgba(15, 23, 42, 0.08);
+            --code-bg: #1E293B;
+            --code-text: #E2E8F0;
+        }
+
+        .dark {
+            /* Futuristic Deep Dark Mode Tokens */
+            --bg-page: #070913;
+            --bg-surface: #0D111D;
+            --bg-card: rgba(19, 25, 41, 0.7);
+            --bg-glass: rgba(13, 17, 29, 0.75);
+            --border-color: rgba(30, 41, 59, 0.8);
+            --border-glow: rgba(0, 229, 209, 0.3);
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+            --grid-line: rgba(255, 255, 255, 0.03);
+            --nav-bg: rgba(7, 9, 19, 0.8);
+            --shadow-card: 0 15px 35px -5px rgba(0, 0, 0, 0.5);
+            --code-bg: #03050B;
+            --code-text: #00E5D1;
+        }
+
+        body {
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            transition: background-color 0.4s ease, color 0.4s ease;
+            overflow-x: hidden;
+        }
+
+        .theme-surface { background-color: var(--bg-surface); }
+        .theme-card { background-color: var(--bg-card); }
+        .theme-border { border-color: var(--border-color); }
+        .theme-text { color: var(--text-main); }
+        .theme-text-muted { color: var(--text-muted); }
+
+        /* Glassmorphism Effect */
+        .glass-panel {
+            background: var(--bg-glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-card);
+        }
+
+        /* Dribbble Mesh Gradient Glow */
+        .glow-mesh {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(42, 72, 255, 0.25) 0%, rgba(124, 58, 237, 0.2) 40%, rgba(0, 229, 209, 0.15) 70%, transparent 100%);
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #2A48FF 0%, #7C3AED 40%, #00E5D1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .gradient-brand {
+            background: linear-gradient(135deg, #2A48FF 0%, #7C3AED 50%, #00E5D1 100%);
+        }
+
+        .gradient-border-card {
+            position: relative;
+            border-radius: 1.25rem;
+            background: var(--bg-glass);
+            backdrop-filter: blur(16px);
+        }
+
+        .gradient-border-card::before {
+            content: "";
+            position: absolute;
+            inset: -1px;
+            border-radius: 1.3rem;
+            padding: 1px;
+            background: linear-gradient(135deg, rgba(42, 72, 255, 0.5), rgba(124, 58, 237, 0.4), rgba(0, 229, 209, 0.6));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+
+        /* Subtle Grid Pattern Background */
+        .bg-grid-pattern {
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+                linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+        }
+
+        /* Orbit Ring Canvas Styling */
+        .orbit-ring {
+            border: 1px dashed rgba(0, 229, 209, 0.3);
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        /* Toast Popup */
+        #toast {
+            visibility: hidden;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+            transform: translateY(20px);
+            opacity: 0;
+        }
+        #toast.show {
+            visibility: visible;
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(0, 229, 209, 0.3);
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 229, 209, 0.6);
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-grid-pattern relative">
+
+    <!-- Toast Popup Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl bg-slate-900/90 border border-cyan-500/40 text-white shadow-2xl backdrop-blur-xl">
+        <div class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></div>
+        <span id="toast-message" class="text-sm font-medium font-sans">Notification</span>
+    </div>
+
+    <!-- Ambient Mesh Glows -->
+    <div class="glow-mesh top-[-100px] left-[-100px] animate-pulse-glow"></div>
+    <div class="glow-mesh top-[40%] right-[-150px] animate-pulse-glow" style="animation-delay: 2s;"></div>
+    <div class="glow-mesh bottom-[10%] left-[20%] animate-pulse-glow" style="animation-delay: 3.5s;"></div>
+
+    <!-- Navigation Header -->
+    <header class="sticky top-0 z-40 border-b theme-border transition-colors duration-300" style="background-color: var(--nav-bg); backdrop-filter: blur(12px);">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
+            
+            <!-- Brand Logo -->
+            <div class="flex items-center gap-3 cursor-pointer" onclick="switchView('landing')">
+                <div class="relative w-10 h-10 rounded-xl gradient-brand p-0.5 shadow-lg shadow-blue-500/20">
+                    <div class="w-full h-full theme-surface rounded-[10px] flex items-center justify-center">
+                        <span class="gradient-text font-black text-xl tracking-tighter">P<span class="text-cyan-400">✦</span></span>
+                    </div>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-2xl font-extrabold tracking-tight theme-text flex items-center gap-0.5">
+                        Pro<span class="gradient-text">A<span class="text-xs inline-block transform -translate-y-0.5">✦</span>gents</span>
+                    </span>
+                    <span class="text-[9px] uppercase font-bold tracking-widest text-cyan-400 -mt-1 font-mono">Autonomous AI Core</span>
+                </div>
+            </div>
+
+            <!-- View Switcher Tabs (Landing vs Design System) -->
+            <div class="hidden md:flex items-center p-1 rounded-2xl theme-surface border theme-border shadow-inner">
+                <button id="tabLanding" onclick="switchView('landing')" class="px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-white gradient-brand shadow-md">
+                    <i data-lucide="layout-template" class="w-4 h-4"></i> AI SaaS Landing
+                </button>
+                <button id="tabDS" onclick="switchView('design-system')" class="px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 theme-text-muted hover:theme-text">
+                    <i data-lucide="palette" class="w-4 h-4"></i> Design System Tokens
+                </button>
+            </div>
+
+            <!-- Header Action Controls -->
+            <div class="flex items-center gap-3">
+                <!-- Theme Toggle Button -->
+                <button onclick="toggleTheme()" class="p-2.5 rounded-xl theme-surface border theme-border hover:border-cyan-500/50 transition-all text-xs font-semibold theme-text flex items-center gap-2 shadow-sm" title="Toggle Theme">
+                    <i id="sunIcon" data-lucide="sun" class="w-4 h-4 text-amber-500 hidden"></i>
+                    <i id="moonIcon" data-lucide="moon" class="w-4 h-4 text-cyan-400"></i>
+                    <span id="themeLabel" class="hidden sm:inline text-xs font-mono">Dark</span>
+                </button>
+
+                <!-- Launch App Button -->
+                <button onclick="triggerLaunchModal()" class="px-5 py-2.5 rounded-xl text-xs font-bold text-white gradient-brand shadow-lg shadow-cyan-500/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2">
+                    <span>Launch Studio</span>
+                    <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile View Switcher Bar -->
+        <div class="md:hidden flex border-t theme-border p-2 justify-center gap-2 theme-surface">
+            <button onclick="switchView('landing')" class="flex-1 py-2 rounded-lg text-xs font-bold text-center theme-text border theme-border">Landing View</button>
+            <button onclick="switchView('design-system')" class="flex-1 py-2 rounded-lg text-xs font-bold text-center theme-text border theme-border">Design Tokens</button>
+        </div>
+    </header>
+
+    <!-- VIEW 1: LANDING PAGE -->
+    <main id="viewLanding" class="relative z-10 transition-opacity duration-300">
+        
+        <!-- HERO SECTION -->
+        <section class="relative pt-12 pb-20 lg:pt-20 lg:pb-32 overflow-hidden">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+                    
+                    <!-- Hero Text Content -->
+                    <div class="lg:col-span-7 space-y-8 text-center lg:text-left">
+                        
+                        <!-- Top Tag -->
+                        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 text-xs font-semibold tracking-wide backdrop-blur-md">
+                            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+                            <span class="font-mono">ProAgents v3.5 Released</span>
+                            <span class="text-slate-400">|</span>
+                            <span class="text-white hover:underline cursor-pointer flex items-center gap-1" onclick="switchView('design-system')">View UI Kit <i data-lucide="chevron-right" class="w-3 h-3"></i></span>
+                        </div>
+
+                        <!-- Main Headline -->
+                        <h1 class="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[1.08] theme-text">
+                            Autonomous <br/>
+                            <span class="gradient-text">AI Agent Swarms</span> <br/>
+                            For Modern Enterprise
+                        </h1>
+
+                        <!-- Subtitle -->
+                        <p class="theme-text-muted text-base sm:text-lg max-w-2xl mx-auto lg:mx-0 font-normal leading-relaxed">
+                            Deploy self-healing, multi-threaded AI agent networks that research, write code, execute tasks, and optimize workflows with zero human supervision.
+                        </p>
+
+                        <!-- Action CTAs -->
+                        <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
+                            <button onclick="triggerLaunchModal()" class="w-full sm:w-auto px-8 py-4 rounded-2xl font-bold text-sm text-white gradient-brand shadow-xl shadow-cyan-500/25 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3 group">
+                                <span>Deploy Your First Agent</span>
+                                <i data-lucide="sparkles" class="w-4 h-4 text-cyan-300 group-hover:rotate-12 transition-transform"></i>
+                            </button>
+
+                            <a href="#playground" class="w-full sm:w-auto px-8 py-4 rounded-2xl font-bold text-sm theme-text glass-panel hover:border-cyan-500/50 transition-all flex items-center justify-center gap-2">
+                                <i data-lucide="play-circle" class="w-4 h-4 text-cyan-400"></i>
+                                <span>Live Workflow Demo</span>
+                            </a>
+                        </div>
+
+                        <!-- Metrics Counter Row -->
+                        <div class="pt-8 border-t theme-border grid grid-cols-3 gap-4 max-w-lg mx-auto lg:mx-0">
+                            <div>
+                                <div class="text-2xl sm:text-3xl font-black gradient-text font-mono">99.98%</div>
+                                <div class="text-xs theme-text-muted font-medium mt-1">Execution Accuracy</div>
+                            </div>
+                            <div>
+                                <div class="text-2xl sm:text-3xl font-black theme-text font-mono">14ms</div>
+                                <div class="text-xs theme-text-muted font-medium mt-1">Swarm Telemetry</div>
+                            </div>
+                            <div>
+                                <div class="text-2xl sm:text-3xl font-black gradient-text font-mono">10M+</div>
+                                <div class="text-xs theme-text-muted font-medium mt-1">Tasks Orchestrated</div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- 3D Bot Avatar & Orbital Rings Graphic (Dribbble MindSphere / Syntra AI Inspired) -->
+                    <div class="lg:col-span-5 relative flex items-center justify-center min-h-[440px]" id="hero3DContainer">
+                        
+                        <!-- Dribbble Orbit Rings -->
+                        <div class="orbit-ring w-[380px] h-[380px] animate-spin-slow"></div>
+                        <div class="orbit-ring w-[290px] h-[290px] animate-spin-reverse border-cyan-400/40"></div>
+                        <div class="orbit-ring w-[200px] h-[200px] border-purple-500/30"></div>
+
+                        <!-- Orbiting Node Badges -->
+                        <div class="absolute -top-4 right-4 glass-panel px-3.5 py-2 rounded-2xl flex items-center gap-2.5 shadow-2xl animate-float z-20">
+                            <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                                <i data-lucide="shield-check" class="w-4 h-4"></i>
+                            </div>
+                            <div>
+                                <div class="text-[11px] font-bold theme-text">SOC2 Compliant</div>
+                                <div class="text-[9px] font-mono text-emerald-400">Governance Active</div>
+                            </div>
+                        </div>
+
+                        <div class="absolute bottom-6 -left-6 glass-panel px-3.5 py-2 rounded-2xl flex items-center gap-2.5 shadow-2xl animate-float z-20" style="animation-delay: 2s;">
+                            <div class="w-7 h-7 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
+                                <i data-lucide="cpu" class="w-4 h-4"></i>
+                            </div>
+                            <div>
+                                <div class="text-[11px] font-bold theme-text">Auto-Scaling Nodes</div>
+                                <div class="text-[9px] font-mono text-cyan-400">128 Threads Running</div>
+                            </div>
+                        </div>
+
+                        <div class="absolute top-1/2 -right-8 transform -translate-y-1/2 glass-panel p-3 rounded-2xl shadow-2xl animate-float z-20" style="animation-delay: 1s;">
+                            <div class="flex items-center gap-2 text-xs font-mono text-purple-400">
+                                <i data-lucide="git-branch" class="w-4 h-4"></i>
+                                <span>Agent Branch #049</span>
+                            </div>
+                        </div>
+
+                        <!-- Main Floating High-Fidelity 3D Bot Mascot Avatar -->
+                        <div id="botAvatar" class="relative z-10 w-72 h-80 transition-transform duration-200 ease-out flex items-center justify-center">
+                            
+                            <!-- Detailed Vector Bot Graphic with Spiral Ribbon Badges -->
+                            <div class="relative w-full h-full flex items-center justify-center animate-float">
+                                
+                                <svg class="w-full h-full drop-shadow-[0_15px_35px_rgba(42,72,255,0.45)]" viewBox="0 0 320 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <defs>
+                                        <!-- Gradient Definitions matching ProAgents Logo -->
+                                        <linearGradient id="helixRibbon" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" stop-color="#2A48FF" />
+                                            <stop offset="45%" stop-color="#7C3AED" />
+                                            <stop offset="85%" stop-color="#00E5D1" />
+                                        </linearGradient>
+
+                                        <linearGradient id="robotHelmet" x1="20%" y1="0%" x2="80%" y2="100%">
+                                            <stop offset="0%" stop-color="#FFFFFF" />
+                                            <stop offset="50%" stop-color="#CBD5E1" />
+                                            <stop offset="100%" stop-color="#64748B" />
+                                        </linearGradient>
+
+                                        <linearGradient id="robotNeck" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" stop-color="#1E293B" />
+                                            <stop offset="100%" stop-color="#0F172A" />
+                                        </linearGradient>
+
+                                        <radialGradient id="cyanEyeGlow" cx="50%" cy="50%" r="50%">
+                                            <stop offset="0%" stop-color="#00E5D1" />
+                                            <stop offset="60%" stop-color="#00B4D8" />
+                                            <stop offset="100%" stop-color="#2A48FF" />
+                                        </radialGradient>
+
+                                        <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
+                                            <feGaussianBlur stdDeviation="6" result="blur" />
+                                            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                                        </filter>
+                                    </defs>
+
+                                    <!-- BACK ORBIT RIBBON (Behind Head) -->
+                                    <path d="M 40 130 C 20 80, 200 30, 270 80 C 310 110, 230 180, 160 190" 
+                                          stroke="url(#helixRibbon)" stroke-width="26" stroke-linecap="round" fill="none" opacity="0.85" />
+                                    <path d="M 40 220 C 10 170, 220 150, 280 200 C 310 230, 200 300, 100 290" 
+                                          stroke="url(#helixRibbon)" stroke-width="24" stroke-linecap="round" fill="none" opacity="0.75" />
+
+                                    <!-- ROBOT NECK BASE & TORSO -->
+                                    <ellipse cx="160" cy="285" rx="52" ry="26" fill="url(#helixRibbon)" opacity="0.9" />
+                                    <path d="M 125 240 L 195 240 L 185 280 Q 160 295 135 280 Z" fill="url(#robotNeck)" />
+
+                                    <!-- ROBOT HEAD MAIN BASE -->
+                                    <path d="M 90 150 C 90 95, 230 95, 230 150 C 230 205, 200 240, 160 240 C 120 240, 90 205, 90 150 Z" fill="url(#robotHelmet)" />
+                                    
+                                    <!-- HEAD CHEEK SHADOW / CONTOUR -->
+                                    <path d="M 100 160 C 100 210, 130 235, 160 235 C 190 235, 220 210, 220 160 Q 160 195 100 160 Z" fill="#1E293B" opacity="0.25" />
+
+                                    <!-- DARK VISOR GLASS FACE -->
+                                    <path d="M 106 145 C 106 120, 214 120, 214 145 C 214 185, 190 205, 160 205 C 130 205, 106 185, 106 145 Z" fill="#070913" stroke="#2A48FF" stroke-width="3" />
+
+                                    <!-- GLOWING NEON CYAN EYES -->
+                                    <!-- Left Eye -->
+                                    <ellipse cx="138" cy="152" rx="9" ry="14" transform="rotate(-8 138 152)" fill="url(#cyanEyeGlow)" filter="url(#neonGlow)" />
+                                    <ellipse cx="138" cy="152" rx="4" ry="7" transform="rotate(-8 138 152)" fill="#FFFFFF" />
+                                    
+                                    <!-- Right Eye -->
+                                    <ellipse cx="182" cy="152" rx="9" ry="14" transform="rotate(8 182 152)" fill="url(#cyanEyeGlow)" filter="url(#neonGlow)" />
+                                    <ellipse cx="182" cy="152" rx="4" ry="7" transform="rotate(8 182 152)" fill="#FFFFFF" />
+
+                                    <!-- GLOWING CYAN EAR RING / AUDIO PORT -->
+                                    <circle cx="95" cy="155" r="16" fill="#0D111D" stroke="url(#helixRibbon)" stroke-width="4" />
+                                    <circle cx="95" cy="155" r="9" fill="none" stroke="#00E5D1" stroke-width="3" filter="url(#neonGlow)" />
+
+                                    <!-- FRONT ORBIT RIBBON (In Front of Head) -->
+                                    <path d="M 280 90 C 320 150, 80 180, 45 220 C 20 250, 100 310, 240 280" 
+                                          stroke="url(#helixRibbon)" stroke-width="22" stroke-linecap="round" fill="none" />
+
+                                    <!-- 5 FLOATING ORBITAL GLASS BADGES (Exact Mascot Match) -->
+                                    
+                                    <!-- 1. CODE BADGE </> (Top Left) -->
+                                    <g transform="translate(60, 60)">
+                                        <rect x="0" y="0" width="48" height="32" rx="10" fill="#2A48FF" fill-opacity="0.8" stroke="#60A5FA" stroke-width="1.5" />
+                                        <text x="24" y="21" font-family="monospace" font-weight="bold" font-size="14" fill="#FFFFFF" text-anchor="middle">&lt;/&gt;</text>
+                                    </g>
+
+                                    <!-- 2. BOOK BADGE 📖 (Top Right) -->
+                                    <g transform="translate(210, 50)">
+                                        <rect x="0" y="0" width="46" height="32" rx="10" fill="#00E5D1" fill-opacity="0.8" stroke="#A5F3FC" stroke-width="1.5" />
+                                        <text x="23" y="21" font-size="15" fill="#FFFFFF" text-anchor="middle">📖</text>
+                                    </g>
+
+                                    <!-- 3. SECURITY SHIELD BADGE 🛡️ (Middle Left) -->
+                                    <g transform="translate(20, 195)">
+                                        <rect x="0" y="0" width="48" height="32" rx="10" fill="#0284C7" fill-opacity="0.8" stroke="#38BDF8" stroke-width="1.5" />
+                                        <path d="M 24 9 L 32 12 V 18 C 32 23 24 26 24 26 C 24 26 16 23 16 18 V 12 Z" fill="#FFFFFF" />
+                                        <path d="M 22 17 L 20 15 L 21.5 13.5 L 22 14 L 25.5 11 L 27 12.5 Z" fill="#0284C7" />
+                                    </g>
+
+                                    <!-- 4. SETTINGS GEAR BADGE ⚙️ (Middle Right) -->
+                                    <g transform="translate(235, 185)">
+                                        <rect x="0" y="0" width="46" height="32" rx="10" fill="#7C3AED" fill-opacity="0.8" stroke="#C084FC" stroke-width="1.5" />
+                                        <text x="23" y="21" font-size="15" fill="#FFFFFF" text-anchor="middle">⚙️</text>
+                                    </g>
+
+                                    <!-- 5. MENU LIST BADGE ☰ (Bottom Center) -->
+                                    <g transform="translate(140, 260)">
+                                        <rect x="0" y="0" width="48" height="30" rx="10" fill="#2563EB" fill-opacity="0.85" stroke="#93C5FD" stroke-width="1.5" />
+                                        <line x1="16" y1="10" x2="32" y2="10" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" />
+                                        <line x1="16" y1="15" x2="32" y2="15" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" />
+                                        <line x1="16" y1="20" x2="32" y2="20" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" />
+                                    </g>
+
+                                </svg>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+        <!-- PLAYGROUND SECTION -->
+        <section id="playground" class="py-16 border-y theme-border theme-surface/40 relative">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+                
+                <div class="text-center max-w-2xl mx-auto space-y-3">
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold text-cyan-400 bg-cyan-500/10 border border-cyan-500/30">
+                        <i data-lucide="terminal" class="w-3.5 h-3.5"></i> LIVE AGENT EXECUTION ENGINE
+                    </div>
+                    <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight theme-text">
+                        Test Drive ProAgents Swarm
+                    </h2>
+                    <p class="theme-text-muted text-sm">Select or input a command below to simulate autonomous multi-step execution in real-time.</p>
+                </div>
+
+                <!-- Interactive Playground Studio Box -->
+                <div class="gradient-border-card p-1 shadow-2xl max-w-4xl mx-auto">
+                    <div class="theme-surface rounded-2xl overflow-hidden">
+                        
+                        <!-- Studio Command Input Header -->
+                        <div class="p-4 sm:p-6 theme-card border-b theme-border space-y-4">
+                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                                <div class="relative flex-1">
+                                    <i data-lucide="sparkles" class="w-4 h-4 text-cyan-400 absolute left-4 top-1/2 -translate-y-1/2"></i>
+                                    <input id="demoPromptInput" type="text" value="Analyze competitor pricing, generate executive summary & post update to Slack" class="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-900/10 dark:bg-slate-950/80 theme-border border text-sm theme-text focus:outline-none focus:border-cyan-400 transition-all font-sans">
+                                </div>
+                                <button onclick="runAgentSimulation()" class="px-6 py-3 rounded-xl text-xs font-bold text-white gradient-brand shadow-lg shadow-cyan-500/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2">
+                                    <i data-lucide="play" class="w-4 h-4 fill-white"></i>
+                                    <span>Execute Swarm</span>
+                                </button>
+                            </div>
+
+                            <!-- Sample Preset Chips -->
+                            <div class="flex flex-wrap items-center gap-2 pt-1">
+                                <span class="text-xs theme-text-muted font-mono">Sample Prompts:</span>
+                                <button onclick="setSamplePrompt('Audit React codebase for memory leaks & generate PR')" class="text-xs px-3 py-1 rounded-lg theme-surface theme-border border hover:border-cyan-400 theme-text transition-all">✦ Audit React Codebase</button>
+                                <button onclick="setSamplePrompt('Synthesize Q3 financial PDF reports into JSON schema')" class="text-xs px-3 py-1 rounded-lg theme-surface theme-border border hover:border-cyan-400 theme-text transition-all">✦ Extract PDF to JSON</button>
+                            </div>
+                        </div>
+
+                        <!-- Live Visual Execution Pipeline Steps -->
+                        <div class="p-6 space-y-6">
+                            
+                            <div class="flex items-center justify-between text-xs font-mono theme-text-muted border-b theme-border pb-3">
+                                <span>EXECUTION GRAPH VISUALIZER</span>
+                                <span id="executionStatus" class="text-emerald-400 font-bold flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span> READY
+                                </span>
+                            </div>
+
+                            <!-- Execution Pipeline Step Cards -->
+                            <div id="pipelineSteps" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                
+                                <!-- Step 1 -->
+                                <div id="step1" class="p-4 rounded-xl theme-card border theme-border space-y-2 transition-all duration-300">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-[10px] font-mono text-cyan-400 font-bold">NODE 01</span>
+                                        <i data-lucide="search" class="w-4 h-4 theme-text-muted"></i>
+                                    </div>
+                                    <div class="text-xs font-bold theme-text">Data Ingestion</div>
+                                    <p class="text-[11px] theme-text-muted">Gathering context & API data payload...</p>
+                                    <div class="step-progress h-1 w-full bg-slate-700/30 rounded-full overflow-hidden mt-2">
+                                        <div class="h-full bg-cyan-400 w-0 transition-all duration-500"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Step 2 -->
+                                <div id="step2" class="p-4 rounded-xl theme-card border theme-border space-y-2 transition-all duration-300 opacity-60">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-[10px] font-mono text-purple-400 font-bold">NODE 02</span>
+                                        <i data-lucide="cpu" class="w-4 h-4 theme-text-muted"></i>
+                                    </div>
+                                    <div class="text-xs font-bold theme-text">LLM Synthesis</div>
+                                    <p class="text-[11px] theme-text-muted">Processing via ProAgents Turbo model...</p>
+                                    <div class="step-progress h-1 w-full bg-slate-700/30 rounded-full overflow-hidden mt-2">
+                                        <div class="h-full bg-purple-500 w-0 transition-all duration-500"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Step 3 -->
+                                <div id="step3" class="p-4 rounded-xl theme-card border theme-border space-y-2 transition-all duration-300 opacity-60">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-[10px] font-mono text-emerald-400 font-bold">NODE 03</span>
+                                        <i data-lucide="send" class="w-4 h-4 theme-text-muted"></i>
+                                    </div>
+                                    <div class="text-xs font-bold theme-text">Action Webhook</div>
+                                    <p class="text-[11px] theme-text-muted">Dispatching output to destination integration...</p>
+                                    <div class="step-progress h-1 w-full bg-slate-700/30 rounded-full overflow-hidden mt-2">
+                                        <div class="h-full bg-emerald-400 w-0 transition-all duration-500"></div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <!-- Terminal Execution Log Console -->
+                            <div class="rounded-xl bg-[#03050B] p-4 border border-slate-800 font-mono text-xs text-slate-300 space-y-2 shadow-inner">
+                                <div class="flex items-center justify-between text-[10px] text-slate-500 border-b border-slate-800/80 pb-2">
+                                    <span>REALTIME TELEMETRY LOG</span>
+                                    <span>UTF-8</span>
+                                </div>
+                                <div id="consoleOutput" class="h-28 overflow-y-auto custom-scrollbar space-y-1.5 text-[11px]">
+                                    <div class="text-slate-500">&gt; System initialized. Awaiting execution trigger...</div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- BENTO FEATURES GRID -->
+        <section class="py-24">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+                
+                <div class="text-center max-w-3xl mx-auto space-y-4">
+                    <div class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold text-cyan-400 bg-cyan-500/10 border border-cyan-500/30">
+                        ✦ ARCHITECTURE
+                    </div>
+                    <h2 class="text-3xl sm:text-5xl font-black tracking-tight theme-text">
+                        Engineered for Unbounded Scalability
+                    </h2>
+                    <p class="theme-text-muted text-base">Explore the modular components powering ProAgents autonomous capabilities.</p>
+                </div>
+
+                <!-- Bento Grid Layout -->
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                    
+                    <!-- Bento 1: Multi-Agent Swarm (Large 8 cols) -->
+                    <div class="md:col-span-8 p-8 rounded-3xl glass-panel relative overflow-hidden group hover:border-cyan-500/40 transition-all">
+                        <div class="space-y-4 relative z-10 max-w-lg">
+                            <div class="w-10 h-10 rounded-2xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 flex items-center justify-center">
+                                <i data-lucide="network" class="w-5 h-5"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold theme-text">Multi-Agent Swarm Orchestration</h3>
+                            <p class="theme-text-muted text-sm leading-relaxed">
+                                Link specialized agents together in DAG (Directed Acyclic Graph) topologies. Sub-agents automatically delegate tasks, perform peer code reviews, and resolve errors natively.
+                            </p>
+                        </div>
+
+                        <!-- Graphic Visual inside Card -->
+                        <div class="mt-8 grid grid-cols-3 gap-3 pt-6 border-t theme-border">
+                            <div class="p-3 rounded-xl theme-card border theme-border text-center">
+                                <div class="text-xs font-bold theme-text">Research Agent</div>
+                                <div class="text-[10px] text-cyan-400 font-mono mt-0.5">Scrapes & Parses</div>
+                            </div>
+                            <div class="p-3 rounded-xl theme-card border theme-border text-center">
+                                <div class="text-xs font-bold theme-text">Coder Agent</div>
+                                <div class="text-[10px] text-purple-400 font-mono mt-0.5">Writes Code & Tests</div>
+                            </div>
+                            <div class="p-3 rounded-xl theme-card border theme-border text-center">
+                                <div class="text-xs font-bold theme-text">QA Agent</div>
+                                <div class="text-[10px] text-emerald-400 font-mono mt-0.5">Executes Pipeline</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bento 2: Governance & Security (4 cols) -->
+                    <div class="md:col-span-4 p-8 rounded-3xl glass-panel space-y-6 hover:border-purple-500/40 transition-all flex flex-col justify-between">
+                        <div class="space-y-4">
+                            <div class="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-400 border border-purple-500/30 flex items-center justify-center">
+                                <i data-lucide="shield" class="w-5 h-5"></i>
+                            </div>
+                            <h3 class="text-xl font-bold theme-text">Enterprise Guardrails</h3>
+                            <p class="theme-text-muted text-sm leading-relaxed">
+                                Strict human-in-the-loop approval gates, automated PII masking, and deterministic sandbox environments.
+                            </p>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-300 font-mono text-xs flex items-center justify-between">
+                            <span>PII Scrubbing</span>
+                            <span class="font-bold text-emerald-400">ENFORCED</span>
+                        </div>
+                    </div>
+
+                    <!-- Bento 3: Telemetry & Monitoring (4 cols) -->
+                    <div class="md:col-span-4 p-8 rounded-3xl glass-panel space-y-6 hover:border-emerald-500/40 transition-all">
+                        <div class="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center justify-center">
+                            <i data-lucide="activity" class="w-5 h-5"></i>
+                        </div>
+                        <h3 class="text-xl font-bold theme-text">Real-time Telemetry</h3>
+                        <p class="theme-text-muted text-sm leading-relaxed">
+                            Monitor token consumption, latency distribution, and cost per task with granular precision down to individual sub-agents.
+                        </p>
+                        <div class="h-16 w-full theme-card border theme-border rounded-xl flex items-end p-2 gap-1.5">
+                            <div class="flex-1 bg-cyan-400/40 rounded-t h-[40%]"></div>
+                            <div class="flex-1 bg-cyan-400/60 rounded-t h-[70%]"></div>
+                            <div class="flex-1 bg-cyan-400 rounded-t h-[90%]"></div>
+                            <div class="flex-1 bg-purple-500 rounded-t h-[60%]"></div>
+                            <div class="flex-1 bg-cyan-400 rounded-t h-[100%]"></div>
+                        </div>
+                    </div>
+
+                    <!-- Bento 4: Integrations Network (8 cols) -->
+                    <div class="md:col-span-8 p-8 rounded-3xl glass-panel space-y-6 hover:border-cyan-500/40 transition-all flex flex-col justify-between">
+                        <div class="space-y-4 max-w-xl">
+                            <div class="w-10 h-10 rounded-2xl bg-blue-500/10 text-blue-400 border border-blue-500/30 flex items-center justify-center">
+                                <i data-lucide="blocks" class="w-5 h-5"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold theme-text">100+ Native Webhook Integrations</h3>
+                            <p class="theme-text-muted text-sm leading-relaxed">
+                                Connect ProAgents with GitHub, Notion, Slack, Postgres, Salesforce, Stripe, and AWS out of the box.
+                            </p>
+                        </div>
+
+                        <div class="flex flex-wrap gap-3 pt-4">
+                            <span class="px-4 py-2 rounded-xl theme-card border theme-border text-xs font-semibold theme-text flex items-center gap-2">
+                                <i data-lucide="github" class="w-4 h-4 text-cyan-400"></i> GitHub Actions
+                            </span>
+                            <span class="px-4 py-2 rounded-xl theme-card border theme-border text-xs font-semibold theme-text flex items-center gap-2">
+                                <i data-lucide="database" class="w-4 h-4 text-purple-400"></i> PostgreSQL
+                            </span>
+                            <span class="px-4 py-2 rounded-xl theme-card border theme-border text-xs font-semibold theme-text flex items-center gap-2">
+                                <i data-lucide="message-square" class="w-4 h-4 text-emerald-400"></i> Slack Webhooks
+                            </span>
+                            <span class="px-4 py-2 rounded-xl theme-card border theme-border text-xs font-semibold theme-text flex items-center gap-2">
+                                <i data-lucide="cloud" class="w-4 h-4 text-amber-400"></i> AWS Lambda
+                            </span>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+        <!-- CTA CALLOUT SECTION -->
+        <section class="py-20 relative overflow-hidden">
+            <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="gradient-border-card p-1 shadow-2xl">
+                    <div class="theme-surface rounded-2xl p-10 sm:p-16 text-center space-y-8 relative overflow-hidden">
+                        
+                        <div class="max-w-2xl mx-auto space-y-4 relative z-10">
+                            <h2 class="text-3xl sm:text-5xl font-black tracking-tight theme-text">
+                                Ready to Automate Your Enterprise Workflows?
+                            </h2>
+                            <p class="theme-text-muted text-base">
+                                Join hundreds of engineering teams building autonomous AI agent networks with ProAgents today.
+                            </p>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 relative z-10">
+                            <button onclick="triggerLaunchModal()" class="w-full sm:w-auto px-8 py-4 rounded-2xl font-bold text-sm text-white gradient-brand shadow-xl shadow-cyan-500/20 hover:scale-105 transition-all">
+                                Start Free Trial
+                            </button>
+                            <button onclick="switchView('design-system')" class="w-full sm:w-auto px-8 py-4 rounded-2xl font-bold text-sm theme-text theme-card theme-border border hover:border-cyan-400 transition-all">
+                                Explore UI Kit
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- VIEW 2: INTERACTIVE DESIGN SYSTEM SHOWCASE -->
+    <main id="viewDS" class="hidden relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
+        
+        <!-- Design System Header Banner -->
+        <div class="p-8 rounded-3xl glass-panel space-y-4">
+            <div class="flex items-center justify-between">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-bold text-cyan-400 bg-cyan-500/10 border border-cyan-500/30">
+                    <i data-lucide="layers" class="w-3.5 h-3.5"></i> PROAGENTS UI KIT & DESIGN SYSTEM v3.5
+                </div>
+                <span class="text-xs font-mono theme-text-muted">Tailwind CSS + Custom CSS Variables</span>
+            </div>
+            <h1 class="text-3xl sm:text-5xl font-black tracking-tight theme-text">
+                Design Tokens & Component Kit
+            </h1>
+            <p class="theme-text-muted text-sm sm:text-base max-w-3xl">
+                A centralized design language built for futuristic AI Web interfaces. Standardized color tokens, glass typography, border gradients, stateful buttons, and agent card components.
+            </p>
+        </div>
+
+        <!-- DS SECTION 1: COLOR TOKENS -->
+        <section class="space-y-6">
+            <h2 class="text-xl sm:text-2xl font-bold theme-text flex items-center gap-2 border-b theme-border pb-3">
+                <span class="text-cyan-400 font-mono text-sm">01.</span> Brand Gradients & Color Tokens
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                
+                <!-- Token 1 -->
+                <div onclick="copyToClipboard('#2A48FF', 'Electric Blue')" class="p-4 rounded-2xl theme-surface theme-border border cursor-pointer hover:border-blue-500 transition-all space-y-3">
+                    <div class="h-16 rounded-xl bg-[#2A48FF] shadow-lg flex items-end p-2 text-white font-mono text-xs">#2A48FF</div>
+                    <div>
+                        <div class="text-xs font-bold theme-text">Electric Blue</div>
+                        <div class="text-[10px] theme-text-muted font-mono">Primary Action Accent</div>
+                    </div>
+                </div>
+
+                <!-- Token 2 -->
+                <div onclick="copyToClipboard('#7C3AED', 'Deep Purple')" class="p-4 rounded-2xl theme-surface theme-border border cursor-pointer hover:border-purple-500 transition-all space-y-3">
+                    <div class="h-16 rounded-xl bg-[#7C3AED] shadow-lg flex items-end p-2 text-white font-mono text-xs">#7C3AED</div>
+                    <div>
+                        <div class="text-xs font-bold theme-text">Deep Purple</div>
+                        <div class="text-[10px] theme-text-muted font-mono">Secondary Gradient Mesh</div>
+                    </div>
+                </div>
+
+                <!-- Token 3 -->
+                <div onclick="copyToClipboard('#00E5D1', 'Neon Cyan')" class="p-4 rounded-2xl theme-surface theme-border border cursor-pointer hover:border-cyan-400 transition-all space-y-3">
+                    <div class="h-16 rounded-xl bg-[#00E5D1] shadow-lg flex items-end p-2 text-slate-950 font-mono text-xs font-bold">#00E5D1</div>
+                    <div>
+                        <div class="text-xs font-bold theme-text">Neon Cyan</div>
+                        <div class="text-[10px] theme-text-muted font-mono">Glows & Active Indicators</div>
+                    </div>
+                </div>
+
+                <!-- Token 4 -->
+                <div onclick="copyToClipboard('linear-gradient(135deg, #2A48FF, #7C3AED, #00E5D1)', 'Brand Gradient')" class="p-4 rounded-2xl theme-surface theme-border border cursor-pointer hover:border-cyan-400 transition-all space-y-3">
+                    <div class="h-16 rounded-xl gradient-brand shadow-lg flex items-end p-2 text-white font-mono text-[10px] font-bold">Gradient</div>
+                    <div>
+                        <div class="text-xs font-bold theme-text">ProAgents Master Gradient</div>
+                        <div class="text-[10px] theme-text-muted font-mono">Brand Hero / CTAs</div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- DS SECTION 2: BUTTON VARIANTS -->
+        <section class="space-y-6">
+            <h2 class="text-xl sm:text-2xl font-bold theme-text flex items-center gap-2 border-b theme-border pb-3">
+                <span class="text-cyan-400 font-mono text-sm">02.</span> Button Component Specifications
+            </h2>
+
+            <div class="p-6 rounded-2xl theme-surface theme-border border space-y-6">
+                <div class="flex flex-wrap items-center gap-4">
+                    
+                    <!-- Primary Button -->
+                    <button class="px-6 py-3 rounded-xl text-xs font-bold text-white gradient-brand shadow-lg shadow-cyan-500/20 hover:scale-105 active:scale-95 transition-all">
+                        Primary Gradient
+                    </button>
+
+                    <!-- Glow Border Button -->
+                    <button class="px-6 py-3 rounded-xl text-xs font-bold text-cyan-400 border border-cyan-500/40 bg-cyan-500/10 hover:bg-cyan-500/20 transition-all">
+                        ✦ Glow Outline
+                    </button>
+
+                    <!-- Secondary Surface Button -->
+                    <button class="px-6 py-3 rounded-xl text-xs font-semibold theme-text theme-card theme-border border hover:border-cyan-400 transition-all">
+                        Secondary Surface
+                    </button>
+
+                    <!-- Loading Button -->
+                    <button disabled class="px-6 py-3 rounded-xl text-xs font-bold text-white gradient-brand opacity-80 flex items-center gap-2">
+                        <i data-lucide="loader-2" class="w-4 h-4 animate-spin text-cyan-300"></i>
+                        <span>Processing Agent...</span>
+                    </button>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- DS SECTION 3: BADGES & AGENT STATUS CHIPS -->
+        <section class="space-y-6">
+            <h2 class="text-xl sm:text-2xl font-bold theme-text flex items-center gap-2 border-b theme-border pb-3">
+                <span class="text-cyan-400 font-mono text-sm">03.</span> Status Badges & Telemetry Chips
+            </h2>
+
+            <div class="p-6 rounded-2xl theme-surface theme-border border flex flex-wrap gap-4">
+                <span class="px-3.5 py-1.5 rounded-full text-xs font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span> Live Process Active
+                </span>
+
+                <span class="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
+                    <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> Task Succeeded
+                </span>
+
+                <span class="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/30 flex items-center gap-1.5">
+                    ✦ ProAgent v3.5
+                </span>
+
+                <span class="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30 flex items-center gap-1.5">
+                    <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> Human Approval Required
+                </span>
+            </div>
+        </section>
+
+        <!-- DS SECTION 4: AGENT NODE CARDS -->
+        <section class="space-y-6">
+            <h2 class="text-xl sm:text-2xl font-bold theme-text flex items-center gap-2 border-b theme-border pb-3">
+                <span class="text-cyan-400 font-mono text-sm">04.</span> Glassmorphic Agent Node Cards
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <!-- Card Sample 1 -->
+                <div class="gradient-border-card p-1 shadow-xl">
+                    <div class="theme-surface rounded-xl p-6 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-mono text-cyan-400 font-bold">AGENT_NODE_ALPHA</span>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">ONLINE</span>
+                        </div>
+                        <div class="text-lg font-bold theme-text">Autonomous Code Refactorer</div>
+                        <p class="theme-text-muted text-xs leading-relaxed">Reads AST tree structures, performs static analysis, and submits PRs with unit tests automatically.</p>
+                        <div class="pt-2 flex items-center justify-between text-xs theme-text-muted font-mono">
+                            <span>Latency: 12ms</span>
+                            <span>Tokens: 1,420</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Sample 2 -->
+                <div class="glass-panel p-6 rounded-2xl space-y-4 border theme-border">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-mono text-purple-400 font-bold">AGENT_NODE_BETA</span>
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">RUNNING</span>
+                    </div>
+                    <div class="text-lg font-bold theme-text">Vector Knowledge Indexer</div>
+                    <p class="theme-text-muted text-xs leading-relaxed">Indexes unstructured PDF documents and converts them into high-dimensional vector embeddings.</p>
+                    <div class="pt-2 flex items-center justify-between text-xs theme-text-muted font-mono">
+                        <span>Embedding: Ada-002</span>
+                        <span>Vector Store: Pinecone</span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- LAUNCH STUDIO MODAL -->
+    <div id="launchModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md hidden transition-opacity duration-300">
+        <div class="gradient-border-card p-1 max-w-md w-full shadow-2xl">
+            <div class="theme-surface rounded-2xl p-6 space-y-6 relative">
+                <button onclick="closeLaunchModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+
+                <div class="space-y-2">
+                    <div class="w-10 h-10 rounded-xl gradient-brand p-0.5 inline-block">
+                        <div class="w-full h-full theme-surface rounded-[8px] flex items-center justify-center text-cyan-400 font-bold">✦</div>
+                    </div>
+                    <h3 class="text-xl font-extrabold theme-text">Deploy ProAgents Workspace</h3>
+                    <p class="theme-text-muted text-xs">Enter your team workspace details to provision your first autonomous agent node.</p>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold theme-text">Workspace Slug</label>
+                        <input type="text" value="acme-corp-ai" class="w-full px-4 py-2.5 rounded-xl theme-input theme-border border text-xs theme-text focus:outline-none focus:border-cyan-400">
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold theme-text">Default LLM Provider</label>
+                        <select class="w-full px-4 py-2.5 rounded-xl theme-input theme-border border text-xs theme-text focus:outline-none focus:border-cyan-400">
+                            <option>ProAgents Turbo Swarm (Default)</option>
+                            <option>Anthropic Claude 3.5 Sonnet</option>
+                            <option>OpenAI GPT-4o Enterprise</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button onclick="confirmLaunch()" class="w-full py-3 rounded-xl font-bold text-xs text-white gradient-brand shadow-lg shadow-cyan-500/20 hover:scale-105 transition-all">
+                    Provision Studio Workspace ✦
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="border-t theme-border theme-surface/60 py-12 relative z-10 mt-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg gradient-brand p-0.5">
+                    <div class="w-full h-full theme-surface rounded-[6px] flex items-center justify-center text-cyan-400 font-bold text-xs">✦</div>
+                </div>
+                <div>
+                    <div class="text-sm font-bold theme-text">ProAgents Autonomous Engine</div>
+                    <div class="text-xs theme-text-muted">Inspired by Dribbble Modern AI UI Trends</div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-6 text-xs theme-text-muted">
+                <a href="#playground" class="hover:text-cyan-400 transition-colors">Playground</a>
+                <a href="#ds" onclick="switchView('design-system')" class="hover:text-cyan-400 transition-colors">Design Tokens</a>
+                <a href="#" class="hover:text-cyan-400 transition-colors">Documentation</a>
+                <a href="#" class="hover:text-cyan-400 transition-colors">API Docs</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // 1. Theme Toggle Logic
+        let currentTheme = 'dark';
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const sunIcon = document.getElementById('sunIcon');
+            const moonIcon = document.getElementById('moonIcon');
+            const themeLabel = document.getElementById('themeLabel');
+
+            if (currentTheme === 'dark') {
+                html.classList.remove('dark');
+                currentTheme = 'light';
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+                themeLabel.innerText = 'Light';
+                showToast('Switched to Light Mode');
+            } else {
+                html.classList.add('dark');
+                currentTheme = 'dark';
+                moonIcon.classList.remove('hidden');
+                sunIcon.classList.add('hidden');
+                themeLabel.innerText = 'Dark';
+                showToast('Switched to Dark Mode');
+            }
+        }
+
+        // 2. View Switcher Logic (Landing vs Design System)
+        function switchView(viewName) {
+            const landingView = document.getElementById('viewLanding');
+            const dsView = document.getElementById('viewDS');
+            const tabLanding = document.getElementById('tabLanding');
+            const tabDS = document.getElementById('tabDS');
+
+            if (viewName === 'design-system') {
+                landingView.classList.add('hidden');
+                dsView.classList.remove('hidden');
+
+                tabLanding.className = "px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 theme-text-muted hover:theme-text";
+                tabDS.className = "px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-white gradient-brand shadow-md";
+
+                showToast('Viewing Interactive Design Tokens');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                dsView.classList.add('hidden');
+                landingView.classList.remove('hidden');
+
+                tabDS.className = "px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 theme-text-muted hover:theme-text";
+                tabLanding.className = "px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-white gradient-brand shadow-md";
+
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        // 3. Parallax Mouse Effect on Hero 3D Graphic Container
+        const container = document.getElementById('hero3DContainer');
+        const botAvatar = document.getElementById('botAvatar');
+
+        if (container && botAvatar) {
+            container.addEventListener('mousemove', (e) => {
+                const rect = container.getBoundingClientRect();
+                const x = e.clientX - rect.left - rect.width / 2;
+                const y = e.clientY - rect.top - rect.height / 2;
+
+                botAvatar.style.transform = `translate(${x * 0.08}px, ${y * 0.08}px) rotateY(${x * 0.05}deg) rotateX(${-y * 0.05}deg)`;
+            });
+
+            container.addEventListener('mouseleave', () => {
+                botAvatar.style.transform = `translate(0px, 0px) rotateY(0deg) rotateX(0deg)`;
+            });
+        }
+
+        // 4. Live Agent Playground Simulation Logic
+        function setSamplePrompt(promptText) {
+            document.getElementById('demoPromptInput').value = promptText;
+            runAgentSimulation();
+        }
+
+        function runAgentSimulation() {
+            const prompt = document.getElementById('demoPromptInput').value;
+            const consoleOutput = document.getElementById('consoleOutput');
+            const statusLabel = document.getElementById('executionStatus');
+
+            const step1 = document.getElementById('step1');
+            const step2 = document.getElementById('step2');
+            const step3 = document.getElementById('step3');
+
+            // Reset States
+            statusLabel.innerHTML = `<span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span> EXECUTING...`;
+            statusLabel.className = "text-cyan-400 font-bold flex items-center gap-1.5";
+
+            consoleOutput.innerHTML = `<div class="text-cyan-400">&gt; Command triggered: "${escapeHtml(prompt)}"</div>`;
+
+            step1.className = "p-4 rounded-xl theme-card border border-cyan-400 shadow-lg space-y-2 transition-all duration-300 opacity-100";
+            step1.querySelector('.step-progress div').style.width = '100%';
+
+            setTimeout(() => {
+                consoleOutput.innerHTML += `<div class="text-slate-300">&gt; [NODE 01] Ingesting webhooks and payload schema... Done (8ms)</div>`;
+                step2.className = "p-4 rounded-xl theme-card border border-purple-500 shadow-lg space-y-2 transition-all duration-300 opacity-100";
+                step2.querySelector('.step-progress div').style.width = '100%';
+            }, 600);
+
+            setTimeout(() => {
+                consoleOutput.innerHTML += `<div class="text-slate-300">&gt; [NODE 02] ProAgents LLM generated synthesis DAG branch #082... Done (14ms)</div>`;
+                step3.className = "p-4 rounded-xl theme-card border border-emerald-400 shadow-lg space-y-2 transition-all duration-300 opacity-100";
+                step3.querySelector('.step-progress div').style.width = '100%';
+            }, 1200);
+
+            setTimeout(() => {
+                consoleOutput.innerHTML += `<div class="text-emerald-400">&gt; [SUCCESS] All 3 agent nodes executed cleanly. Result posted!</div>`;
+                statusLabel.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span> COMPLETED`;
+                statusLabel.className = "text-emerald-400 font-bold flex items-center gap-1.5";
+                consoleOutput.scrollTop = consoleOutput.scrollHeight;
+                showToast('Agent Swarm Task Completed!');
+            }, 1800);
+        }
+
+        // 5. Utility Toast & Clipboard
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            toastMessage.innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        function copyToClipboard(text, label) {
+            const temp = document.createElement('textarea');
+            temp.value = text;
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+
+            showToast(`Copied ${label} (${text})`);
+        }
+
+        // 6. Launch Modal Functions
+        function triggerLaunchModal() {
+            document.getElementById('launchModal').classList.remove('hidden');
+        }
+
+        function closeLaunchModal() {
+            document.getElementById('launchModal').classList.add('hidden');
+        }
+
+        function confirmLaunch() {
+            closeLaunchModal();
+            showToast('Studio Workspace Initialized Successfully! ✦');
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+    </script>
+</body>
+</html>

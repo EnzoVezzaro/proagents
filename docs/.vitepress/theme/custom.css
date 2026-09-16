@@ -199,3 +199,16 @@ html.dark {
   background: rgba(0, 72, 228, 0.55);
   color: #ffffff;
 }
+
+/* ---------------------------------------------------------------------------
+ * Navbar logo per color mode — the lockups are background-specific:
+ * light mode uses the ink-text lockup (logo-dark.png), dark mode swaps to the
+ * white-text lockup (logo.png). VitePress renders the title logo as .VPImage.
+ * ------------------------------------------------------------------------- */
+img.VPImage {
+  height: 30px;
+  width: auto;
+}
+.dark img.VPImage {
+  content: url("/logo.png");
+}

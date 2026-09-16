@@ -3,17 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/png" href="/proagents/app/favicon.png" />
+    <meta name="theme-color" content="#000024" />
+    <link rel="icon" type="image/png" href="/proagents/app/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/proagents/app/favicon-48.png" />
     <title>ProAgents Marketplace</title>
     <style>
+      /* Pre-paint tokens — mirrors web/src/ui/styles.css so the first frame
+         is already the navy world (no light flash before React mounts). */
       :root {
-        --ink: #050505;
-        --ink-2: #0c0c0c;
-        --cream: #f1eeea;
-        --cream-dim: #a8a69f;
-        --lime: #b9fb1d;
-        --lime-dark: #7ecf02;
-        --line: #232323;
+        --ink: #000024;
+        --ink-2: #040a33;
+        --cream: #f4f7ff;
+        --cream-dim: #9aa6cf;
+        --blue: #0048e4;
+        --violet: #5424e4;
+        --cyan: #0ccccc;
+        --line: #17245c;
       }
       html, body { margin: 0; background: var(--ink); color: var(--cream); }
     </style>

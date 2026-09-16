@@ -53,7 +53,7 @@ bun --bun vitepress build docs   # docs build (must pass before PRs)
 - CLI JSON output changes must be additive
 - Validation rules get `PA0xx` codes + a suggestion string + tests (profiles: PA02x
   composition conflicts, PA03x profile validation; agents: PA001–PA013)
-- Brand palette (from `logo.png`): navy `#000024`, blue `#0048e4`, violet
+- Brand palette (from `branding/`): navy `#000024`, blue `#0048e4`, violet
   `#5424e4`, cyan `#0ccccc`, ice `#f4f7ff` — see DESIGN.md for the token
   grammar before touching any UI color
 - The shipped skill lives at `.agents/skills/proagent/` — keep SKILL.md lean, push detail

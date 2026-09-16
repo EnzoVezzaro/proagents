@@ -146,7 +146,7 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
         }}
       >
         <a href="#/catalog" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", color: "var(--cream)" }}>
-          <img src="/proagents/app/logo.png" alt="ProAgents" width={34} height={15} style={{ borderRadius: 4, display: "block", minWidth: 150, height: 'auto' }} />
+          <img src="/proagents/app/logo.png" alt="ProAgents" width={88} height={28} style={{ display: "block" }} />
         </a>
         <nav aria-label="Primary" style={{ display: "flex", gap: 18, fontSize: 14 }}>
           {nav("catalog", "Catalog")}

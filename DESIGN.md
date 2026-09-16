@@ -1,7 +1,22 @@
 # ProAgents Design System
 
-The visual world is **derived from the logo** (`logo.png`): a blue → violet
-gradient mark on deep space. Every color decision below traces to it.
+The visual world is **derived from the brand assets in `branding/`** — the
+source of truth for every logo surface (regenerate derived copies from here,
+never edit `docs/public` / `web/public` assets by hand):
+
+| Asset | Content | Use on |
+|---|---|---|
+| `branding/logo.png` | gradient mark + white wordmark | dark surfaces |
+| `branding/logo-black.png` | gradient mark + ink wordmark | light surfaces |
+| `branding/logo-bot-icon.png` | gradient mark only | **both** (favicons, avatars) |
+| `branding/logo-text.png` | white wordmark | dark surfaces |
+| `branding/logo-black-text.png` | ink wordmark | light surfaces |
+
+Derived copies: `web/public/` (favicon 32/48, trimmed header lockup),
+`docs/public/` (favicon, `logo.png` dark-mode navbar, `logo-dark.png`
+light-mode navbar, `bot-icon.png` hero, composed `og-image.png`), root
+`logo.png` (README). A blue → violet gradient mark on deep space anchors every
+color decision below.
 Methodology: **Impeccable** (impeccable.style) for visual craft, **Design with
 Intent** (designwithintent.ai) for UX strategy.
 
