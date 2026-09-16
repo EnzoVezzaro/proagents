@@ -69,8 +69,9 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
   const nav = (to: string, label: string) => (
     <a
       href={`#/${to}`}
+      aria-current={route === to || route.startsWith(to + "/") ? "page" : undefined}
       style={{
-        color: route === to || route.startsWith(to + "/") ? "var(--lime)" : "var(--cream-dim)",
+        color: route === to || route.startsWith(to + "/") ? "var(--cyan)" : "var(--cream-dim)",
         textDecoration: "none",
         fontWeight: route === to || route.startsWith(to + "/") ? 700 : 400,
       }}
@@ -87,19 +88,22 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
           alignItems: "center",
           gap: 24,
           padding: "14px 28px",
-          borderBottom: "1px solid var(--line)",
-          background: "var(--ink-2)",
+          borderBottom: "1px solid transparent",
+          background: "rgba(0, 0, 36, 0.72)",
+          backdropFilter: "blur(14px)",
+          WebkitBackdropFilter: "blur(14px)",
           position: "sticky",
           top: 0,
           zIndex: 10,
+          boxShadow: "inset 0 -1px 0 var(--line), 0 8px 24px rgba(0, 0, 12, 0.35)",
         }}
       >
         <a href="#/catalog" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", color: "var(--cream)" }}>
-          <img src="/proagents/app/logo.png" alt="ProAgents" width={28} height={28} style={{ borderRadius: 6 }} />
+          <img src="/proagents/app/logo.png" alt="ProAgents" width={34} height={15} style={{ borderRadius: 4, display: "block" }} />
           <strong style={{ fontSize: 16 }}>ProAgents</strong>
-          <span style={{ color: "var(--lime)", fontSize: 12, fontWeight: 700, letterSpacing: 1 }}>MARKETPLACE</span>
+          <span style={{ background: "var(--grad)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent", WebkitTextFillColor: "transparent", fontSize: 12, fontWeight: 700, letterSpacing: 1 }}>MARKETPLACE</span>
         </a>
-        <nav style={{ display: "flex", gap: 18, fontSize: 14 }}>
+        <nav aria-label="Primary" style={{ display: "flex", gap: 18, fontSize: 14 }}>
           {nav("catalog", "Catalog")}
           {nav("dashboard", "Dashboard")}
           {nav("build-profile", "Build a profile")}
@@ -112,7 +116,7 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
             rel="noreferrer"
             style={{ color: "var(--cream)", textDecoration: "none", border: "1px solid var(--line)", borderRadius: 8, padding: "6px 12px", fontSize: 13 }}
           >
-            ♥ <span style={{ color: "var(--lime)", fontWeight: 700 }}>Donate</span>
+            ♥ <span style={{ color: "var(--cyan)", fontWeight: 700 }}>Donate</span>
           </a>
           <GitHubAuth user={user} />
           <button
@@ -131,14 +135,14 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
           </button>
         </div>
       </header>
-      <main style={{ maxWidth: 1080, margin: "0 auto", padding: "28px 20px 80px" }}>{page}</main>
-      <footer style={{ borderTop: "1px solid var(--line)", padding: "18px 28px", color: "var(--cream-dim)", fontSize: 12, textAlign: "center" }}>
+      <main style={{ maxWidth: 1180, margin: "0 auto", padding: "32px 24px 88px" }}>{page}</main>
+      <footer style={{ borderTop: "1px solid var(--line)", padding: "22px 28px", color: "var(--cream-dim)", fontSize: 12, textAlign: "center", background: "rgba(0, 0, 24, 0.5)" }}>
         ProAgents Marketplace · fully open source (MIT) · runs entirely in your browser on GitHub Pages ·{" "}
-        <a href="https://github.com/EnzoVezzaro/proagents" style={{ color: "var(--lime)" }}>
+        <a href="https://github.com/EnzoVezzaro/proagents" style={{ color: "var(--cyan)", textDecoration: "none" }}>
           source
         </a>{" "}·{" "}
-        <a href="https://github.com/sponsors/EnzoVezzaro" style={{ color: "var(--lime)" }}>♥ Sponsor</a>{" "}·{" "}
-        <a href="https://ko-fi.com/enzojuniorvezzaro" style={{ color: "var(--lime)" }}>☕ Ko-fi</a>
+        <a href="https://github.com/sponsors/EnzoVezzaro" style={{ color: "var(--cyan)", textDecoration: "none" }}>♥ Sponsor</a>{" "}·{" "}
+        <a href="https://ko-fi.com/enzojuniorvezzaro" style={{ color: "var(--cyan)", textDecoration: "none" }}>☕ Ko-fi</a>
       </footer>
       {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} />}
     </div>

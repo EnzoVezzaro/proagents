@@ -3,7 +3,12 @@ import React from "react";
 /**
  * Design tokens — the marketplace SPA's craft floor. Everything interactive
  * gets: keyboard focus rings, hover/active feedback, transition curves, and
- * a consistent type ramp. Dark ink-and-lime world per the brand logo.
+ * a consistent type ramp.
+ *
+ * World: deep-space navy canvas, electric-blue primary, violet secondary,
+ * cyan signal — derived from the logo (blue→violet gradient on deep space).
+ * The gradient is reserved for primary actions and hero moments; cyan is the
+ * signal color (focus, active nav, "live" states), never a fill.
  */
 
 export const focusRing: React.CSSProperties["outline"] = undefined;
@@ -11,12 +16,12 @@ export const focusRing: React.CSSProperties["outline"] = undefined;
 /** Spread onto any interactive element for a11y focus + consistent cursor. */
 export const interactive = {
   cursor: "pointer",
-  transition: "border-color .15s ease, background .15s ease, color .15s ease, transform .1s ease",
+  transition: "border-color .15s ease, background .15s ease, color .15s ease, transform .1s ease, box-shadow .15s ease",
   outline: "none",
 } as const;
 
 export function focusStyle(e: React.FocusEvent<HTMLElement>): void {
-  e.currentTarget.style.boxShadow = "0 0 0 2px var(--ink), 0 0 0 4px var(--lime)";
+  e.currentTarget.style.boxShadow = "0 0 0 2px var(--ink), 0 0 0 4px var(--cyan)";
 }
 export function blurStyle(e: React.FocusEvent<HTMLElement>): void {
   e.currentTarget.style.boxShadow = "none";
@@ -31,17 +36,18 @@ export function focusProps(): {
   return { onFocus: focusStyle, onBlur: blurStyle };
 }
 
-/** Primary button (lime). */
+/** Primary action — the brand gradient, the only big gradient surface. */
 export const btnPrimary: React.CSSProperties = {
   ...interactive,
-  background: "var(--lime)",
-  color: "#0a0a0a",
-  border: "1px solid var(--lime)",
+  background: "var(--grad)",
+  color: "#ffffff",
+  border: "1px solid rgba(255,255,255,0.18)",
   borderRadius: 10,
   padding: "10px 18px",
   fontWeight: 700,
   fontSize: 13,
   fontFamily: "inherit",
+  boxShadow: "0 2px 14px rgba(0, 72, 228, 0.35)",
 };
 
 /** Secondary/ghost button. */
@@ -57,10 +63,23 @@ export const btnGhost: React.CSSProperties = {
   fontFamily: "inherit",
 };
 
+/** Tertiary: soft blue fill for on-rail selected states. */
+export const btnSoft: React.CSSProperties = {
+  ...interactive,
+  background: "var(--accent-soft)",
+  color: "var(--cream)",
+  border: "1px solid rgba(0, 72, 228, 0.5)",
+  borderRadius: 10,
+  padding: "10px 16px",
+  fontWeight: 600,
+  fontSize: 13,
+  fontFamily: "inherit",
+};
+
 export const field: React.CSSProperties = {
   width: "100%",
   boxSizing: "border-box",
-  background: "var(--ink)",
+  background: "var(--ink-3)",
   color: "var(--cream)",
   border: "1px solid var(--line)",
   borderRadius: 10,
@@ -95,4 +114,23 @@ export const type = {
   h3: { fontSize: 14, fontWeight: 700, margin: "0 0 8px" } as React.CSSProperties,
   body: { fontSize: 14, lineHeight: 1.65, color: "var(--cream-dim)" } as React.CSSProperties,
   small: { fontSize: 12.5, lineHeight: 1.55, color: "var(--cream-dim)" } as React.CSSProperties,
+};
+
+/** The brand gradient as text (wordmark, hero numerals). */
+export const gradText: React.CSSProperties = {
+  background: "var(--grad)",
+  WebkitBackgroundClip: "text",
+  backgroundClip: "text",
+  color: "transparent",
+  WebkitTextFillColor: "transparent",
+};
+
+/** Cyan signal dot for live/active states. */
+export const signalDot: React.CSSProperties = {
+  width: 7,
+  height: 7,
+  borderRadius: 999,
+  background: "var(--cyan)",
+  display: "inline-block",
+  boxShadow: "0 0 8px rgba(12, 204, 204, 0.8)",
 };

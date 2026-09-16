@@ -13,9 +13,9 @@ import { CATALOG_URL } from "../../catalog.js";
  * canonical ProfileManifest JSON the CLI already equips.
  */
 
-const btn: React.CSSProperties = { background: "var(--lime)", color: "#000", border: "none", borderRadius: 8, padding: "8px 14px", fontWeight: 700, cursor: "pointer", fontSize: 13 };
+const btn: React.CSSProperties = { background: "var(--grad)", color: "#ffffff", border: "none", borderRadius: 8, padding: "8px 14px", fontWeight: 700, cursor: "pointer", fontSize: 13 };
 const btnGhost: React.CSSProperties = { background: "transparent", color: "var(--cream-dim)", border: "1px solid var(--line)", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 13 };
-const btnDanger: React.CSSProperties = { background: "transparent", color: "#ff7b72", border: "1px solid #ff7b72", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 13 };
+const btnDanger: React.CSSProperties = { background: "transparent", color: "var(--danger)", border: "1px solid var(--danger)", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 13 };
 const field: React.CSSProperties = { width: "100%", boxSizing: "border-box", background: "var(--ink)", color: "var(--cream)", border: "1px solid var(--line)", borderRadius: 8, padding: "8px 10px", fontSize: 13 };
 const label: React.CSSProperties = { display: "block", fontSize: 11, color: "var(--cream-dim)", marginBottom: 4, marginTop: 10, textTransform: "uppercase" as const, letterSpacing: 0.4 };
 const hint: React.CSSProperties = { color: "var(--cream-dim)", fontSize: 12, lineHeight: 1.55, marginTop: 8 };
@@ -174,7 +174,7 @@ export function ProfileBuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
                   style={{
                     ...btnGhost,
                     display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left",
-                    borderColor: active ? "var(--lime)" : "var(--line)",
+                    borderColor: active ? "var(--cyan)" : "var(--line)",
                     color: active ? "var(--cream)" : "var(--cream-dim)",
                     background: active ? "rgba(185,251,29,0.08)" : "transparent",
                   }}
@@ -183,9 +183,9 @@ export function ProfileBuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
                   <span style={{
                     width: 20, height: 20, borderRadius: 999, display: "inline-flex", alignItems: "center", justifyContent: "center",
                     fontSize: 11, fontWeight: 700, flexShrink: 0,
-                    background: done ? "var(--lime)" : "transparent",
+                    background: done ? "var(--cyan)" : "transparent",
                     color: done ? "#000" : "var(--cream-dim)",
-                    border: done ? "1px solid var(--lime)" : "1px solid var(--line)",
+                    border: done ? "1px solid var(--cyan)" : "1px solid var(--line)",
                   }}>{done ? "✓" : i + 1}</span>
                   <span>
                     <span style={{ display: "block", fontSize: 13, fontWeight: active ? 700 : 400 }}>{s.title}</span>
@@ -244,7 +244,7 @@ function IdentityTab(props: { profile: ProfileManifest; update: (p: Partial<Prof
           <label style={label}>Slug (kebab-case)</label>
           <input style={field} value={p.slug} onChange={(e) => update({ profile: { ...p, slug: slugify(e.target.value) } })} placeholder="security-engineer" aria-invalid={slugTaken} />
           {slugTaken && (
-            <p style={{ color: "#ff7b72", fontSize: 12, margin: "4px 0 0" }}>
+            <p style={{ color: "var(--danger)", fontSize: 12, margin: "4px 0 0" }}>
               ⛔ “{p.slug}” already exists in the marketplace — pick another (PA038).
             </p>
           )}
@@ -379,7 +379,7 @@ function McpServerCard(props: { server: ProfileMcpServer; onChange: (patch: Part
           </select>
         </div>
         <button onClick={run} disabled={checking} style={{ ...btnGhost, padding: "8px 12px" }}>{checking ? "Checking…" : "Health check"}</button>
-        <button onClick={onRemove} style={{ ...btnGhost, padding: "8px 10px", borderColor: "#ff7b72", color: "#ff7b72" }} aria-label="Remove MCP server">✕</button>
+        <button onClick={onRemove} style={{ ...btnGhost, padding: "8px 10px", borderColor: "var(--danger)", color: "var(--danger)" }} aria-label="Remove MCP server">✕</button>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 8 }}>
         {server.transport === "stdio" ? (
@@ -399,7 +399,7 @@ function McpServerCard(props: { server: ProfileMcpServer; onChange: (patch: Part
         </div>
       </div>
       {health && (
-        <p style={{ fontSize: 12, margin: "8px 0 0", color: health.ok ? "var(--lime)" : "#ff7b72" }}>
+        <p style={{ fontSize: 12, margin: "8px 0 0", color: health.ok ? "var(--ok)" : "var(--danger)" }}>
           {health.ok ? "✓" : "✕"} {health.detail}
         </p>
       )}
@@ -464,7 +464,7 @@ function SkillsTab(props: { profile: ProfileManifest; update: (p: Partial<Profil
               <label style={label}>Skill name (kebab-case)</label>
               <input style={field} value={name} onChange={(e) => renameWritten(name, e.target.value)} aria-label="Written skill name" />
             </div>
-            <button onClick={() => removeSkill(name)} style={{ ...btnGhost, padding: "8px 10px", borderColor: "#ff7b72", color: "#ff7b72" }} aria-label="Remove written skill">✕</button>
+            <button onClick={() => removeSkill(name)} style={{ ...btnGhost, padding: "8px 10px", borderColor: "var(--danger)", color: "var(--danger)" }} aria-label="Remove written skill">✕</button>
           </div>
           <label style={label}>Description (one line)</label>
           <input style={field} value={b.description} onChange={(e) => update({ skillBodies: { ...bodies, [name]: { ...b, description: e.target.value } } })} placeholder="What this skill does and when to use it" aria-label="Written skill description" />
@@ -547,12 +547,12 @@ function ShipTab(props: {
           <button onClick={() => navigate("catalog")} style={btnGhost}>Back to catalog</button>
         </div>
         {publishState && (
-          <p style={{ marginTop: 12, fontSize: 13, color: publishState.startsWith("✓") ? "var(--lime)" : "var(--cream-dim)", whiteSpace: "pre-wrap" }}>
+          <p style={{ marginTop: 12, fontSize: 13, color: publishState.startsWith("✓") ? "var(--ok)" : "var(--cream-dim)", whiteSpace: "pre-wrap" }}>
             {publishState.includes("http") ? (
               <>
                 {publishState.split(/(https:\/\/[^\s)]+)/).map((part, i) =>
                   part.startsWith("https://") ? (
-                    <a key={i} href={part} target="_blank" rel="noreferrer" style={{ color: "var(--lime)", fontWeight: 700 }}>{part}</a>
+                    <a key={i} href={part} target="_blank" rel="noreferrer" style={{ color: "var(--cyan)", fontWeight: 700 }}>{part}</a>
                   ) : (
                     <span key={i}>{part}</span>
                   ),

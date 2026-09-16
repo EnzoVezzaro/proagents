@@ -116,7 +116,7 @@ export function PreviewPage(props: { id?: string; ctx: AppCtx }): React.JSX.Elem
 
   return (
     <div>
-      <a href={crewId ? `#/item/${encodeURIComponent(crewId)}` : "#/catalog"} style={{ color: "var(--lime)", fontSize: 13 }}>← back</a>
+      <a href={crewId ? `#/item/${encodeURIComponent(crewId)}` : "#/catalog"} style={{ color: "var(--cyan)", fontSize: 13, textDecoration: "none" }}>← back</a>
       <h1 style={{ margin: "14px 0 6px" }}>Preview an agent on your repo</h1>
       <p style={{ color: "var(--cream-dim)", maxWidth: 720, lineHeight: 1.6 }}>
         Runs the crew against a repo you control, <strong>on the fly</strong>, with the provider/model from Settings. The model sees the crew contract plus your repo's file tree — your code itself never leaves the browser except to your chosen provider.
@@ -141,11 +141,13 @@ export function PreviewPage(props: { id?: string; ctx: AppCtx }): React.JSX.Elem
           <button
             onClick={run}
             disabled={!repo || !crew || !providerReady || busy !== null}
-            style={{ background: !repo || !crew || !providerReady || busy !== null ? "var(--line)" : "var(--lime)", color: "#000", border: "none", borderRadius: 10, padding: "10px 18px", fontWeight: 700, cursor: !repo || !crew || !providerReady || busy !== null ? "not-allowed" : "pointer", fontSize: 14 }}
+            style={{ background: !repo || !crew || !providerReady || busy !== null ? "var(--line)" : "var(--grad)", color: "#ffffff", border: "none", borderRadius: 10, padding: "10px 18px", fontWeight: 700, cursor: !repo || !crew || !providerReady || busy !== null ? "not-allowed" : "pointer", fontSize: 14 }}
           >
             {busy ?? "Run preview"}
           </button>
-          {!providerReady && <span style={{ color: "var(--cream-dim)", fontSize: 12 }}>Add a provider API key in ⚙ Settings first.</span>}
+          {!repo && <span style={{ color: "var(--cream-dim)", fontSize: 12 }}>pick a repository first</span>}
+          {repo && !crew && <span style={{ color: "var(--cream-dim)", fontSize: 12 }}>pick a crew</span>}
+          {repo && crew && !providerReady && <span style={{ color: "var(--cream-dim)", fontSize: 12 }}>add a model API key in ⚙ Settings</span>}
         </div>
       )}
 
@@ -157,7 +159,7 @@ export function PreviewPage(props: { id?: string; ctx: AppCtx }): React.JSX.Elem
           <pre style={{ whiteSpace: "pre-wrap", background: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 12, padding: 18, fontSize: 13, lineHeight: 1.6 }}>{result}</pre>
           {token && repo && (
             <div style={{ marginTop: 16, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-              <button onClick={install} disabled={busy !== null} style={{ background: busy ? "var(--line)" : "var(--lime)", color: "#000", border: "none", borderRadius: 10, padding: "10px 18px", fontWeight: 700, cursor: busy ? "not-allowed" : "pointer", fontSize: 14 }}>
+              <button onClick={install} disabled={busy !== null} style={{ background: busy ? "var(--line)" : "var(--grad)", color: "#ffffff", border: "none", borderRadius: 10, padding: "10px 18px", fontWeight: 700, cursor: busy ? "not-allowed" : "pointer", fontSize: 14 }}>
                 Install {crew.name} into {repo.split("/")[1]}
               </button>
               <span style={{ color: "var(--cream-dim)", fontSize: 12 }}>
@@ -169,7 +171,7 @@ export function PreviewPage(props: { id?: string; ctx: AppCtx }): React.JSX.Elem
       )}
 
       {installDone && (
-        <div style={{ marginTop: 14, background: "rgba(185,251,29,0.08)", border: "1px solid var(--lime)", borderRadius: 10, padding: 14, fontSize: 13 }}>
+        <div style={{ marginTop: 14, background: "var(--accent-soft)", border: "1px solid var(--blue-bright)", borderRadius: 10, padding: 14, fontSize: 13 }}>
           ✓ Installed {installDone.length} files. Pull the branch and run the crew locally — it is the same layout <code>proagent crew install</code> produces.
         </div>
       )}

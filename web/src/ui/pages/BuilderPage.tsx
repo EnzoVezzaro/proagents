@@ -14,6 +14,7 @@ import {
 import { CATALOG_URL } from "../../catalog.js";
 import { issueBody, issueTitle } from "../../proposal.js";
 import { newWorker, renameMcpServer, stripEmptyContexts, validateCrewDraft } from "../../crew-draft.js";
+import { btnSoft } from "../tokens.js";
 
 /**
  * Crew builder — the GUI counterpart of the CLI interview. Agentic-first:
@@ -23,7 +24,7 @@ import { newWorker, renameMcpServer, stripEmptyContexts, validateCrewDraft } fro
  * runs.
  */
 
-const btn: React.CSSProperties = { background: "var(--lime)", color: "#000", border: "none", borderRadius: 8, padding: "8px 14px", fontWeight: 700, cursor: "pointer", fontSize: 13 };
+const btn: React.CSSProperties = { background: "var(--grad)", color: "#ffffff", border: "none", borderRadius: 8, padding: "8px 14px", fontWeight: 700, cursor: "pointer", fontSize: 13 };
 const btnGhost: React.CSSProperties = { background: "transparent", color: "var(--cream-dim)", border: "1px solid var(--line)", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 13 };
 const field: React.CSSProperties = { width: "100%", boxSizing: "border-box", background: "var(--ink)", color: "var(--cream)", border: "1px solid var(--line)", borderRadius: 8, padding: "8px 10px", fontSize: 13 };
 const label: React.CSSProperties = { display: "block", fontSize: 11, color: "var(--cream-dim)", marginBottom: 4, marginTop: 10, textTransform: "uppercase" as const, letterSpacing: 0.4 };
@@ -150,11 +151,11 @@ export function BuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
 
       <div style={{ display: "flex", gap: 6, margin: "20px 0", flexWrap: "wrap", alignItems: "center" }}>
         {tabs.map(([id, label]) => (
-          <button key={id} onClick={() => setTab(id)} style={{ ...(id === tab ? btn : btnGhost), background: id === tab ? "var(--lime)" : "transparent", color: id === tab ? "#000" : "var(--cream-dim)" }}>
+          <button key={id} onClick={() => setTab(id)} style={{ ...(id === tab ? btnSoft : btnGhost), borderColor: id === tab ? "var(--blue-bright)" : "var(--line)", color: id === tab ? "var(--cream)" : "var(--cream-dim)" }}>
             {label}
           </button>
         ))}
-        <button onClick={startOver} style={{ ...btnGhost, marginLeft: "auto", color: "#ff7b72", borderColor: "#ff7b72" }}>
+        <button onClick={startOver} style={{ ...btnGhost, marginLeft: "auto", color: "var(--danger)", borderColor: "var(--danger)" }}>
           Start over
         </button>
       </div>
@@ -242,7 +243,7 @@ function WorkersTab(props: {
             <strong>{i + 1}. {w.name || "unnamed"}</strong>
             <button
               onClick={() => update({ workers: crew.workers.filter((x) => x.id !== w.id) })}
-              style={{ background: "none", border: "none", color: "#ff7b72", cursor: "pointer", fontSize: 13 }}
+              style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: 13 }}
             >
               remove
             </button>
@@ -278,7 +279,7 @@ function WorkersTab(props: {
                   ...btnGhost,
                   padding: "5px 10px",
                   fontSize: 12,
-                  ...(w.profile === p.id ? { borderColor: "var(--lime)", color: "var(--lime)" } : {}),
+                  ...(w.profile === p.id ? { borderColor: "var(--cyan)", color: "var(--cyan)" } : {}),
                 }}
               >
                 {p.id}{w.profile === p.id ? " ✓" : ""}
@@ -292,7 +293,7 @@ function WorkersTab(props: {
             placeholder="or type a profile slug — built-in (security-engineer), marketplace, or local profiles/"
           />
           {w.profile && (
-            <p style={{ color: "var(--lime)", fontSize: 12, margin: "8px 0 0" }}>
+            <p style={{ color: "var(--warn)", fontSize: 12, margin: "8px 0 0" }}>
               Operates as <strong>{w.profile}</strong> — expertise, methods, rules and verification come from the profile spec at install time.
             </p>
           )}
@@ -356,8 +357,8 @@ function WorkersTab(props: {
               ["secrets", ["none", "named", "all"]],
             ] as const).map(([key, levels]) => (
               <div key={key}>
-                <label style={label}>{key}</label>
-                <select style={field} value={w.permissions[key]} onChange={(e) => updateWorker(w.id, { permissions: { ...w.permissions, [key]: e.target.value } as CrewPermissions })}>
+                <label style={label} htmlFor={`perm-${w.id}-${key}`}>{key}</label>
+                <select id={`perm-${w.id}-${key}`} style={field} value={w.permissions[key]} onChange={(e) => updateWorker(w.id, { permissions: { ...w.permissions, [key]: e.target.value } as CrewPermissions })}>
                   {levels.map((l) => (
                     <option key={l}>{l}</option>
                   ))}
@@ -400,7 +401,7 @@ function McpTab(props: { crew: CrewDefinition; update: (p: Partial<CrewDefinitio
               <label style={{ ...label, marginTop: 0 }}>Server name — workers bind to this (lowercase slug)</label>
               <input style={field} value={m.name} onChange={(e) => renameServer(m.name, e.target.value)} aria-label={`MCP server name (${m.name})`} />
             </div>
-            <button onClick={() => update({ mcpServers: crew.mcpServers.filter((x) => x.name !== m.name) })} style={{ background: "none", border: "none", color: "#ff7b72", cursor: "pointer", fontSize: 13 }}>remove</button>
+            <button onClick={() => update({ mcpServers: crew.mcpServers.filter((x) => x.name !== m.name) })} style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: 13 }}>remove</button>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 10 }}>
             <div>
@@ -522,7 +523,7 @@ function ShipTab(props: {
       <Card>
         <label style={label}>2 · Share it on the marketplace</label>
         <p style={{ color: "var(--cream-dim)", fontSize: 13, lineHeight: 1.6, margin: "4px 0 12px" }}>
-          Everything published here is <strong style={{ color: "var(--lime)" }}>free and MIT-licensed</strong>.
+          Everything published here is <strong style={{ color: "var(--ok)", textDecoration: "none" }}>free and MIT-licensed</strong>.
           Publishing files a <strong>proposal issue</strong> on the ProAgents repo — CI validates
           your crew automatically, and a maintainer merge (<code>/publish</code>) puts it in the
           marketplace. Nothing goes live without a human review.
@@ -533,12 +534,12 @@ function ShipTab(props: {
           <button onClick={() => navigate("catalog")} style={btnGhost}>Back to catalog</button>
         </div>
         {publishState && (
-          <p style={{ marginTop: 12, fontSize: 13, color: publishState.startsWith("✓") ? "var(--lime)" : "var(--cream-dim)", whiteSpace: "pre-wrap" }}>
+          <p style={{ marginTop: 12, fontSize: 13, color: publishState.startsWith("✓") ? "var(--ok)" : "var(--cream-dim)", whiteSpace: "pre-wrap" }}>
             {publishState.includes("http") ? (
               <>
                 {publishState.split(/(https:\/\/[^\s)]+)/).map((part, i) =>
                   part.startsWith("https://") ? (
-                    <a key={i} href={part} target="_blank" rel="noreferrer" style={{ color: "var(--lime)", fontWeight: 700 }}>{part}</a>
+                    <a key={i} href={part} target="_blank" rel="noreferrer" style={{ color: "var(--cyan)", fontWeight: 700 }}>{part}</a>
                   ) : (
                     <span key={i}>{part}</span>
                   ),

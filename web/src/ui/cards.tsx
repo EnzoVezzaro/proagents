@@ -14,22 +14,30 @@ export function ItemCard(props: { item: MarketplaceItem }): React.JSX.Element {
         padding: 20,
         textDecoration: "none",
         color: "var(--cream)",
-        transition: "border-color .15s",
+        transition: "border-color .18s ease, transform .18s ease, box-shadow .18s ease",
       }}
-      onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--lime)")}
-      onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--line)")}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = "var(--blue-bright)";
+        e.currentTarget.style.transform = "translateY(-2px)";
+        e.currentTarget.style.boxShadow = "0 10px 28px rgba(0, 20, 90, 0.45)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = "var(--line)";
+        e.currentTarget.style.transform = "none";
+        e.currentTarget.style.boxShadow = "none";
+      }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-        <span style={{ fontSize: 11, letterSpacing: 1.2, color: item.kind === "profile" ? "var(--lime)" : item.kind === "crew" ? "var(--cream)" : "var(--cream-dim)", textTransform: "uppercase" as const, fontWeight: 700 }}>
+        <span style={{ fontSize: 11, letterSpacing: 1.2, color: item.kind === "profile" ? "var(--cyan)" : item.kind === "crew" ? "var(--cream)" : "var(--cream-dim)", textTransform: "uppercase" as const, fontWeight: 700 }}>
           {item.kind}
         </span>
-        <span style={{ fontWeight: 700, color: "var(--lime)", fontSize: 13 }}>Free · MIT</span>
+        <span style={{ fontWeight: 700, color: "var(--ok)", fontSize: 13 }}>Free · MIT</span>
       </div>
       <h3 style={{ margin: "0 0 6px", fontSize: 16 }}>{item.name}</h3>
       <p style={{ margin: 0, color: "var(--cream-dim)", fontSize: 13, lineHeight: 1.5, minHeight: 40 }}>{item.description}</p>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 14 }}>
         {item.tags.slice(0, 4).map((t) => (
-          <span key={t} style={{ background: "var(--ink)", border: "1px solid var(--line)", borderRadius: 999, padding: "2px 10px", fontSize: 11, color: "var(--cream-dim)" }}>
+          <span key={t} style={{ background: "var(--ink-3)", border: "1px solid var(--line)", borderRadius: 999, padding: "2px 10px", fontSize: 11, color: "var(--cream-dim)" }}>
             {t}
           </span>
         ))}
@@ -51,5 +59,5 @@ export function EmptyState(props: { title: string; body: string }): React.JSX.El
 }
 
 export function ErrorNote(props: { message: string }): React.JSX.Element {
-  return <div style={{ background: "#2a1214", border: "1px solid #ff7b72", color: "#ffb0aa", borderRadius: 10, padding: "12px 16px", fontSize: 13, lineHeight: 1.5 }}>{props.message}</div>;
+  return <div style={{ background: "rgba(255, 107, 122, 0.08)", border: "1px solid var(--danger)", color: "#ffb3ba", borderRadius: 10, padding: "12px 16px", fontSize: 13, lineHeight: 1.5 }}>{props.message}</div>;
 }

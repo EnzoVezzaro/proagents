@@ -43,9 +43,9 @@ export function DashboardPage(props: { ctx: AppCtx; user: { login: string } | nu
       )}
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, margin: "24px 0" }}>
-        <a href="#/builder" style={{ background: "var(--lime)", color: "#000", borderRadius: 14, padding: 24, textDecoration: "none" }}>
-          <div style={{ fontSize: 20, fontWeight: 800 }}>Build your crew</div>
-          <p style={{ margin: "8px 0 0", fontSize: 13, lineHeight: 1.5 }}>Assemble workers, permissions, MCP servers and context — then publish to the marketplace or export the JSON.</p>
+        <a href="#/builder" style={{ background: "var(--grad)", color: "#ffffff", borderRadius: 14, padding: 24, textDecoration: "none", boxShadow: "0 8px 28px rgba(0, 72, 228, 0.35)" }}>
+          <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.01em" }}>Build your crew</div>
+          <p style={{ margin: "8px 0 0", fontSize: 13, lineHeight: 1.5, color: "rgba(255,255,255,0.88)" }}>Assemble workers, permissions, MCP servers and context — then publish to the marketplace or export the JSON.</p>
         </a>
         <a href="#/preview" style={{ background: "var(--ink-2)", border: "1px solid var(--line)", color: "var(--cream)", borderRadius: 14, padding: 24, textDecoration: "none" }}>
           <div style={{ fontSize: 20, fontWeight: 800 }}>Preview on a repo</div>
@@ -66,7 +66,7 @@ export function DashboardPage(props: { ctx: AppCtx; user: { login: string } | nu
           {mine.map((c) => (
             <a key={c.id} href={`#/item/${encodeURIComponent(c.id)}`} style={{ display: "flex", justifyContent: "space-between", background: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 12, padding: 16, textDecoration: "none", color: "var(--cream)", flexWrap: "wrap", gap: 8 }}>
               <span><strong>{c.name}</strong> <span style={{ color: "var(--cream-dim)" }}>· v{c.version} · {c.workers.length} workers</span></span>
-              <span style={{ color: "var(--lime)", fontSize: 13 }}>free · MIT</span>
+              <span style={{ color: "var(--ok)", fontSize: 13 }}>free · MIT</span>
             </a>
           ))}
         </div>

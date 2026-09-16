@@ -26,7 +26,7 @@ const pathCard: React.CSSProperties = {
   cursor: "pointer",
   transition: "border-color .15s, transform .15s",
 };
-const pathCardActive: React.CSSProperties = { ...pathCard, borderColor: "var(--lime)" };
+const pathCardActive: React.CSSProperties = { ...pathCard, borderColor: "var(--blue-bright)" };
 
 export function BuildEntryPage(props: { ctx: AppCtx; navigate: (to: string) => void }): React.JSX.Element {
   const { settings, navigate } = props.ctx;
@@ -112,7 +112,7 @@ export function BuildEntryPage(props: { ctx: AppCtx; navigate: (to: string) => v
 
           {!token ? (
             <p style={{ color: "var(--cream-dim)", fontSize: 13 }}>
-              <a href="#/catalog" style={{ color: "var(--lime)" }}>Sign in with GitHub</a> (header) to list your repositories.
+              <a href="#/catalog" style={{ color: "var(--cyan)", textDecoration: "none" }}>Sign in with GitHub</a> (header) to list your repositories.
             </p>
           ) : (
             <div style={{ display: "grid", gap: 10 }}>
@@ -130,8 +130,8 @@ export function BuildEntryPage(props: { ctx: AppCtx; navigate: (to: string) => v
                 onClick={analyze}
                 disabled={!selected || phase === "analyzing"}
                 style={{
-                  background: !selected || phase === "analyzing" ? "var(--line)" : "var(--lime)",
-                  color: "#000",
+                  background: !selected || phase === "analyzing" ? "var(--line)" : "var(--grad)",
+                  color: "#ffffff",
                   border: "none",
                   borderRadius: 10,
                   padding: "10px 16px",
@@ -161,7 +161,7 @@ export function BuildEntryPage(props: { ctx: AppCtx; navigate: (to: string) => v
             Start from an empty crew: name it, add workers with explicit permissions, bind MCP
             servers, wire the handoff graph. Full control, no assumptions.
           </p>
-          <span style={{ color: "var(--lime)", fontWeight: 700, fontSize: 13 }}>Open the builder →</span>
+          <span style={{ color: "var(--cyan)", fontWeight: 700, fontSize: 13 }}>Open the builder →</span>
         </div>
       </div>
 
@@ -185,7 +185,7 @@ export function BuildEntryPage(props: { ctx: AppCtx; navigate: (to: string) => v
                   <strong style={{ fontSize: 14 }}>
                     {s.name} <span style={{ color: "var(--cream-dim)", fontWeight: 400 }}>· {s.role}</span>
                   </strong>
-                  <span style={{ fontSize: 12, color: "var(--lime)" }}>emits: {s.emits.join(", ")}</span>
+                  <span style={{ fontSize: 12, color: "var(--cyan)" }}>emits: {s.emits.join(", ")}</span>
                 </div>
                 <p style={{ margin: "6px 0 4px", color: "var(--cream-dim)", fontSize: 13, lineHeight: 1.55 }}>{s.description}</p>
                 <p style={{ margin: 0, fontSize: 12, color: "var(--cream-dim)" }}>
@@ -198,7 +198,7 @@ export function BuildEntryPage(props: { ctx: AppCtx; navigate: (to: string) => v
           <div style={{ display: "flex", gap: 12, marginTop: 18, flexWrap: "wrap" }}>
             <button
               onClick={() => openInBuilder(true)}
-              style={{ background: "var(--lime)", color: "#000", border: "none", borderRadius: 10, padding: "11px 18px", fontWeight: 700, cursor: "pointer", fontSize: 14 }}
+              style={{ background: "var(--grad)", color: "#ffffff", border: "none", borderRadius: 10, padding: "11px 18px", fontWeight: 700, cursor: "pointer", fontSize: 14 }}
             >
               Open in builder & edit →
             </button>

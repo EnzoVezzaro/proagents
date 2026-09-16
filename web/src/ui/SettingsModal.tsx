@@ -57,7 +57,7 @@ export function SettingsModal(props: { onClose: () => void }): React.JSX.Element
           Everything you enter here stays in <em>this browser</em> (localStorage). The site is static — there is no server to send it to.
         </p>
 
-        <h3 style={{ fontSize: 13, color: "var(--lime)", margin: "22px 0 0" }}>Model provider (for previews)</h3>
+        <h3 style={{ fontSize: 13, color: "var(--cyan)", margin: "22px 0 0" }}>Model provider (for previews)</h3>
         <label style={label}>Provider</label>
         <select
           value={provider.provider}
@@ -96,22 +96,22 @@ export function SettingsModal(props: { onClose: () => void }): React.JSX.Element
           </>
         )}
 
-        <h3 style={{ fontSize: 13, color: "var(--lime)", margin: "22px 0 0" }}>GitHub</h3>
+        <h3 style={{ fontSize: 13, color: "var(--cyan)", margin: "22px 0 0" }}>GitHub</h3>
         <label style={label}>Personal access token (alternative to device-flow login)</label>
         <input type="password" value={githubToken} onChange={(e) => setGithubToken(e.target.value)} placeholder="ghp_… or github_pat_…" style={field} />
         <p style={{ color: "var(--cream-dim)", fontSize: 12, marginTop: 6 }}>
           Needs <code>repo</code> scope for repo previews and publishing crews. Prefer the “Sign in with GitHub” device-flow button in the header — it never pastes a token.
         </p>
 
-        <h3 style={{ fontSize: 13, color: "var(--lime)", margin: "22px 0 0" }}>Clerk (optional identity UI)</h3>
+        <h3 style={{ fontSize: 13, color: "var(--cyan)", margin: "22px 0 0" }}>Clerk (optional identity UI)</h3>
         <label style={label}>Publishable key</label>
         <input value={clerkKey} onChange={(e) => setClerkKey(e.target.value)} placeholder="pk_test_…" style={field} />
         <p style={{ color: "var(--cream-dim)", fontSize: 12, marginTop: 6 }}>
           Publishable keys (pk_…) are safe in browsers. Secret keys (sk_…) are rejected — they must never be embedded in a static site.
         </p>
 
-        {error && <div style={{ marginTop: 14, color: "#ff7b72", fontSize: 13 }}>{error}</div>}
-        {saved && <div style={{ marginTop: 14, color: "var(--lime)", fontSize: 13 }}>✓ Saved</div>}
+        {error && <div style={{ marginTop: 14, color: "var(--danger)", fontSize: 13 }}>{error}</div>}
+        {saved && <div style={{ marginTop: 14, color: "var(--ok)", fontSize: 13 }}>✓ Saved</div>}
 
         <div style={{ display: "flex", gap: 10, marginTop: 22, justifyContent: "flex-end" }}>
           <button
@@ -125,7 +125,7 @@ export function SettingsModal(props: { onClose: () => void }): React.JSX.Element
           >
             Reset
           </button>
-          <button onClick={save} style={{ background: "var(--lime)", color: "#000", border: "none", borderRadius: 8, padding: "9px 18px", cursor: "pointer", fontWeight: 700, fontSize: 13 }}>
+          <button onClick={save} style={{ background: "var(--grad)", color: "#ffffff", border: "none", borderRadius: 8, padding: "9px 18px", cursor: "pointer", fontWeight: 700, fontSize: 13 }}>
             Save settings
           </button>
         </div>

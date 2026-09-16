@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="logo.png" alt="ProAgents" width="140" />
+<img src="logo.png" alt="ProAgents" width="250" />
 
 **Forge professional AI agents from existing coding agents.**
 

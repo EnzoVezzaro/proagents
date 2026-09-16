@@ -1,12 +1,15 @@
 /**
- * ProAgents theme — derived from the logo:
- *   ink    #000000 / #0a0a0a   (74% of the logo is near-black)
- *   cream  #f1eeea            (line-art strokes)
- *   lime   #b9fb1d            (accent sparks)
+ * ProAgents theme — derived from the current logo (blue → violet gradient on
+ * deep-space navy):
+ *   navy    #000024   canvas (dark = the brand's native habitat)
+ *   blue    #0048e4   primary (the logo's dominant hue)
+ *   violet  #5424e4   secondary (the gradient's far end)
+ *   cyan    #0ccccc   signal accent (focus, active markers)
+ *   ice     #f4f7ff   text on dark
  *
  * Two full variants:
- *   :root  → light mode (paper surfaces, ink text, lime accent)
- *   .dark  → the brand's native ink-and-lime forge
+ *   :root  → light mode (ice paper, navy text, blue brand)
+ *   .dark  → the logo's native deep-space world
  * VitePress toggles `html.dark` from the navbar switch + system preference.
  */
 
@@ -14,117 +17,119 @@
  * Shared brand tokens (both modes)
  * ------------------------------------------------------------------------- */
 :root {
-  --vp-c-lime: #b9fb1d;
-  --vp-c-lime-soft: rgba(185, 251, 29, 0.14);
-  --vp-c-lime-deep: #7aa80e; /* lime that stays readable on white */
+  --pa-navy: #000024;
+  --pa-blue: #0048e4;
+  --pa-blue-deep: #0036b3; /* readable on white */
+  --pa-violet: #5424e4;
+  --pa-violet-deep: #4a1fc4;
+  --pa-cyan: #0a9ea8; /* cyan that survives on white */
+  --pa-cyan-bright: #0ccccc;
+  --pa-ice: #f4f7ff;
+  --pa-grad: linear-gradient(120deg, #0048e4 0%, #3b2fe0 55%, #5424e4 100%);
 
-  --vp-c-brand-1: var(--vp-c-lime-deep);
-  --vp-c-brand-2: #5f8a0a;
-  --vp-c-brand-3: #8fc713;
-  --vp-c-brand-soft: var(--vp-c-lime-soft);
+  --vp-c-brand-1: var(--pa-blue-deep);
+  --vp-c-brand-2: var(--pa-violet-deep);
+  --vp-c-brand-3: var(--pa-blue);
+  --vp-c-brand-soft: rgba(0, 72, 228, 0.12);
 
   --vp-font-family-base: "Inter", ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
   --vp-font-family-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo,
     Consolas, monospace;
 
-  --vp-button-brand-bg: var(--vp-c-lime);
-  --vp-button-brand-text: #0a0a0a;
-  --vp-button-brand-border: var(--vp-c-lime);
-  --vp-button-brand-hover-bg: #c9ff45;
-  --vp-button-brand-hover-text: #0a0a0a;
-  --vp-button-brand-hover-border: #c9ff45;
-  --vp-button-brand-active-bg: #a5e018;
-  --vp-button-brand-active-text: #0a0a0a;
-  --vp-button-brand-active-border: #a5e018;
+  --vp-button-brand-bg: var(--pa-grad);
+  --vp-button-brand-text: #ffffff;
+  --vp-button-brand-border: transparent;
+  --vp-button-brand-hover-bg: linear-gradient(
+    120deg,
+    #2e6bff 0%,
+    #5a3bea 55%,
+    #6b35f2 100%
+  );
+  --vp-button-brand-hover-text: #ffffff;
+  --vp-button-brand-hover-border: transparent;
+  --vp-button-brand-active-bg: var(--pa-blue-deep);
+  --vp-button-brand-active-text: #ffffff;
+  --vp-button-brand-active-border: transparent;
 
-  --vp-code-lang-color: #6f6d66;
+  --vp-code-lang-color: #6b7290;
 }
 
 /* ---------------------------------------------------------------------------
- * Light mode (default)
+ * Light mode (default) — ice paper, navy text
  * ------------------------------------------------------------------------- */
 :root {
-  --vp-c-bg: #fcfcf9;
-  --vp-c-bg-alt: #f4f4ef;
+  --vp-c-bg: #fbfcff;
+  --vp-c-bg-alt: #f2f5fc;
   --vp-c-bg-elv: #ffffff;
-  --vp-c-bg-soft: #f4f4ef;
+  --vp-c-bg-soft: #f2f5fc;
 
-  --vp-c-text-1: #16160f;
-  --vp-c-text-2: #4d4c44;
-  --vp-c-text-3: #6f6d66;
+  --vp-c-text-1: #0a1030;
+  --vp-c-text-2: #3d4569;
+  --vp-c-text-3: #6b7290;
 
-  --vp-c-divider: #e4e3da;
-  --vp-c-gutter: #ecebe2;
-  --vp-c-border: #dedcd0;
+  --vp-c-divider: #e2e7f4;
+  --vp-c-gutter: #eaeefb;
+  --vp-c-border: #d8deef;
 
-  --vp-c-text-code: #3f6212;
-  --vp-code-color: var(--vp-c-lime-soft);
+  --vp-c-text-code: var(--pa-blue-deep);
+  --vp-code-color: rgba(0, 72, 228, 0.07);
 
   --vp-home-hero-name-color: transparent;
-  --vp-home-hero-name-background: linear-gradient(
-    120deg,
-    #16160f 30%,
-    var(--vp-c-lime-deep)
-  );
+  --vp-home-hero-name-background: var(--pa-grad);
 
   --vp-home-hero-image-background-image: radial-gradient(
     circle,
-    rgba(185, 251, 29, 0.35) 0%,
-    rgba(185, 251, 29, 0.08) 45%,
+    rgba(0, 72, 228, 0.22) 0%,
+    rgba(84, 36, 228, 0.08) 45%,
     transparent 70%
   );
   --vp-home-hero-image-filter: blur(28px);
 }
 
 /* ---------------------------------------------------------------------------
- * Dark mode — the logo's native palette
+ * Dark mode — the logo's native deep-space world
  * ------------------------------------------------------------------------- */
 html.dark {
-  --vp-c-brand-1: var(--vp-c-lime);
-  --vp-c-brand-2: #d2ff66;
-  --vp-c-brand-3: #8fc713;
+  --vp-c-brand-1: #6f95ff; /* electric blue lifted for dark text contrast */
+  --vp-c-brand-2: #9d7bff;
+  --vp-c-brand-3: #0048e4;
 
-  --vp-c-ink: #050505;
-  --vp-c-ink-2: #0c0c0c;
-  --vp-c-cream: #f1eeea;
-  --vp-c-cream-dim: #a8a69f;
+  --vp-c-bg: var(--pa-navy);
+  --vp-c-bg-alt: #040a33;
+  --vp-c-bg-elv: #0a1445;
+  --vp-c-bg-soft: #071040;
 
-  --vp-c-bg: var(--vp-c-ink);
-  --vp-c-bg-alt: var(--vp-c-ink-2);
-  --vp-c-bg-elv: #111110;
-  --vp-c-bg-soft: #101010;
+  --vp-c-text-1: var(--pa-ice);
+  --vp-c-text-2: #c3cbec;
+  --vp-c-text-3: #9aa6cf;
 
-  --vp-c-text-1: var(--vp-c-cream);
-  --vp-c-text-2: #c9c6bf;
-  --vp-c-text-3: var(--vp-c-cream-dim);
+  --vp-c-divider: #17245c;
+  --vp-c-gutter: #101a4d;
+  --vp-c-border: #22306e;
 
-  --vp-c-divider: #232320;
-  --vp-c-gutter: #1a1a18;
-  --vp-c-border: #2a2a26;
-
-  --vp-c-text-code: #d8ff7a;
-  --vp-code-lang-color: var(--vp-c-cream-dim);
+  --vp-c-text-code: #8fb0ff;
+  --vp-code-lang-color: #9aa6cf;
 
   --vp-home-hero-name-color: transparent;
   --vp-home-hero-name-background: linear-gradient(
     120deg,
-    var(--vp-c-cream) 30%,
-    var(--vp-c-lime)
+    #6f95ff 0%,
+    #9d7bff 100%
   );
 
   --vp-home-hero-image-background-image: radial-gradient(
     circle,
-    rgba(185, 251, 29, 0.22) 0%,
-    rgba(185, 251, 29, 0.05) 45%,
+    rgba(0, 72, 228, 0.35) 0%,
+    rgba(84, 36, 228, 0.15) 45%,
     transparent 70%
   );
-  --vp-home-hero-image-filter: blur(28px);
+  --vp-home-hero-image-filter: blur(32px);
 }
 
 /* ---------------------------------------------------------------------------
  * Shared decorations
- * ------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------ */
 
 .VPHero {
   position: relative;
@@ -134,38 +139,43 @@ html.dark {
   letter-spacing: -0.02em;
 }
 
-/* Grid texture on the home hero, like the og-image (mode-aware lines) */
+/* Ambient grid on the home hero (mode-aware, brand-tinted lines) */
 .VPHomeHero::before {
   content: "";
   position: absolute;
   inset: 0;
-  background-image:
-    linear-gradient(rgba(5, 5, 5, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(5, 5, 5, 0.05) 1px, transparent 1px);
+  background-image: linear-gradient(rgba(10, 16, 48, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(10, 16, 48, 0.05) 1px, transparent 1px);
   background-size: 40px 40px;
   pointer-events: none;
   mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
 }
 .dark .VPHomeHero::before {
-  background-image:
-    linear-gradient(rgba(241, 238, 234, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(241, 238, 234, 0.03) 1px, transparent 1px);
+  background-image: linear-gradient(rgba(159, 166, 207, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(159, 166, 207, 0.05) 1px, transparent 1px);
 }
 
-/* Lime spark on the docs outline + sidebar active markers */
+/* Cyan signal on the docs outline + sidebar active markers */
 .VPDocAsideOutline .outline-marker {
-  background: var(--vp-c-lime);
+  background: var(--pa-cyan-bright);
   border-radius: 2px;
 }
+.dark .VPDocAsideOutline .outline-marker {
+  background: var(--pa-cyan-bright);
+}
 .VPSidebarItem.is-active > .item > .indicator {
-  background: var(--vp-c-lime);
+  background: var(--pa-cyan-bright);
 }
 
 /* Custom block accents */
 .custom-block.tip {
-  border-color: var(--vp-c-lime);
-  background: var(--vp-c-lime-soft);
+  border-color: var(--pa-blue);
+  background: rgba(0, 72, 228, 0.08);
   color: var(--vp-c-text-1);
+}
+.dark .custom-block.tip {
+  border-color: #2e6bff;
+  background: rgba(0, 72, 228, 0.16);
 }
 .custom-block.warning {
   border-color: #d9a441;
@@ -174,14 +184,18 @@ html.dark {
 
 /* Code blocks: brand-tinted surface per mode */
 .vp-doc div[class*="language-"] {
-  background: #f6f6ef;
+  background: #f4f6fd;
   border: 1px solid var(--vp-c-border);
 }
 .dark .vp-doc div[class*="language-"] {
-  background: #0b0b0a;
+  background: #030722;
 }
 
-/* Selection in brand lime */
+/* Selection in brand blue */
 ::selection {
-  background: rgba(185, 251, 29, 0.35);
+  background: rgba(0, 72, 228, 0.35);
+}
+.dark ::selection {
+  background: rgba(0, 72, 228, 0.55);
+  color: #ffffff;
 }

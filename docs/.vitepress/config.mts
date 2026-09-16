@@ -18,7 +18,7 @@ export default defineConfig({
       },
     ],
     ["meta", { property: "og:image", content: "/og-image.png" }],
-    ["meta", { name: "theme-color", content: "#b9fb1d" }],
+    ["meta", { name: "theme-color", content: "#000024" }],
   ],
   base: "/proagents/",
   cleanUrls: true,

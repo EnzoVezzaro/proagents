@@ -57,11 +57,17 @@ export function CatalogPage(_props: { ctx: AppCtx }): React.JSX.Element {
   return (
     <div>
       <div style={{ display: "flex", alignItems: "baseline", gap: 14, flexWrap: "wrap" }}>
-        <h1 style={{ margin: 0 }}>Profiles & crews marketplace</h1>
-        <span style={{ color: "var(--cream-dim)", fontSize: 13 }}>Free · MIT · every listing is a JSON file in the open repo</span>
+        <h1 style={{ margin: 0, fontSize: 30, letterSpacing: "-0.02em" }}>
+          Professional specs, ready to equip
+        </h1>
       </div>
+      <p style={{ color: "var(--cream-dim)", fontSize: 14, maxWidth: 640, lineHeight: 1.6, margin: "6px 0 0" }}>
+        Profile and crew <strong style={{ color: "var(--cream)", fontWeight: 600 }}>specs</strong> your coding agent
+        executes — equip one with <code style={{ color: "var(--cyan)" }}>npx proagent equip &lt;slug&gt;</code>, or
+        compose a crew from professions. Free · MIT · every listing is a reviewable JSON file in the open repo.
+      </p>
 
-      <div style={{ display: "flex", gap: 10, margin: "20px 0 6px", flexWrap: "wrap", alignItems: "center" }}>
+      <div style={{ display: "flex", gap: 10, margin: "22px 0 6px", flexWrap: "wrap", alignItems: "center" }}>
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -70,8 +76,14 @@ export function CatalogPage(_props: { ctx: AppCtx }): React.JSX.Element {
           style={{ flex: 1, minWidth: 240, background: "var(--ink-2)", color: "var(--cream)", border: "1px solid var(--line)", borderRadius: 10, padding: "10px 14px", fontSize: 14 }}
         />
         <a
+          href="#/build-profile"
+          style={{ background: "transparent", color: "var(--cream)", border: "1px solid var(--line)", borderRadius: 10, padding: "10px 16px", fontWeight: 600, fontSize: 14, textDecoration: "none", whiteSpace: "nowrap" }}
+        >
+          + Build a profile
+        </a>
+        <a
           href="#/build"
-          style={{ background: "var(--lime)", color: "#0a0a0a", borderRadius: 10, padding: "10px 16px", fontWeight: 700, fontSize: 14, textDecoration: "none", whiteSpace: "nowrap" }}
+          style={{ background: "var(--grad)", color: "#ffffff", borderRadius: 10, padding: "10px 16px", fontWeight: 700, fontSize: 14, textDecoration: "none", whiteSpace: "nowrap" }}
         >
           + Build a crew
         </a>
@@ -115,9 +127,9 @@ function TagChip(props: { label: string; active: boolean; onClick: () => void })
     <button
       onClick={props.onClick}
       style={{
-        background: props.active ? "var(--lime)" : "var(--ink-2)",
-        color: props.active ? "#000" : "var(--cream-dim)",
-        border: `1px solid ${props.active ? "var(--lime)" : "var(--line)"}`,
+        background: props.active ? "var(--accent-soft)" : "var(--ink-2)",
+        color: props.active ? "var(--cyan)" : "var(--cream-dim)",
+        border: `1px solid ${props.active ? "var(--cyan)" : "var(--line)"}`,
         borderRadius: 999,
         padding: "4px 12px",
         fontSize: 12,

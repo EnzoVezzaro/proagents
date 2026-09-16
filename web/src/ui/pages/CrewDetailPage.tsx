@@ -46,7 +46,7 @@ export function CrewDetailPage(props: { id: string; ctx: AppCtx }): React.JSX.El
   if (error) {
     return (
       <div>
-        <a href="#/catalog" style={{ color: "var(--lime)", fontSize: 13 }}>← back to catalog</a>
+        <a href="#/catalog" style={{ color: "var(--cyan)", fontSize: 13, textDecoration: "none" }}>← back to catalog</a>
         <div style={{ marginTop: 16 }}>
           <ErrorNote message={error} />
         </div>
@@ -56,7 +56,7 @@ export function CrewDetailPage(props: { id: string; ctx: AppCtx }): React.JSX.El
   if (profile) {
     return (
       <div>
-        <a href="#/catalog" style={{ color: "var(--lime)", fontSize: 13 }}>← back to catalog</a>
+        <a href="#/catalog" style={{ color: "var(--cyan)", fontSize: 13, textDecoration: "none" }}>← back to catalog</a>
         <ProfileDetail manifest={profile} />
       </div>
     );
@@ -65,7 +65,7 @@ export function CrewDetailPage(props: { id: string; ctx: AppCtx }): React.JSX.El
 
   return (
     <div>
-      <a href="#/catalog" style={{ color: "var(--lime)", fontSize: 13 }}>← back to catalog</a>
+      <a href="#/catalog" style={{ color: "var(--cyan)", fontSize: 13, textDecoration: "none" }}>← back to catalog</a>
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 20, marginTop: 14, flexWrap: "wrap" }}>
         <div style={{ maxWidth: 640 }}>
@@ -78,11 +78,11 @@ export function CrewDetailPage(props: { id: string; ctx: AppCtx }): React.JSX.El
           </div>
         </div>
         <div style={{ background: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 14, padding: 20, minWidth: 240 }}>
-          <div style={{ fontSize: 22, fontWeight: 800, color: "var(--lime)" }}>Free · MIT</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: "var(--ok)", textDecoration: "none" }}>Free · MIT</div>
           <div style={{ color: "var(--cream-dim)", fontSize: 12, marginBottom: 14 }}>v{crew.version} · by {crew.author} · {crew.workers.length} worker{crew.workers.length === 1 ? "" : "s"}</div>
           <a
             href={`#/preview/${encodeURIComponent(crew.id)}`}
-            style={{ display: "block", textAlign: "center", background: "var(--lime)", color: "var(--ink)", borderRadius: 10, padding: "11px 0", fontWeight: 700, textDecoration: "none", fontSize: 14 }}
+            style={{ display: "block", textAlign: "center", background: "var(--grad)", color: "#ffffff", borderRadius: 10, padding: "11px 0", fontWeight: 700, textDecoration: "none", fontSize: 14 }}
           >
             Preview on your repo
           </a>
@@ -129,7 +129,7 @@ export function CrewDetailPage(props: { id: string; ctx: AppCtx }): React.JSX.El
           <ul style={{ color: "var(--cream-dim)", fontSize: 13, lineHeight: 1.8 }}>
             {crew.mcpServers.map((m) => (
               <li key={m.name}>
-                <code style={{ color: "var(--lime)" }}>{m.name}</code> — {m.transport}
+                <code style={{ color: "var(--cyan)" }}>{m.name}</code> — {m.transport}
                 {m.url ? ` · ${m.url}` : m.command ? ` · ${m.command} ${(m.args ?? []).join(" ")}` : ""}
                 {m.allowedTools && m.allowedTools.length > 0 ? ` · tools: ${m.allowedTools.join(", ")}` : ""}
               </li>
@@ -152,10 +152,10 @@ export function CrewDetailPage(props: { id: string; ctx: AppCtx }): React.JSX.El
 
 function Badge(props: { children: React.ReactNode; tone: "safe" | "warn" | "gate" | "mcp" }): React.JSX.Element {
   const colors: Record<string, { fg: string; bg: string }> = {
-    safe: { fg: "#7ee787", bg: "rgba(126,231,135,0.08)" },
+    safe: { fg: "var(--ok)", bg: "rgba(61,220,151,0.08)" },
     warn: { fg: "#ffb454", bg: "rgba(255,180,84,0.08)" },
     gate: { fg: "#79c0ff", bg: "rgba(121,192,255,0.08)" },
-    mcp: { fg: "var(--lime)", bg: "rgba(185,251,29,0.08)" },
+    mcp: { fg: "var(--cyan)", bg: "rgba(12,204,204,0.08)" },
   };
   const c = colors[props.tone];
   return (

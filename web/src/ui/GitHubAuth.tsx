@@ -62,15 +62,15 @@ export function GitHubAuth(props: { user: { login: string; avatar_url: string } 
     <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
       {status && <span style={{ color: "var(--cream-dim)", fontSize: 12 }}>{status}</span>}
       {flow && flow.userCode && (
-        <code style={{ background: "var(--ink)", border: "1px solid var(--lime)", color: "var(--lime)", padding: "3px 8px", borderRadius: 6, letterSpacing: 2 }}>
+        <code style={{ background: "var(--ink-3)", border: "1px solid var(--cyan)", color: "var(--cyan)", padding: "3px 8px", borderRadius: 6, letterSpacing: 2 }}>
           {flow.userCode}
         </code>
       )}
       <button
         onClick={start}
         style={{
-          background: "var(--lime)",
-          color: "#000",
+          background: "var(--grad)",
+          color: "#ffffff",
           border: "none",
           borderRadius: 8,
           padding: "7px 14px",
