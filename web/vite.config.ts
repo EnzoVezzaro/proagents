@@ -4,7 +4,8 @@ import { fileURLToPath } from "node:url";
 import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 
-// GitHub Pages project site: the app is served from /proagents/app/.
+// GitHub Pages project site: the SPA is the site root (/proagents/); the
+// docs site lives at /proagents/docs/ (see pages.yml for the artifact layout).
 // envDir points at the repo root so one .env file serves both the CLI
 // (secrets, gitignored) and the web build (only VITE_* vars are embedded —
 // they must never hold secrets).
@@ -51,7 +52,7 @@ function marketplaceDevServer(): Plugin {
 }
 
 export default defineConfig({
-  base: "/proagents/app/",
+  base: "/proagents/",
   envDir: "..",
   envPrefix: "VITE_",
   plugins: [react(), marketplaceDevServer()],

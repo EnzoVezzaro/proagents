@@ -17,7 +17,7 @@ repo, and any item pulls into your repository with one command.
 
 | Piece | Where | What it is |
 |---|---|---|
-| Marketplace app | [`/proagents/app/`](https://enzovezzaro.github.io/proagents/app/) | Static SPA (React + Vite) deployed to GitHub Pages — runs entirely in your browser |
+| Marketplace app | [`/proagents/`](https://enzovezzaro.github.io/proagents/) | Static SPA (React + Vite) deployed to GitHub Pages — runs entirely in your browser |
 | Catalog | `.marketplace/catalog.json` + `.marketplace/items/*.json` | **Git-as-database**: the repo itself is the data layer; every listing is a reviewable JSON file, and Pages serves reads |
 | CLI | `proagent equip <slug>` · `proagent crew …` | the courier: pulls a spec (profile or crew) and hands it to your harness |
 | Installer | `.agents/skills/<profile>/` + instructions block · `.agents/crews/<id>/` + `.mcp.json` | the on-disk layout any agent runtime can execute |

@@ -365,7 +365,7 @@ export async function publishProfileAsPr(
       head: branch,
       base: base.default_branch,
       body: [
-        `Automated profile proposal via the [ProAgents marketplace builder](https://enzovezzaro.github.io/proagents/app/).`,
+        `Automated profile proposal via the [ProAgents marketplace builder](https://enzovezzaro.github.io/proagents/).`,
         ``,
         `Adds \`.marketplace/items/${slug}.json\` + catalog index entry. The deterministic validator runs on this PR.`,
         `Maintainers: verify the profession is sound, then merge to publish.`,

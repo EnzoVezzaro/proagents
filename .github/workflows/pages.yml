@@ -1,4 +1,4 @@
-name: Deploy docs and marketplace to GitHub Pages
+name: Deploy marketplace (root) and docs to GitHub Pages
 
 on:
   push:
@@ -25,19 +25,138 @@ jobs:
           cache: npm
       - uses: oven-sh/setup-bun@v2
       - run: npm ci
-      - run: bun --bun vitepress build docs
-      # Git-backed catalog data → served at /.marketplace/* (copied from the source of truth)
-      - run: mkdir -p docs/.vitepress/dist/.marketplace/items && cp .marketplace/catalog.json docs/.vitepress/dist/.marketplace/ && cp .marketplace/items/*.json docs/.vitepress/dist/.marketplace/items/
-      # Marketplace SPA → docs/.vitepress/dist/app (Vite base is /proagents/app/)
+
+      # Marketplace SPA is the SITE ROOT. Vite base is /proagents/.
       - run: npm ci --prefix web
       - run: npm run build --prefix web
-      - run: cp -r web/dist docs/.vitepress/dist/app
+
+      # Docs site lives at /proagents/docs/.
+      - run: bun --bun vitepress build docs
+
+      # Assemble the artifact: SPA at root, docs under /docs/.
+      - run: mkdir -p site/docs
+      - run: cp -r web/dist/. site/
+      - run: cp -r docs/.vitepress/dist/. site/docs/
+
+      # Git-backed catalog data → served at /.marketplace/* next to the SPA
+      # (copied from the source of truth).
+      - run: mkdir -p site/.marketplace/items && cp .marketplace/catalog.json site/.marketplace/ && cp .marketplace/items/*.json site/.marketplace/items/
+
+      # Redirect shim: old /proagents/app/<path> links (READMEs, published PRs,
+      # search engines) land on the same hash route in the new root location.
+      - run: |
+          mkdir -p site/app
+          cat > site/app/index.html <<'HTML'
+          <!doctype html>
+          <html lang="en">
+            <head>
+              <meta charset="utf-8" />
+              <title>ProAgents Marketplace — moved</title>
+              <script>
+                (function () {
+                  var dest = "../";
+                  if (window.location.hash && window.location.hash !== "#/") dest += window.location.hash;
+                  window.location.replace(dest);
+                })();
+              </script>
+            </head>
+            <body>
+              The marketplace moved to the site root. <a href="../">Continue</a>.
+            </body>
+          </html>
+          HTML
+
+      # Branded 404 for the whole artifact. GitHub Pages serves /404.html for
+      # any miss while keeping the attempted URL, so stale pre-relocation doc
+      # links (/proagents/guide/…) redirect into /proagents/docs/… (every old
+      # page name still exists there); anything else gets the brand page with
+      # the two real entry points.
+      - run: |
+          cat > site/404.html <<'HTML'
+          <!doctype html>
+          <html lang="en">
+            <head>
+              <meta charset="utf-8" />
+              <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+              <meta name="theme-color" content="#000024" />
+              <title>Page not found — ProAgents</title>
+              <link rel="icon" type="image/png" href="/proagents/favicon-32.png" />
+              <style>
+                :root {
+                  --ink: #000024;
+                  --cream: #f4f7ff;
+                  --cream-dim: #9aa6cf;
+                  --line: #17245c;
+                  --cyan: #0ccccc;
+                  --grad: linear-gradient(120deg, #0048e4 0%, #3b2fe0 55%, #5424e4 100%);
+                }
+                * { box-sizing: border-box; }
+                html, body { margin: 0; background: var(--ink); color: var(--cream); }
+                body {
+                  min-height: 100vh;
+                  display: grid;
+                  place-items: center;
+                  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+                  padding: 24px;
+                }
+                main {
+                  max-width: 560px;
+                  border: 1px solid var(--line);
+                  border-radius: 14px;
+                  padding: 40px 44px;
+                  background: #040a33;
+                }
+                h1 { font-size: 28px; margin: 22px 0 10px; letter-spacing: -0.02em; }
+                p { margin: 0 0 8px; color: var(--cream-dim); line-height: 1.55; }
+                p code { color: var(--cream); font-size: 0.92em; }
+                .actions { display: flex; gap: 12px; margin-top: 26px; flex-wrap: wrap; }
+                .btn {
+                  display: inline-block;
+                  padding: 10px 18px;
+                  border-radius: 9px;
+                  background: var(--grad);
+                  color: #ffffff;
+                  font-weight: 600;
+                  font-size: 14px;
+                  text-decoration: none;
+                }
+                .btn.ghost {
+                  background: transparent;
+                  border: 1px solid var(--line);
+                  color: var(--cream);
+                  font-weight: 500;
+                }
+                .btn:hover { filter: brightness(1.12); }
+                :focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+                @media (max-width: 560px) { main { padding: 28px 24px; } }
+              </style>
+              <script>
+                (function () {
+                  var m = location.pathname.match(/^\/proagents\/(guide|cli|context|license)(\/.*)?$/);
+                  if (m) location.replace("/proagents/docs/" + m[1] + (m[2] || "/"));
+                })();
+              </script>
+            </head>
+            <body>
+              <main>
+                <img src="/proagents/logo.png" alt="ProAgents" width="132" height="42" />
+                <h1>Page not found</h1>
+                <p>The docs moved from <code>/proagents/</code> to <code>/proagents/docs/</code> — old documentation links redirect there automatically.</p>
+                <div class="actions">
+                  <a class="btn" href="/proagents/">Open the marketplace</a>
+                  <a class="btn ghost" href="/proagents/docs/">Read the docs</a>
+                </div>
+              </main>
+            </body>
+          </html>
+          HTML
+
       - uses: actions/configure-pages@v5
         with:
           enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/.vitepress/dist
+          path: site
 
   deploy:
     needs: build

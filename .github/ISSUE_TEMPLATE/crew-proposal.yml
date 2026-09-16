@@ -7,7 +7,7 @@ body:
     attributes:
       value: |
         Thanks for proposing a crew! **The easiest way to fill this in** is the
-        [marketplace builder](https://enzovezzaro.github.io/proagents/app/) —
+        [marketplace builder](https://enzovezzaro.github.io/proagents/) —
         *Build a crew → File marketplace proposal* creates this issue with everything
         pre-filled, and CI validates it within seconds.
 

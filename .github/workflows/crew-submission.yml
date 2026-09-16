@@ -124,14 +124,14 @@ jobs:
             const L = [];
             if (!hasJson) {
               L.push('❌ **No proposal JSON found.** The issue body must contain a `' + process.env.JSON_BEGIN + '` … `' + process.env.JSON_END + '` block (crew) or `' + process.env.PROFILE_JSON_BEGIN + '` … `' + process.env.PROFILE_JSON_END + '` block (profile) with a ```json fence.');
-              L.push('', 'The [builder](https://enzovezzaro.github.io/proagents/app/) generates crew JSON automatically; profile proposals follow `profiles/security-engineer.json`.');
+              L.push('', 'The [builder](https://enzovezzaro.github.io/proagents/) generates crew JSON automatically; profile proposals follow `profiles/security-engineer.json`.');
             } else if (valid) {
               L.push('✅ **`' + id + '` v' + version + ' passes the deterministic ' + kind + ' validator.**');
               L.push('', 'Next step: a maintainer reviews the design' + (kind === 'profile' ? ' (rules, verification, tools)' : ' (permissions, handoffs, MCP)') + ', then comments **/publish** on this issue to commit it to the marketplace catalog. Nothing goes live without that review.');
             } else {
               L.push('❌ **`' + id + '` failed validation**');
               L.push('', '```', problems || 'unknown error — check the workflow log', '```');
-              L.push('', 'Edit the issue body to fix the JSON — the check re-runs automatically. The [builder](https://enzovezzaro.github.io/proagents/app/) only produces valid crews.');
+              L.push('', 'Edit the issue body to fix the JSON — the check re-runs automatically. The [builder](https://enzovezzaro.github.io/proagents/) only produces valid crews.');
             }
             await github.rest.issues.createComment({
               owner: context.repo.owner,
@@ -291,7 +291,7 @@ jobs:
             const L = [
               '🚀 **Published `' + process.env.PUBLISHED + '` to the marketplace catalog** (via /publish by @' + context.payload.comment.user.login + ').',
               '',
-              'It appears in the [marketplace](https://enzovezzaro.github.io/proagents/app/) after the next Pages build — usually under a minute. Closing as completed. 🎉',
+              'It appears in the [marketplace](https://enzovezzaro.github.io/proagents/) after the next Pages build — usually under a minute. Closing as completed. 🎉',
             ];
             await github.rest.issues.createComment({
               owner: context.repo.owner,
