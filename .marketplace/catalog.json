@@ -1,7 +1,171 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-15T00:00:00.000Z",
+  "updatedAt": "2026-09-16T05:06:25.298Z",
   "items": [
+    {
+      "id": "api-designer",
+      "name": "API Designer",
+      "version": "1.0.0",
+      "description": "Professional profile: API contract design, versioning and deprecation strategy, and error models — treats every endpoint as a public commitment.",
+      "author": "proagents",
+      "tags": [
+        "profile",
+        "api",
+        "design"
+      ],
+      "kind": "profile",
+      "downloads": 0,
+      "createdAt": "2026-09-16T05:06:25.298Z",
+      "updatedAt": "2026-09-16T05:06:25.298Z"
+    },
+    {
+      "id": "code-reviewer",
+      "name": "Code Reviewer",
+      "version": "1.0.0",
+      "description": "Professional profile: correctness analysis, API/schema review and test-adequacy assessment — reviews the change, not the author.",
+      "author": "proagents",
+      "tags": [
+        "profile",
+        "review",
+        "quality"
+      ],
+      "kind": "profile",
+      "downloads": 0,
+      "createdAt": "2026-09-16T05:06:25.298Z",
+      "updatedAt": "2026-09-16T05:06:25.298Z"
+    },
+    {
+      "id": "data-engineer",
+      "name": "Data Engineer",
+      "version": "1.0.0",
+      "description": "Professional profile: batch and streaming pipeline design, warehouse modeling and data-quality enforcement — schemas as contracts, idempotency as default.",
+      "author": "proagents",
+      "tags": [
+        "profile",
+        "data",
+        "pipelines"
+      ],
+      "kind": "profile",
+      "downloads": 0,
+      "createdAt": "2026-09-16T05:06:25.298Z",
+      "updatedAt": "2026-09-16T05:06:25.298Z"
+    },
+    {
+      "id": "developer-experience-engineer",
+      "name": "Developer Experience Engineer",
+      "version": "1.0.0",
+      "description": "Professional profile: onboarding automation, local dev environment design and inner-source tooling — friction measured in minutes-to-first-PR.",
+      "author": "proagents",
+      "tags": [
+        "profile",
+        "devex",
+        "tooling"
+      ],
+      "kind": "profile",
+      "downloads": 0,
+      "createdAt": "2026-09-16T05:06:25.298Z",
+      "updatedAt": "2026-09-16T05:06:25.298Z"
+    },
+    {
+      "id": "incidere-incident-response",
+      "name": "Incidere — Incident Response",
+      "version": "1.0.0",
+      "description": "Three-worker incident response crew: triage the signal, draft stakeholder comms, execute approval-gated mitigation. Reads your repo's runbooks and incident history for context.",
+      "author": "proagents",
+      "tags": [
+        "incident-response",
+        "sre",
+        "on-call",
+        "comms",
+        "multi-agent"
+      ],
+      "kind": "crew",
+      "downloads": 0,
+      "createdAt": "2026-09-15T00:00:00.000Z",
+      "updatedAt": "2026-09-15T00:00:00.000Z"
+    },
+    {
+      "id": "legacy-modernizer",
+      "name": "Legacy Modernizer",
+      "version": "1.0.0",
+      "description": "Professional profile: strangler-fig migrations, characterization testing and dependency retirement — safety net first, big-bang rewrites never.",
+      "author": "proagents",
+      "tags": [
+        "profile",
+        "modernization",
+        "refactor"
+      ],
+      "kind": "profile",
+      "downloads": 0,
+      "createdAt": "2026-09-16T05:06:25.298Z",
+      "updatedAt": "2026-09-16T05:06:25.298Z"
+    },
+    {
+      "id": "ml-engineer",
+      "name": "ML Engineer",
+      "version": "1.0.0",
+      "description": "Professional profile: training pipeline design, evaluation methodology and feature engineering — baselines before metrics, versioned artifacts always.",
+      "author": "proagents",
+      "tags": [
+        "profile",
+        "ml",
+        "training"
+      ],
+      "kind": "profile",
+      "downloads": 0,
+      "createdAt": "2026-09-16T05:06:25.298Z",
+      "updatedAt": "2026-09-16T05:06:25.298Z"
+    },
+    {
+      "id": "mobile-engineer",
+      "name": "Mobile Engineer",
+      "version": "1.0.0",
+      "description": "Professional profile: offline-first architecture, release engineering and performance budgets — designed for the worst network and the oldest device.",
+      "author": "proagents",
+      "tags": [
+        "profile",
+        "mobile",
+        "ios",
+        "android"
+      ],
+      "kind": "profile",
+      "downloads": 0,
+      "createdAt": "2026-09-16T05:06:25.298Z",
+      "updatedAt": "2026-09-16T05:06:25.298Z"
+    },
+    {
+      "id": "platform-engineer",
+      "name": "Platform Engineer",
+      "version": "1.0.0",
+      "description": "Professional profile: internal developer platforms, CI/CD architecture and multi-tenant isolation — paved roads with documented escape hatches.",
+      "author": "proagents",
+      "tags": [
+        "profile",
+        "platform",
+        "infra"
+      ],
+      "kind": "profile",
+      "downloads": 0,
+      "createdAt": "2026-09-16T05:06:25.298Z",
+      "updatedAt": "2026-09-16T05:06:25.298Z"
+    },
+    {
+      "id": "pr-review-gate",
+      "name": "PR Review Gate",
+      "version": "1.0.0",
+      "description": "Two-worker pull-request review crew: a read-only security/architecture reviewer and a standards checker that drafts the review verdict for humans to approve. Strictly read-only on the repo.",
+      "author": "proagents",
+      "tags": [
+        "code-review",
+        "security",
+        "quality",
+        "multi-agent"
+      ],
+      "kind": "crew",
+      "downloads": 0,
+      "createdAt": "2026-09-15T00:00:00.000Z",
+      "updatedAt": "2026-09-15T00:00:00.000Z"
+    },
     {
       "id": "security-engineer",
       "name": "Security Engineer",
@@ -13,23 +177,6 @@
         "security",
         "owasp",
         "threat-modeling"
-      ],
-      "kind": "profile",
-      "downloads": 0,
-      "createdAt": "2026-09-15T00:00:00.000Z",
-      "updatedAt": "2026-09-15T00:00:00.000Z"
-    },
-    {
-      "id": "staff-engineer",
-      "name": "Staff Engineer",
-      "version": "1.0.0",
-      "description": "Professional profile: cross-team technical leadership, systems thinking, tradeoff analysis and architectural consistency.",
-      "author": "proagents",
-      "tags": [
-        "profile",
-        "engineering",
-        "leadership",
-        "architecture"
       ],
       "kind": "profile",
       "downloads": 0,
@@ -54,39 +201,53 @@
       "updatedAt": "2026-09-15T00:00:00.000Z"
     },
     {
-      "id": "incidere-incident-response",
-      "name": "Incidere — Incident Response",
+      "id": "staff-engineer",
+      "name": "Staff Engineer",
       "version": "1.0.0",
-      "description": "Three-worker incident response crew: triage the signal, draft stakeholder comms, execute approval-gated mitigation. Reads your repo's runbooks and incident history for context.",
+      "description": "Professional profile: cross-team technical leadership, systems thinking, tradeoff analysis and architectural consistency.",
       "author": "proagents",
       "tags": [
-        "incident-response",
-        "sre",
-        "on-call",
-        "comms",
-        "multi-agent"
+        "profile",
+        "engineering",
+        "leadership",
+        "architecture"
       ],
-      "kind": "crew",
+      "kind": "profile",
       "downloads": 0,
       "createdAt": "2026-09-15T00:00:00.000Z",
       "updatedAt": "2026-09-15T00:00:00.000Z"
     },
     {
-      "id": "pr-review-gate",
-      "name": "PR Review Gate",
+      "id": "technical-writer",
+      "name": "Technical Writer",
       "version": "1.0.0",
-      "description": "Two-worker pull-request review crew: a read-only security/architecture reviewer and a standards checker that drafts the review verdict for humans to approve. Strictly read-only on the repo.",
+      "description": "Professional profile: API documentation, architecture explainers and onboarding guides — written for the reader under pressure, examples over abstraction.",
       "author": "proagents",
       "tags": [
-        "code-review",
-        "security",
-        "quality",
-        "multi-agent"
+        "profile",
+        "documentation",
+        "writing"
       ],
-      "kind": "crew",
+      "kind": "profile",
       "downloads": 0,
-      "createdAt": "2026-09-15T00:00:00.000Z",
-      "updatedAt": "2026-09-15T00:00:00.000Z"
+      "createdAt": "2026-09-16T05:06:25.298Z",
+      "updatedAt": "2026-09-16T05:06:25.298Z"
+    },
+    {
+      "id": "test-automator",
+      "name": "Test Automator",
+      "version": "1.0.0",
+      "description": "Professional profile: test pyramid architecture, flake diagnosis and fixture design — signal per minute of CI, tests that fail for exactly one reason.",
+      "author": "proagents",
+      "tags": [
+        "profile",
+        "testing",
+        "ci"
+      ],
+      "kind": "profile",
+      "downloads": 0,
+      "createdAt": "2026-09-16T05:06:25.298Z",
+      "updatedAt": "2026-09-16T05:06:25.298Z"
     },
     {
       "id": "test-healer",
