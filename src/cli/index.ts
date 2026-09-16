@@ -40,6 +40,7 @@ import {
   runEquip,
   runInspectProfile,
   runListProfiles,
+  runProfileCommand,
   runValidateProfiles,
 } from "./profiles.js";
 
@@ -99,7 +100,8 @@ Agent-building commands:
   inspect                   Dump full session state (for agents/humans)
   improve                   Show or configure self-improvement
   benchmark                 Benchmark subcommands (proagent benchmark help)
-  crew                      Marketplace: profiles & crews (proagent crew help)
+  crew                      Marketplace crews: list/show/validate/install/publish (proagent crew help)
+  profile                   Marketplace profiles: list/show/install/validate/publish/submit (proagent profile help)
   help                      Show this help
 
 Global options:
@@ -588,6 +590,7 @@ async function main(): Promise<void> {
     case "list": return runListProfiles(isJson(flags));
     case "equip": return runEquip(args, flags);
     case "compile": return runCompile(args, flags);
+    case "profile": return runProfileCommand(args, flags);
     case "init": return cmdInit(flags, args);
     case "status": return cmdStatus(flags);
     case "question": return cmdQuestion(flags);

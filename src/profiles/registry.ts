@@ -128,7 +128,12 @@ export async function resolveProfiles(slugs: string[], root: string = process.cw
 /** Fetch a profile manifest from the remote Git-backed marketplace catalog. */
 export async function fetchProfileManifest(id: string, repo: string, ref: string, token?: string): Promise<ProfileManifest> {
   const url = `https://raw.githubusercontent.com/${repo}/${ref}/${MARKETPLACE_ITEMS_DIR}/${id}.json`;
-  const res = await fetch(url, { headers: token ? { authorization: `Bearer ${token}` } : {} });
+  // Mirrors fetchRaw in crew/registry.ts: retry unauthenticated on 404, since
+  // an invalid token makes GitHub raw answer 404 even for public files.
+  let res = await fetch(url, { headers: token ? { authorization: `Bearer ${token}` } : {} });
+  if (res.status === 404 && token) {
+    res = await fetch(url);
+  }
   if (res.status === 404) throw new Error(`profile not found in marketplace: ${id}`);
   if (!res.ok) throw new Error(`profile fetch failed: HTTP ${res.status}`);
   const json: unknown = await res.json();

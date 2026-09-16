@@ -14,6 +14,12 @@ Machine-facing details for the equip path. The canonical schema lives in
 | `proagent compile <slug> --target <id> --json` | same as equip with `command: "compile"` |
 | `proagent equip … --dry-run --json` | `{ status, dryRun: true, target, profile, effective }` |
 | `proagent validate --profiles --json` | `{ status, command, reports: ProfileValidationReport[] }` |
+| `proagent profile list --json` | `{ status, repo, ref, profiles[] }` (catalog slice, kind: profile) |
+| `proagent profile show <id> --json` | `{ status, profile }` |
+| `proagent profile install <id> --json` | same shape as equip |
+| `proagent profile validate <file> --json` | `{ status: "ok"\|"invalid", slug, problems[] }` |
+| `proagent profile publish <file> --json` | `{ status, slug, version, repo, ref, itemPath, catalogPath }` |
+| `proagent profile submit <file> --json` | `{ status, slug, version, repo, issue, url }` |
 
 `HarnessSignal = { id, name, capabilities, evidence }` where capabilities include
 `projectInstructions`, `skills`, `ruleEnforcement` (`native | instructions | none`), `mcp`,
@@ -65,6 +71,20 @@ The instructions block is delimited by `<!-- proagent:profile:start <hash> -->` 
 `<!-- proagent:profile:end <hash> -->` markers. Re-equipping replaces the block between
 markers — it never duplicates or rewrites the rest of the file. The marker hash is derived
 from profile content (deterministic), never a timestamp.
+
+## Marketplace publishing
+
+Profiles reach the catalog the reviewable way:
+
+```bash
+proagent profile validate my.json    # deterministic gate (PA03x, non-zero exit on errors)
+proagent profile submit my.json      # files a [profile-proposal] issue with a PROFILE-JSON block
+```
+
+CI extracts the block, runs `profileProblems()` and comments the verdict; a maintainer
+`/publish` commits `items/<slug>.json` + the `kind: "profile"` catalog entry.
+`proagent profile publish` performs the same two Contents-API commits directly (requires
+contents:write) — proposals are the default because every change is a reviewable diff.
 
 ## Local profiles
 

@@ -50,6 +50,8 @@ export async function runCrewCommand(args: string[], flags: Record<string, strin
       return crewShow(rest[0], flags, json);
     case "install":
       return crewInstall(rest[0], flags, json);
+    case "build":
+      return crewBuild(rest[0], flags, json);
     case "publish":
       return crewPublish(rest[0], flags, json);
     case "submit":
@@ -61,6 +63,41 @@ export async function runCrewCommand(args: string[], flags: Record<string, strin
     default:
       fail(`Unknown crew command: ${sub}. See: proagent crew help`);
   }
+}
+
+/**
+ * `proagent crew build <file.json>` — install a crew from a local JSON file
+ * (the output of the SPA builder or a hand-written definition). Identical to
+ * install except the source is a file path, not a catalog id; `--file` names
+ * the definition when the positional arg is the target repo instead.
+ */
+async function crewBuild(file: string | undefined, flags: Record<string, string | boolean>, json: boolean): Promise<void> {
+  const target = (typeof flags.file === "string" && flags.file) || file;
+  if (!target) fail("Usage: proagent crew build <crew.json> [--file <crew.json>]");
+  let crew: CrewDefinition;
+  try {
+    crew = JSON.parse(await fs.readFile(target, "utf8")) as CrewDefinition;
+  } catch (err) {
+    fail(`cannot read crew file: ${(err as Error).message}`);
+  }
+  const problems = crewProblems(crew);
+  if (problems.length > 0) fail(`crew failed validation: ${problems.join("; ")}`);
+
+  const root = process.cwd();
+  if (flags["dry-run"] === true || flags.dryRun === true) {
+    const plan = planInstall(crew);
+    if (json) return jsonOut({ status: "ok", dryRun: true, plan });
+    console.log(`Install plan for ${crew.id}@${crew.version}:`);
+    for (const e of plan.entries) console.log(`  + ${e.path} (${e.bytes} bytes)`);
+    return;
+  }
+  const result = await installCrew(crew, root);
+  if (json) return jsonOut({ status: "ok", installed: result });
+  console.log(`✓ Built ${crew.id}@${crew.version}:`);
+  for (const f of result.filesWritten) console.log(`  + ${f}`);
+  console.log("  ~ .mcp.json (merged)");
+  console.log("");
+  console.log("Crew is ready. Point your agent runtime at .agents/crews/ and .mcp.json.");
 }
 
 function printCrewHelp(): void {
@@ -77,7 +114,10 @@ Subcommands:
     --token <gh-token>      Token for private catalogs (or GITHUB_TOKEN env)
   show <id>                 Print a crew definition (workers, permissions, MCP)
   validate <file.json>      Validate a crew JSON file
-  install <id>              Install a crew into the current repo
+  install <id>              Install a crew from the catalog into the current repo
+  build <crew.json>         Install a crew from a local JSON file (builder output)
+    --file <crew.json>      Explicit definition path
+    --dry-run               Show the plan without writing
     --repo / --ref / --token
     --dry-run               Show the install plan without writing
   publish <file.json>       Commit a crew definition directly to the catalog
@@ -116,14 +156,17 @@ async function crewList(flags: Record<string, string | boolean>, json: boolean):
   const { repo, ref, token } = remoteOpts(flags);
   const catalog = await readCatalogRemote(repo, ref, token);
   if (json) return jsonOut({ status: "ok", repo, ref, catalog });
-  if (catalog.items.length === 0) {
+  const crews = catalog.items.filter((i) => i.kind !== "profile");
+  if (crews.length === 0) {
     console.log("Marketplace catalog is empty.");
     return;
   }
   console.log(`Marketplace crews (${repo}@${ref}):`);
-  for (const item of catalog.items) {
+  for (const item of crews) {
     console.log(`  • ${item.id.padEnd(34)} ${item.kind.padEnd(5)} v${item.version.padEnd(8)} ${item.description.slice(0, 54)}`);
   }
+  const profileCount = catalog.items.length - crews.length;
+  if (profileCount > 0) console.log(`  (…and ${profileCount} profile(s) — see: proagent profile list)`);
 }
 
 async function crewValidate(file: string | undefined, json: boolean): Promise<void> {

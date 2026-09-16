@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`proagent profile` command group** — marketplace parity with crews:
+  `profile list/show/install/validate/publish/submit`. `profile install` is the
+  MARKETPLACE.md one-liner (resolve → validate → equip); `profile submit` files a
+  `[profile-proposal]` issue with a PROFILE-JSON block; `profile publish` commits to the
+  catalog via the GitHub Contents API
+- **`proagent crew build <file.json>`** — install a crew from a local builder JSON (the
+  command the SPA builder and docs reference); `--file`/`--dry-run` supported
+- **Robust catalog reads** — authenticated raw.githubusercontent 404s retry
+  unauthenticated, so an invalid token no longer masks a public catalog
+- **MARKETPLACE.md spec status markers** — each section now notes what ships today vs.
+  what is specified (discovery, MCP testing, completeness scoring are roadmap)
 - **GitHub community & CI support files** — dependabot config (npm + web + Actions), pull-
   request template with the determinism/boundary/contract checklist, issue-template config
   (discussions + docs links), and a **profile-proposal issue form** mirroring the crew form

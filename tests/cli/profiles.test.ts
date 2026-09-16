@@ -157,4 +157,62 @@ describe("profile CLI (PROFILES-CLI)", () => {
       await fs.rm(root, { recursive: true, force: true });
     }
   });
+
+  it("PROFILES-CLI-009: profile validate gates a manifest file (CREW-CLI parity)", async () => {
+    const root = await makeRepo({});
+    try {
+      await fs.mkdir(path.join(root, "profiles"), { recursive: true });
+      const good = {
+        version: "1",
+        profile: { name: "G", slug: "good-profile", version: "1.0.0" },
+        identity: { title: "G" },
+        expertise: ["x"],
+        tools: { required: ["shell"] },
+        verification: { required: ["tests"] },
+      };
+      await fs.writeFile(path.join(root, "profiles", "good.json"), JSON.stringify(good));
+      const ok = JSON.parse(run(root, ["profile", "validate", path.join(root, "profiles", "good.json"), "--json"]));
+      expect(ok.status).toBe("ok");
+      expect(ok.slug).toBe("good-profile");
+
+      const bad = { ...good, verification: { required: [] } };
+      await fs.writeFile(path.join(root, "profiles", "bad.json"), JSON.stringify(bad));
+      let failed = false;
+      try {
+        run(root, ["profile", "validate", path.join(root, "profiles", "bad.json"), "--json"]);
+      } catch (err) {
+        failed = true;
+        const e = err as { status?: number; stdout?: string };
+        expect(e.status).not.toBe(0);
+        const parsed = JSON.parse(e.stdout ?? "{}");
+        expect(parsed.status).toBe("invalid");
+        expect(parsed.problems[0]).toContain("PA035");
+      }
+      expect(failed).toBe(true);
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("PROFILES-CLI-010: profile install <id> equips from a local catalog item", async () => {
+    const root = await makeRepo({ "CLAUDE.md": "# x\n" });
+    try {
+      await fs.mkdir(path.join(root, ".marketplace", "items"), { recursive: true });
+      const item = {
+        version: "1",
+        profile: { name: "Local M", slug: "marketplace-local", version: "1.0.0" },
+        identity: { title: "Local M" },
+        expertise: ["x"],
+        tools: { required: ["filesystem", "shell", "git"] },
+        verification: { required: ["tests"] },
+      };
+      await fs.writeFile(path.join(root, ".marketplace", "items", "marketplace-local.json"), JSON.stringify(item));
+      const parsed = JSON.parse(run(root, ["profile", "install", "marketplace-local", "--json"]));
+      expect(parsed.status).toBe("ok");
+      expect(parsed.profile).toEqual(["marketplace-local"]);
+      expect(await fs.readFile(path.join(root, "CLAUDE.md"), "utf8")).toContain("Local M");
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
 });

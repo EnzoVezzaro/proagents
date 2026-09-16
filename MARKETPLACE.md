@@ -1,5 +1,13 @@
 ## Marketplace
 
+> **Spec status.** This document is the marketplace product specification: it describes
+> the target experience. Parts of it ship today — profile and crew listings in the
+> Git-backed catalog, `profile install` / `crew install`, validated composition,
+> issue-based publishing with CI validation, the profile compiler and runtime adapters —
+> while the in-browser resource-discovery layer (npm/MCP/skill search inside the builder),
+> connection testing, completeness scoring and benchmarking-from-the-builder are roadmap.
+> Each section below notes what works now vs. what is specified.
+
 The marketplace is not just a catalog of downloadable skills or pre-built crews.
 
 It is a **Professional Agent Builder**: a complete UX for designing, assembling, testing, validating, publishing, and installing everything an agent needs to operate professionally in a specific domain.
@@ -117,6 +125,10 @@ The marketplace therefore becomes an **agent construction environment**, not a s
 
 ## Resource Discovery
 
+> **Specified, not yet shipped.** Discovery today is the static catalog (`proagent
+> profile list`, `proagent crew list`, the SPA) plus local `./profiles/` — the unified
+> npm/MCP/Git/skill search layer below is roadmap.
+
 The builder should provide a unified resource discovery layer.
 
 ```text
@@ -173,6 +185,11 @@ The system should distinguish between:
 ---
 
 ## MCP Integration
+
+> **Partially shipped.** Crews carry MCP server bindings (merged into `.mcp.json` on
+> install, never clobbering existing entries). The discover → test → allowlist workflow
+> below is roadmap; profiles express tool requirements, and MCP wiring follows the crew
+> path today.
 
 MCP should be a first-class part of profile construction.
 
@@ -271,6 +288,10 @@ The resulting profile contains the **capability graph**, rather than blindly ins
 
 ## Profile Completeness
 
+> **Partially shipped** — deterministic profile validation (PA030–PA038) and composition
+> conflict detection (PA02x) gate every equip and publish today; the percentage-complete
+> scoring UX below is roadmap.
+
 Every profile should have a machine-checkable completeness model.
 
 ```text
@@ -365,6 +386,10 @@ The result is a **professional-agent package**, not a prompt.
 
 ## Runtime Adapters
 
+> **Ships today** — `src/adapters/` detects Claude Code, Codex, OpenCode, Cursor and
+> Gemini CLI from project layout + env signals, and compiles profiles into each harness's
+> strongest mechanisms with reported limitations.
+
 A professional profile is provider-agnostic.
 
 The marketplace compiles the profile for the selected coding-agent runtime:
@@ -439,6 +464,11 @@ This creates an ecosystem where developers can publish both **professional agent
 
 ## Marketplace Installation
 
+> **Ships today** — `proagent profile install <id>` (and the `proagent equip` shortcut)
+> resolves a profile from the catalog, validates it, composes it if several are given,
+> detects the harness and compiles the profile with reported limitations. Dependency
+> graphs, MCP connection testing and interactive fallback choice are specified below.
+
 Installing a profile should produce the complete agent configuration required by the target environment.
 
 ```bash
@@ -497,6 +527,12 @@ Choose:
 ---
 
 ## Publish
+
+> **Ships today (single-file profiles + crews).** `proagent profile validate` gates,
+> `proagent profile submit` files a reviewable proposal issue (CI-validated, maintainer
+> `/publish` commits it), and `proagent profile publish` commits directly with
+> contents:write. Crews have the same trio (`crew validate/submit/publish`). Multi-file
+> profile bundles and provenance manifests are specified below.
 
 Publishing should package the **entire professional profile**, including its dependency graph and provenance.
 

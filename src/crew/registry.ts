@@ -47,10 +47,24 @@ export async function readCatalogLocal(root: string): Promise<MarketplaceCatalog
   }
 }
 
+/**
+ * Fetch raw.githubusercontent.com content. If an authenticated request returns
+ * 404, retry unauthenticated before giving up: a stale/invalid token makes
+ * GitHub answer 404 (not 401) even for public files, which would otherwise
+ * mask a working public catalog behind a broken credential.
+ */
+async function fetchRaw(url: string, token?: string): Promise<Response> {
+  const res = await fetch(url, { headers: token ? { authorization: `Bearer ${token}` } : {} });
+  if (res.status === 404 && token) {
+    return fetch(url);
+  }
+  return res;
+}
+
 /** Read the catalog from GitHub raw (works for any branch; defaults to main). */
 export async function readCatalogRemote(repo: string = REPO, ref = "main", token?: string): Promise<MarketplaceCatalog> {
   const url = `https://raw.githubusercontent.com/${repo}/${ref}/${CATALOG_PATH}`;
-  const res = await fetch(url, { headers: token ? { authorization: `Bearer ${token}` } : {} });
+  const res = await fetchRaw(url, token);
   if (res.status === 404) return emptyCatalog();
   if (!res.ok) throw new CrewError("CREW_REGISTRATION_ERROR", `catalog fetch failed: HTTP ${res.status}`);
   return asCatalog(await res.json());
@@ -59,7 +73,7 @@ export async function readCatalogRemote(repo: string = REPO, ref = "main", token
 /** Fetch a full crew definition from the remote catalog. */
 export async function fetchCrewDefinition(id: string, repo: string = REPO, ref = "main", token?: string): Promise<CrewDefinition> {
   const url = `https://raw.githubusercontent.com/${repo}/${ref}/${MARKETPLACE_DIR}/items/${id}.json`;
-  const res = await fetch(url, { headers: token ? { authorization: `Bearer ${token}` } : {} });
+  const res = await fetchRaw(url, token);
   if (res.status === 404) throw new CrewError("CREW_NOT_FOUND", `crew not found in marketplace: ${id}`);
   if (!res.ok) throw new CrewError("CREW_REGISTRATION_ERROR", `crew fetch failed: HTTP ${res.status}`);
   const crew = (await res.json()) as CrewDefinition;

@@ -77,6 +77,20 @@ non-zero:
 { "status": "blocked", "command": "equip", "conflicts": [{ "code": "PA022", "severity": "error", "message": "…", "profiles": ["a", "b"], "suggestion": "…" }] }
 ```
 
+### profile (marketplace group)
+
+```bash
+proagent profile list --json               # → { status, repo, ref, profiles[] }
+proagent profile show <id> --json          # → { status, profile }
+proagent profile install <id> --json       # same shape as equip
+proagent profile validate <file> --json    # → { status: "ok"|"invalid", slug, problems[] }
+proagent profile publish <file> --json     # → { status, slug, version, repo, ref, itemPath, catalogPath }
+proagent profile submit <file> --json      # → { status, slug, version, repo, issue, url }
+```
+
+`profile validate` exits non-zero with `status: "invalid"` and the deterministic
+`problems[]` (PA03x codes) when the manifest fails — the same gate CI runs on proposals.
+
 ### validate --profiles
 
 ```bash

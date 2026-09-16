@@ -284,6 +284,18 @@ describe("crew CLI (CREW-CLI)", () => {
     expect(fs.existsSync(path.join(cliProject(), ".agents", "crews", "pr-review-gate"))).toBe(false);
   });
 
+  it("CREW-CLI-005b: crew build installs from a local builder JSON", () => {
+    const root = cliProject();
+    const crewFile = path.join(root, "crew.json");
+    const crew = JSON.parse(fs.readFileSync(path.resolve(".marketplace", "items", "test-healer.json"), "utf8"));
+    fs.writeFileSync(crewFile, JSON.stringify(crew));
+    const { stdout } = cli(["crew", "build", crewFile, "--json"]);
+    const parsed = JSON.parse(stdout);
+    expect(parsed.status).toBe("ok");
+    expect(fs.existsSync(path.join(root, ".agents", "crews", "test-healer", "crew.json"))).toBe(true);
+    expect(fs.existsSync(path.join(root, ".agents", "crews", "test-healer", "workers", "healer", "SKILL.md"))).toBe(true);
+  });
+
   it("CREW-CLI-005: all shipped catalog items validate", () => {
     const itemsDir = path.resolve(".marketplace", "items");
     const catalog = JSON.parse(fs.readFileSync(path.resolve(".marketplace", "catalog.json"), "utf8")) as {

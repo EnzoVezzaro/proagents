@@ -43,7 +43,23 @@ proagent equip staff-engineer security-engineer   # compose professions
 proagent compile security-engineer --target codex # explicit harness
 ```
 
-## Install a crew (the one-liner)
+### The `profile` command group
+
+Everything the marketplace offers for profiles is also available as explicit
+subcommands — mirroring the `crew` group:
+
+```bash
+proagent profile list                        # the profile slice of the catalog
+proagent profile show <id>                   # print the full manifest
+proagent profile install <id> [id…]          # resolve + validate + equip
+proagent profile validate <file.json>        # gate before publish/submit (non-zero exit on errors)
+proagent profile publish <file.json>         # direct catalog commit (contents:write)
+proagent profile submit <file.json>          # file a proposal issue (recommended)
+```
+
+`profile submit` opens an issue with the manifest in a `PROFILE-JSON` block — CI validates
+it automatically and a maintainer `/publish` commits it, the same review-gated flow crews
+use. The issue form (`.github/ISSUE_TEMPLATE/profile-proposal.yml`) also works by hand.
 
 ## Install a crew (the one-liner)
 
@@ -105,8 +121,9 @@ Either way you end with a **CrewDefinition JSON** that:
 ### Publishing = a proposal issue, not a direct commit
 Marketplace submissions are GitHub issues, gated by CI:
 
-1. **File the proposal** — the builder's *Ship* tab (or `proagent crew submit crew.json`)
-   opens an issue with the full crew JSON in a parseable block.
+1. **File the proposal** — the builder's *Ship* tab (or `proagent crew submit crew.json` /
+   `proagent profile submit profile.json`) opens an issue with the full JSON in a parseable
+   block.
 2. **CI validates instantly** — the `Crew proposal pipeline` workflow extracts the JSON and
    runs the same deterministic validator the CLI uses, commenting ✅ or ❌ with exact
    problems. Editing the issue re-runs the check.
@@ -165,7 +182,7 @@ cp .env.example .env
 | Variable | Used by | Notes |
 |---|---|---|
 | `PROAGENT_MARKET_REPO` | CLI, SPA build | Catalog repo (default `EnzoVezzaro/proagents`) |
-| `GITHUB_TOKEN` | CLI | `contents:write` token for `crew publish` / browser-less install |
+| `GITHUB_TOKEN` | CLI | `contents:write` token for `crew publish` / `profile publish` / browser-less install |
 | `CLERK_SECRET_KEY` | server only | ⚠️ `sk_…` — never prefix with `VITE_` |
 | `VITE_*` | SPA build | Public values only (`VITE_GITHUB_APP_CLIENT_ID`, `VITE_MARKET_REPO`, `VITE_CLERK_PUBLISHABLE_KEY`) |
 
@@ -179,14 +196,19 @@ CLI). Project files always outrank the global one, and CI secrets beat everythin
 The recommended path (used by the builder's *Ship* tab too):
 
 ```bash
+# crews
 proagent crew validate my-crew.json       # must pass
 proagent crew submit my-crew.json         # files the proposal issue; CI validates it
+
+# profiles
+proagent profile validate my-profile.json # must pass
+proagent profile submit my-profile.json   # files the proposal issue; CI validates it
 ```
 
 A maintainer then comments `/publish` on the issue, which commits `items/<id>.json` and
 updates `catalog.json` — the next Pages build serves them. Direct commits are still
-available to maintainers via `proagent crew publish` (contents:write), but proposals are
-the reviewable, auditable default.
+available to maintainers via `proagent crew publish` / `proagent profile publish`
+(contents:write), but proposals are the reviewable, auditable default.
 
 ## Known limitations
 

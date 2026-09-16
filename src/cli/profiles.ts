@@ -4,7 +4,10 @@ import {
   resolveProfiles,
   validateAllProfiles,
 } from "../profiles/registry.js";
+import { publishProfile, profileProblems, MARKETPLACE_ITEMS_DIR } from "../profiles/marketplace.js";
 import { composeProfiles } from "../profiles/composition.js";
+import fs from "node:fs/promises";
+import path from "node:path";
 import {
   compileForHarness,
   detectHarnesses,
@@ -30,6 +33,7 @@ Usage:
   proagent compile <slug> --target <id>  Compile a profile for a specific harness (like equip, explicit)
     --output <dir>                       Output directory override
   proagent validate --profiles           Validate all discoverable profiles
+  proagent profile <sub>                 Marketplace commands: list/show/install/validate/publish/submit
 
 All commands support --json.
 `);
@@ -295,4 +299,248 @@ export async function runValidateProfiles(json: boolean): Promise<void> {
   }
   console.log("");
   if (!ok) process.exitCode = 1;
+}
+
+// ---------------------------------------------------------------------------
+// `proagent profile <subcommand>` — the MARKETPLACE.md command group
+// ---------------------------------------------------------------------------
+
+const MARKET_REPO = "EnzoVezzaro/proagents";
+
+/** --repo / --ref / --token resolution, shared by profile catalog commands. */
+function profileRemoteOpts(flags: Record<string, string | boolean>): { repo: string; ref: string; token?: string } {
+  const env = getEnvConfig();
+  return {
+    repo: (typeof flags.repo === "string" && flags.repo) || env.marketRepo || MARKET_REPO,
+    ref: typeof flags.ref === "string" && flags.ref ? flags.ref : "main",
+    token: (typeof flags.token === "string" && flags.token) || env.githubToken || undefined,
+  };
+}
+
+function printProfileHelp(): void {
+  console.log(`
+proagent profile — marketplace profile commands
+
+Usage:
+  proagent profile list                    List marketplace profiles (Git-backed catalog)
+    --repo owner/name --ref branch --token <gh-token>
+  proagent profile show <id>               Print a profile manifest from the catalog
+  proagent profile install <id>            Resolve + validate + equip from the catalog
+    --target <harness> --dry-run --repo / --ref / --token
+  proagent profile validate <file.json>    Validate a profile manifest file
+  proagent profile publish <file.json>     Commit a profile to the catalog (contents:write)
+  proagent profile submit <file.json>      File a marketplace proposal issue (recommended)
+
+The one-liner: install a profile and it is compiled to your harness:
+
+  proagent profile install security-engineer
+
+Shortcuts: proagent equip (== profile install), proagent list (== profile list).
+`);
+}
+
+/** Load a profile manifest from a file or catalog id (local dir, then remote). */
+async function resolveProfileItem(idOrFile: string, flags: Record<string, string | boolean>): Promise<ProfileManifest> {
+  if (idOrFile.endsWith(".json")) {
+    try {
+      return JSON.parse(await fs.readFile(idOrFile, "utf8")) as ProfileManifest;
+    } catch (err) {
+      fail(`cannot read profile file: ${(err as Error).message}`);
+    }
+  }
+  const local = path.join(process.cwd(), MARKETPLACE_ITEMS_DIR, `${idOrFile}.json`);
+  try {
+    return JSON.parse(await fs.readFile(local, "utf8")) as ProfileManifest;
+  } catch {
+    // fall through to remote
+  }
+  const { repo, ref, token } = profileRemoteOpts(flags);
+  return fetchProfileManifest(idOrFile, repo, ref, token);
+}
+
+/** `proagent profile list` — the profile slice of the Git-backed catalog. */
+export async function runProfileList(flags: Record<string, string | boolean>, json: boolean): Promise<void> {
+  warnIfStandalone("profile list", json);
+  const { repo, ref, token } = profileRemoteOpts(flags);
+  const url = `https://raw.githubusercontent.com/${repo}/${ref}/.marketplace/catalog.json`;
+  // Unauthenticated retry on 404: an invalid token makes GitHub raw answer
+  // 404 even for public files (same rationale as fetchRaw in crew/registry).
+  let res = await fetch(url, { headers: token ? { authorization: `Bearer ${token}` } : {} });
+  if (res.status === 404 && token) {
+    res = await fetch(url);
+  }
+  if (!res.ok) fail(`catalog fetch failed: HTTP ${res.status}`);
+  const catalog = (await res.json()) as { items: Array<{ id: string; kind: string; version: string; description: string }> };
+  const profiles = catalog.items.filter((i) => i.kind === "profile");
+  if (json) return jsonOut({ status: "ok", repo, ref, profiles });
+  if (profiles.length === 0) {
+    console.log("No profiles in the marketplace catalog yet.");
+    return;
+  }
+  console.log(`Marketplace profiles (${repo}@${ref}):`);
+  for (const item of profiles) {
+    console.log(`  • ${item.id.padEnd(26)} v${item.version.padEnd(8)} ${item.description.slice(0, 58)}`);
+  }
+}
+
+/** `proagent profile show <id>` — print the full manifest. */
+async function profileShow(id: string | undefined, flags: Record<string, string | boolean>, json: boolean): Promise<void> {
+  if (!id) fail("Usage: proagent profile show <id>");
+  const manifest = await resolveProfileItem(id, flags);
+  if (json) return jsonOut({ status: "ok", profile: manifest });
+  return runInspectProfile(manifest.profile.slug, false);
+}
+
+/** `proagent profile install <id>` — resolve from catalog, validate, equip. */
+export async function runProfileInstall(args: string[], flags: Record<string, string | boolean>): Promise<void> {
+  warnIfStandalone("profile install", flags.json === true);
+  const slugs = requireSlugs(args, "Usage: proagent profile install <id> [id…]");
+  return equipPipeline(slugs, flags, false);
+}
+
+/** `proagent profile validate <file.json>` — gate before publish/submit. */
+async function profileValidate(file: string | undefined, json: boolean): Promise<void> {
+  if (!file) fail("Usage: proagent profile validate <file.json>");
+  let manifest: ProfileManifest;
+  try {
+    manifest = JSON.parse(await fs.readFile(file, "utf8")) as ProfileManifest;
+  } catch (err) {
+    fail(`cannot read profile file: ${(err as Error).message}`);
+  }
+  const problems = profileProblems(manifest);
+  if (problems.length > 0) process.exitCode = 1; // non-zero even in --json mode
+  if (json) {
+    return jsonOut({
+      status: problems.length === 0 ? "ok" : "invalid",
+      file,
+      slug: manifest.profile?.slug,
+      problems,
+    });
+  }
+  if (problems.length === 0) {
+    console.log(`✓ Profile "${manifest.profile.slug}" v${manifest.profile.version} is valid.`);
+    return;
+  }
+  console.error(`✗ Profile "${manifest.profile?.slug ?? "?"}" is invalid:`);
+  for (const p of problems) console.error(`  - ${p}`);
+}
+
+/** `proagent profile publish <file.json>` — direct Contents-API commit. */
+async function profilePublish(file: string | undefined, flags: Record<string, string | boolean>, json: boolean): Promise<void> {
+  if (!file) fail("Usage: proagent profile publish <file.json>");
+  let manifest: ProfileManifest;
+  try {
+    manifest = JSON.parse(await fs.readFile(file, "utf8")) as ProfileManifest;
+  } catch (err) {
+    fail(`cannot read profile file: ${(err as Error).message}`);
+  }
+  const problems = profileProblems(manifest);
+  if (problems.length > 0) fail(`refusing to publish invalid profile: ${problems.join("; ")}`);
+
+  const { repo, ref } = profileRemoteOpts(flags);
+  const token = (typeof flags.token === "string" && flags.token) || getEnvConfig().githubToken;
+  if (!token) fail("publish requires a token with contents:write (--token, GITHUB_TOKEN, or a .env file)");
+
+  const paths = await publishProfile(manifest, { repo, branch: ref, token });
+  if (json) return jsonOut({ status: "ok", slug: manifest.profile.slug, version: manifest.profile.version, repo, ref, ...paths });
+  console.log(`✓ Published ${manifest.profile.slug}@${manifest.profile.version} to ${repo}@${ref}`);
+  console.log(`  + ${paths.itemPath}`);
+  console.log(`  ~ ${paths.catalogPath}`);
+  console.log("  (GitHub Pages serves the catalog after the next Pages build)");
+}
+
+/** `proagent profile submit <file.json>` — file a PROFILE-JSON proposal issue. */
+async function profileSubmit(file: string | undefined, flags: Record<string, string | boolean>, json: boolean): Promise<void> {
+  if (!file) fail("Usage: proagent profile submit <file.json>");
+  let manifest: ProfileManifest;
+  try {
+    manifest = JSON.parse(await fs.readFile(file, "utf8")) as ProfileManifest;
+  } catch (err) {
+    fail(`cannot read profile file: ${(err as Error).message}`);
+  }
+  const problems = profileProblems(manifest);
+  if (problems.length > 0) fail(`refusing to submit an invalid profile: ${problems.join("; ")}`);
+
+  const env = getEnvConfig();
+  const repo = (typeof flags.repo === "string" && flags.repo) || env.marketRepo || MARKET_REPO;
+  const token = (typeof flags.token === "string" && flags.token) || env.githubToken;
+  if (!token) fail("submit requires a GitHub token (--token, GITHUB_TOKEN, or .env) with issues:write");
+
+  const BEGIN = "<!-- PROFILE-JSON-BEGIN -->";
+  const END = "<!-- PROFILE-JSON-END -->";
+  const body = [
+    `## Marketplace proposal: ${manifest.identity.title}`,
+    "",
+    manifest.profile.description ?? manifest.identity.summary ?? "",
+    "",
+    "### Profile summary",
+    "",
+    `- **Slug**: \`${manifest.profile.slug}\` v${manifest.profile.version}`,
+    `- **Expertise**: ${manifest.expertise.join(", ")}`,
+    `- **Methods**: ${(manifest.methods ?? []).join(", ") || "—"}`,
+    `- **Rules**: ${(manifest.rules ?? []).length} normative rule(s)`,
+    `- **Verification**: ${(manifest.verification.required ?? []).join(", ")}`,
+    "",
+    "### Profile JSON",
+    "",
+    BEGIN,
+    "```json",
+    JSON.stringify(manifest, null, 2),
+    "```",
+    END,
+    "",
+    "---",
+    "",
+    "Maintainers: CI validates this proposal automatically. If the check is green and the design is sound, comment `/publish` to commit it to the marketplace catalog.",
+  ].join("\n");
+
+  const res = await fetch(`https://api.github.com/repos/${repo}/issues`, {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${token}`,
+      accept: "application/vnd.github+json",
+      "content-type": "application/json",
+      "user-agent": "proagent-cli",
+    },
+    body: JSON.stringify({
+      title: `[profile-proposal] ${manifest.profile.slug} v${manifest.profile.version}`,
+      body,
+      labels: ["profile-proposal"],
+    }),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    fail(`issue creation failed: HTTP ${res.status} ${text.slice(0, 200)}`);
+  }
+  const issue = (await res.json()) as { number: number; html_url: string };
+  if (json) return jsonOut({ status: "ok", slug: manifest.profile.slug, version: manifest.profile.version, repo, issue: issue.number, url: issue.html_url });
+  console.log(`✓ Proposal filed: ${issue.html_url}`);
+  console.log("  CI validates it within seconds; a maintainer /publish commits it to the marketplace.");
+}
+
+/** Entry point for `proagent profile <subcommand>`. */
+export async function runProfileCommand(args: string[], flags: Record<string, string | boolean>): Promise<void> {
+  const sub = args[0];
+  const rest = args.slice(1);
+  const json = flags.json === true;
+  switch (sub) {
+    case "list":
+      return runProfileList(flags, json);
+    case "show":
+      return profileShow(rest[0], flags, json);
+    case "install":
+      return runProfileInstall(rest, flags);
+    case "validate":
+      return profileValidate(rest[0], json);
+    case "publish":
+      return profilePublish(rest[0], flags, json);
+    case "submit":
+      return profileSubmit(rest[0], flags, json);
+    case undefined:
+    case "help":
+      printProfileHelp();
+      return;
+    default:
+      fail(`Unknown profile command: ${sub}. See: proagent profile help`);
+  }
 }
