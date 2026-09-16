@@ -8,6 +8,7 @@ import { ProfileBuilderPage } from "./pages/ProfileBuilderPage.js";
 import { PreviewPage } from "./pages/PreviewPage.js";
 import { SettingsModal } from "./SettingsModal.js";
 import { loadSettings, saveSettings, githubTokenNeedsRefresh, githubRefreshExpired, type AppSettings } from "../settings.js";
+import { DOCS_URL, SOURCE_URL } from "../links.js";
 import { getAuthenticatedUser, refreshAccessToken } from "../github.js";
 
 export interface AppCtx {
@@ -146,13 +147,13 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
         }}
       >
         <a href="#/catalog" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", color: "var(--cream)" }}>
-          <img src="/proagents/app/logo.png" alt="ProAgents" width={88} height={28} style={{ display: "block" }} />
+          <img src={`${import.meta.env.BASE_URL}logo.png`} alt="ProAgents" width={88} height={28} style={{ display: "block" }} />
         </a>
         <nav aria-label="Primary" style={{ display: "flex", gap: 18, fontSize: 14 }}>
           {nav("catalog", "Catalog")}
           {nav("dashboard", "Dashboard")}
           <a
-            href="https://enzovezzaro.github.io/proagents/"
+            href={DOCS_URL}
             target="_blank"
             rel="noreferrer"
             style={{ color: "var(--cream-dim)", textDecoration: "none" }}
@@ -188,10 +189,10 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
       <main style={{ maxWidth: 1180, margin: "0 auto", padding: "32px 24px 88px" }}>{page}</main>
       <footer style={{ borderTop: "1px solid var(--line)", padding: "22px 28px", color: "var(--cream-dim)", fontSize: 12, textAlign: "center", background: "rgba(0, 0, 24, 0.5)" }}>
         ProAgents Marketplace · fully open source (MIT) · runs entirely in your browser on GitHub Pages ·{" "}
-        <a href="https://enzovezzaro.github.io/proagents/" style={{ color: "var(--cyan)", textDecoration: "none" }}>
+        <a href={DOCS_URL} style={{ color: "var(--cyan)", textDecoration: "none" }}>
           docs
         </a>{" "}·{" "}
-        <a href="https://github.com/EnzoVezzaro/proagents" style={{ color: "var(--cyan)", textDecoration: "none" }}>
+        <a href={SOURCE_URL} style={{ color: "var(--cyan)", textDecoration: "none" }}>
           source
         </a>{" "}·{" "}
         <a href="https://github.com/sponsors/EnzoVezzaro" style={{ color: "var(--cyan)", textDecoration: "none" }}>Sponsor</a>{" "}·{" "}

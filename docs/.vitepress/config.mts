@@ -7,7 +7,7 @@ export default defineConfig({
   description:
     "Professional profiles for existing coding agents — equip Claude Code, Codex, OpenCode and friends with professional expertise, methods, rules and verification.",
   head: [
-    ["link", { rel: "icon", type: "image/png", href: "/favicon.png" }],
+    ["link", { rel: "icon", type: "image/png", href: "/proagents/docs/favicon.png" }],
     ["meta", { property: "og:type", content: "website" }],
     ["meta", { property: "og:title", content: "ProAgents" }],
     [
@@ -17,19 +17,21 @@ export default defineConfig({
         content: "Professional profiles for existing coding agents.",
       },
     ],
-    ["meta", { property: "og:image", content: "/og-image.png" }],
+    ["meta", { property: "og:image", content: "/proagents/docs/og-image.png" }],
     ["meta", { name: "theme-color", content: "#000024" }],
   ],
-  base: "/proagents/",
+  base: "/proagents/docs/",
   cleanUrls: true,
   themeConfig: {
     // Light navbar gets the dark-ink lockup; dark mode swaps to the white-text
     // lockup via `.dark img.VPImage` in theme/custom.css.
     logo: "/logo-dark.png",
-    siteTitle: "ProAgents",
+    // The logo lockup already carries the wordmark; a site title would render
+    // "ProAgents ProAgents" next to it.
+    siteTitle: false,
     nav: [
       { text: "Docs", link: "/guide/what-is-proagents", activeMatch: "/guide/" },
-      { text: "Marketplace", link: "/app/" },
+      { text: "Marketplace", link: "https://enzovezzaro.github.io/proagents/" },
       { text: "CLI", link: "/cli/", activeMatch: "/cli/" },
       {
         text: "Context",
@@ -42,7 +44,7 @@ export default defineConfig({
         link: "https://github.com/EnzoVezzaro/proagents",
       },
       {
-        text: "❤ Sponsor",
+        text: "Sponsor",
         link: "https://github.com/sponsors/EnzoVezzaro",
       },
     ],
@@ -109,7 +111,7 @@ export default defineConfig({
     ],
     footer: {
       message:
-        'Released under the <a href="/proagents/LICENSE.md">MIT License</a> · <a href="https://github.com/sponsors/EnzoVezzaro">❤ Sponsor on GitHub</a> · <a href="https://ko-fi.com/enzojuniorvezzaro">☕ Ko-fi</a>',
+        'Released under the <a href="/proagents/docs/LICENSE.md">MIT License</a> · <a href="https://github.com/sponsors/EnzoVezzaro">Sponsor on GitHub</a> · <a href="https://ko-fi.com/enzojuniorvezzaro">Ko-fi</a>',
       copyright: "Copyright © 2026 ProAgents contributors",
     },
     outline: { level: [2, 3], label: "On this page" },

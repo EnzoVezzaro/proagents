@@ -19,6 +19,7 @@
 :root {
   --pa-navy: #000024;
   --pa-blue: #0048e4;
+  --pa-blue-bright: #2e6bff; /* hover lift */
   --pa-blue-deep: #0036b3; /* readable on white */
   --pa-violet: #5424e4;
   --pa-violet-deep: #4a1fc4;
@@ -37,17 +38,15 @@
   --vp-font-family-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo,
     Consolas, monospace;
 
-  --vp-button-brand-bg: var(--pa-grad);
+  /* VitePress applies --vp-button-brand-bg via `background-color`, where a
+   * gradient is invalid and the button renders transparent (white text on
+   * white). Solid blue goes in the color slot; the brand gradient rides on
+   * background-image below, with the solid color as its fallback. */
+  --vp-button-brand-bg: var(--pa-blue);
   --vp-button-brand-text: #ffffff;
   --vp-button-brand-border: transparent;
-  --vp-button-brand-hover-bg: linear-gradient(
-    120deg,
-    #2e6bff 0%,
-    #5a3bea 55%,
-    #6b35f2 100%
-  );
+  --vp-button-brand-hover-bg: var(--pa-blue-bright);
   --vp-button-brand-hover-text: #ffffff;
-  --vp-button-brand-hover-border: transparent;
   --vp-button-brand-active-bg: var(--pa-blue-deep);
   --vp-button-brand-active-text: #ffffff;
   --vp-button-brand-active-border: transparent;
@@ -156,14 +155,27 @@ html.dark {
 }
 
 /* ---------------------------------------------------------------------------
+ * Brand gradient on primary buttons (background-image slot — see token note
+ * above). Hover lifts to the brighter gradient.
+ * ------------------------------------------------------------------------ */
+.VPButton.brand {
+  background-image: var(--pa-grad);
+}
+.VPButton.brand:hover {
+  background-image: linear-gradient(120deg, #2e6bff 0%, #5a3bea 55%, #6b35f2 100%);
+}
+
+/* ---------------------------------------------------------------------------
  * Navbar logo per color mode — the lockups are background-specific:
- * light mode uses the ink-text lockup (logo-dark.png), dark mode swaps to the
+ * light mode uses the dark-ink lockup (logo-dark.png), dark mode swaps to the
  * white-text lockup (logo.png). VitePress renders the title logo as .VPImage.
+ * Scoped to the navbar: a global height rule crushes any other VPImage (e.g. a
+ * hero image) down to 30px.
  * ------------------------------------------------------------------------- */
-img.VPImage {
+.VPNavBar img.VPImage {
   height: 30px;
   width: auto;
 }
-.dark img.VPImage {
-  content: url("/logo.png");
+.dark .VPNavBar img.VPImage {
+  content: url("/proagents/docs/logo.png");
 }
