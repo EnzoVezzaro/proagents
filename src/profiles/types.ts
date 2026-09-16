@@ -12,6 +12,29 @@
 // Profile definition
 // ---------------------------------------------------------------------------
 
+/** A named MCP server a profile requires, verbatim for .mcp.json merge. */
+export interface ProfileMcpServer {
+  name: string;
+  transport: "stdio" | "http" | "sse";
+  command?: string;
+  args?: string[];
+  url?: string;
+  env?: Record<string, string>;
+  allowedTools?: string[];
+  /** Health endpoint (relative or absolute URL) checked before publish/use. */
+  healthCheck?: string;
+  /** True when the last health probe succeeded (never persisted to specs). */
+  healthy?: boolean;
+}
+
+/** A registry package the profile's skills/tools come from (npm or GitHub). */
+export interface ProfilePackage {
+  /** Registry id: "npm:<pkg>[@version]" or "github:owner/repo[@ref]". */
+  registry: string;
+  /** Why the profile needs it — shown in reviews and install plans. */
+  reason?: string;
+}
+
 export interface ProfileManifest {
   version: string; // schema version, "1"
   profile: {
@@ -31,8 +54,10 @@ export interface ProfileManifest {
   knowledge?: string[];
   /** Named professional methods this profile applies. */
   methods?: string[];
-  /** Reusable skills the profile composes. */
+  /** Reusable skills the profile composes: "npm:<pkg>[@v]", "github:o/r", or a written skill's kebab-case name. */
   skills?: string[];
+  /** Written skill bodies for skills entries that are not registry refs. */
+  skillBodies?: Record<string, { description: string; body: string }>;
   /** Normative constraints — enforced by the harness where supported. */
   rules?: string[];
   /** Standards bodies / frameworks the profile follows (OWASP, ISO…). */
@@ -41,6 +66,10 @@ export interface ProfileManifest {
     required: string[];
     optional?: string[];
     forbidden?: string[];
+    /** MCP servers the profession needs, merged into the harness .mcp.json. */
+    mcp?: ProfileMcpServer[];
+    /** Registry packages (npm/GitHub) providing skills or tooling. */
+    packages?: ProfilePackage[];
   };
   verification: {
     required: string[];
@@ -89,7 +118,13 @@ export interface EffectiveProfile {
   skills: string[];
   rules: string[];
   standards: string[];
-  tools: { required: string[]; optional: string[]; forbidden: string[] };
+  tools: {
+    required: string[];
+    optional: string[];
+    forbidden: string[];
+    mcp: ProfileMcpServer[];
+    packages: ProfilePackage[];
+  };
   verification: { required: string[]; optional: string[] };
 }
 
@@ -114,7 +149,9 @@ export type ProfileValidationCode =
   | "PA035" // no verification requirements
   | "PA036" // forbidden tool also required
   | "PA037" // knowledge reference missing from profile directory
-  | "PA038"; // duplicate slug in registry
+  | "PA038" // duplicate slug in registry
+  | "PA039" // invalid MCP server entry (name/transport/url/command)
+  | "PA040"; // invalid package registry ref (not npm:/github:)
 
 export interface ProfileValidationReport {
   ok: boolean;

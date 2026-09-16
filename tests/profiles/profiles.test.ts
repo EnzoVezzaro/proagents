@@ -155,6 +155,45 @@ describe("profile validation (PROFILES-VAL)", () => {
     const report = validateProfile(m, { checkKnowledge: false });
     expect(report.findings.map((f) => f.code)).toContain("PA036");
   });
+
+  it("PROFILES-VAL-008: PA039 rejects malformed MCP server entries", () => {
+    const m = manifest("mcp-bad");
+    m.tools.mcp = [
+      { name: "Bad Name", transport: "stdio" }, // invalid name + missing command
+      { name: "no-url", transport: "http" }, // missing url
+      { name: "dup", transport: "stdio", command: "x" },
+      { name: "dup", transport: "http", url: "https://x" }, // duplicate name
+    ];
+    const report = validateProfile(m, { checkKnowledge: false });
+    const codes = report.findings.filter((f) => f.code === "PA039");
+    expect(codes.length).toBeGreaterThanOrEqual(4);
+    expect(codes.every((f) => f.severity === "error")).toBe(true);
+  });
+
+  it("PROFILES-VAL-009: PA039 accepts well-formed MCP servers", () => {
+    const m = manifest("mcp-good");
+    m.tools.mcp = [
+      { name: "context7", transport: "stdio", command: "npx -y context7" },
+      { name: "remote-sse", transport: "sse", url: "https://mcp.example.com/sse", healthCheck: "/health" },
+    ];
+    const report = validateProfile(m, { checkKnowledge: false });
+    expect(report.findings.filter((f) => f.code === "PA039")).toEqual([]);
+  });
+
+  it("PROFILES-VAL-010: PA040 rejects non-registry package and skill refs", () => {
+    const m = manifest("pkg-bad");
+    m.tools.packages = [{ registry: "just-a-package-name" }];
+    m.skills = ["npm:@org/good", "http://not-a-registry"];
+    const report = validateProfile(m, { checkKnowledge: false });
+    const codes = report.findings.filter((f) => f.code === "PA040");
+    expect(codes.length).toBe(2);
+  });
+
+  it("PROFILES-VAL-011: PA038 — duplicate slug warning still fires alongside the new codes", () => {
+    const m = manifest("shadowed");
+    const report = validateProfile(m, { checkKnowledge: false, duplicateSlugs: new Set(["shadowed"]) });
+    expect(report.findings.map((f) => f.code)).toContain("PA038");
+  });
 });
 
 describe("shipped marketplace catalog (PROFILES-CATALOG)", () => {
@@ -241,5 +280,24 @@ describe("profile composition (PROFILES-COMP)", () => {
     const r1 = composeProfiles([a, b]);
     const r2 = composeProfiles([a, b]);
     expect(r1).toEqual(r2);
+  });
+
+  it("PROFILES-COMP-007: MCP servers and packages merge and dedupe by name/registry", () => {
+    const a = manifest("profile-a", {
+      tools: { required: ["shell"], mcp: [{ name: "context7", transport: "stdio", command: "npx -y context7" }] },
+    });
+    const b = manifest("profile-b", {
+      tools: {
+        required: ["git"],
+        mcp: [
+          { name: "context7", transport: "stdio", command: "npx -y context7" }, // same → deduped
+          { name: "github", transport: "http", url: "https://mcp.github.com" },
+        ],
+        packages: [{ registry: "npm:@org/skills" }, { registry: "npm:@org/skills" }],
+      },
+    });
+    const { effective } = composeProfiles([a, b]);
+    expect(effective.tools.mcp.map((s) => s.name)).toEqual(["context7", "github"]);
+    expect(effective.tools.packages).toEqual([{ registry: "npm:@org/skills" }]);
   });
 });

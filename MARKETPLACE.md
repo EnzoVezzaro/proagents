@@ -67,14 +67,18 @@ The marketplace should **not merely store references**. It should understand the
 
 ## Marketplace Builder UX
 
-> **Partially shipped.** The SPA ships a **profile builder** (identity → expertise &
-> rules → tools & verification → ship, emits the canonical ProfileManifest) and a
-> progressive **crew** builder (repo-grounded starter crew or custom, workers that
-> reference profile specs as their profession, permission scoping, MCP bindings, handoff
-> graph, one-click proposal). The CLI ships the pipeline (`profile install` / `crew build`
-> with composition, validation and compilation). The 15-step profile builder UX below is
-> the roadmap target both builders already follow structurally: choose path → define →
-> configure → validate → preview → publish/install.
+> **Partially shipped.** The SPA ships a guided **profile builder** walkthrough —
+> identity → expertise & rules → tools & MCP (with live health checks and registry
+> packages) → skills (registry installs or written inline) → verification → ship —
+> with per-step completion tracking, Next/Back navigation, draft persistence, slug
+> collision blocking against the live catalog, and PR-based publishing. The crew builder
+> (repo-grounded starter crew or custom, workers that reference profile specs as their
+> profession, permission scoping, MCP bindings, handoff graph, one-click proposal) is
+> also shipped. The CLI ships the pipeline (`profile install` / `crew build` with
+> composition, validation and compilation, including profile-declared MCP servers merged
+> into `.mcp.json` and written skills installed as standalone skills). The 15-step
+> profile builder UX below is the roadmap target both builders already follow
+> structurally: choose path → define → configure → validate → preview → publish/install.
 
 The experience is designed as a progressive builder rather than a configuration form.
 
@@ -561,11 +565,24 @@ Choose:
 
 ## Publish
 
-> **Ships today (single-file profiles + crews).** `proagent profile validate` gates,
-> `proagent profile submit` files a reviewable proposal issue (CI-validated, maintainer
-> `/publish` commits it), and `proagent profile publish` commits directly with
-> contents:write. Crews have the same trio (`crew validate/submit/publish`). Multi-file
-> profile bundles and provenance manifests are specified below.
+> **Ships today (single-file profiles + crews).** Two publishing paths, both CI-validated:
+>
+> 1. **Proposal issue** — `proagent profile submit` (or the SPA's "File proposal issue")
+>    files a reviewable issue; CI validates the PROFILE-JSON block; maintainer `/publish`
+>    commits it.
+> 2. **Pull request** — the SPA's "Publish via pull request" (GitHub sign-in required)
+>    creates a branch, commits `items/<slug>.json` + `catalog.json`, and opens a PR;
+>    `.github/workflows/marketplace-pr.yml` validates every changed item and the index
+>    consistency; a maintainer merge publishes. Fork-based PRs are supported for
+>    contributors without push access.
+>
+> The CLI also ships `proagent profile publish` (direct commit, contents:write). Crews
+> have the same trio (`crew validate/submit/publish`). Multi-file profile bundles and
+> provenance manifests are specified below.
+>
+> **Remote vs local equip:** `npx proagent equip <slug>` resolves built-ins → local
+> `./profiles/` → the marketplace catalog. A profile only works remotely once it is
+> merged into the catalog repo — until then, use the downloaded JSON locally.
 
 Publishing should package the **entire professional profile**, including its dependency graph and provenance.
 

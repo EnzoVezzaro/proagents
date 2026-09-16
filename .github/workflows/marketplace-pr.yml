@@ -1,0 +1,122 @@
+name: Marketplace PR validation
+
+# Publishing path #2: pull requests. The SPA's "Publish via pull request"
+# flow and manual contributions both land as PRs touching
+# .marketplace/items/*.json (+ catalog.json). Every changed item is run
+# through the same deterministic validators the CLI and SPA use; the catalog
+# index must stay consistent with the item files.
+
+on:
+  pull_request:
+    paths:
+      - ".marketplace/**"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: marketplace-pr-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci && npm run build
+
+      - name: List changed marketplace items
+        id: changed
+        run: |
+          git diff --name-only --diff-filter=ACM "origin/${{ github.base_ref }}...HEAD" -- '.marketplace/items/*.json' > /tmp/items.txt || true
+          echo "count=$(wc -l < /tmp/items.txt | tr -d ' ')" >> "$GITHUB_OUTPUT"
+          echo "files<<FILES_EOF" >> "$GITHUB_OUTPUT"
+          cat /tmp/items.txt >> "$GITHUB_OUTPUT"
+          echo "FILES_EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Validate changed items
+        id: validate
+        if: steps.changed.outputs.count != '0'
+        run: |
+          set -e
+          FAIL=0
+          : > /tmp/problems.txt
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            echo "::checking $f"
+            kind=$(node --input-type=module -e "
+              import fs from 'node:fs';
+              const j = JSON.parse(fs.readFileSync('$f', 'utf8'));
+              console.log(j.profile ? 'profile' : 'crew');
+            ")
+            node --input-type=module -e "
+              import fs from 'node:fs';
+              import { crewProblems } from './dist/crew/validate.js';
+              import { profileProblems } from './dist/profiles/marketplace.js';
+              const item = JSON.parse(fs.readFileSync('$f', 'utf8'));
+              const kind = '$kind';
+              const problems = kind === 'profile' ? profileProblems(item) : crewProblems(item);
+              if (problems.length > 0) {
+                for (const p of problems) console.error('$f: ' + p);
+                process.exit(1);
+              }
+            " || FAIL=1
+          done < /tmp/items.txt
+          exit $FAIL
+
+      - name: Catalog index consistency
+        id: catalog
+        if: steps.changed.outputs.count != '0'
+        run: |
+          node --input-type=module <<'NODE'
+            import fs from "node:fs";
+            const catalog = JSON.parse(fs.readFileSync(".marketplace/catalog.json", "utf8"));
+            const indexIds = new Set(catalog.items.map((i) => i.id));
+            const problems = [];
+            const changed = fs.readFileSync("/tmp/items.txt", "utf8").split("\n").filter(Boolean);
+            for (const f of changed) {
+              const item = JSON.parse(fs.readFileSync(f, "utf8"));
+              const id = item.profile?.slug ?? item.id;
+              const expectedName = f.replace(".marketplace/items/", "").replace(".json", "");
+              if (id !== expectedName) problems.push(`${f}: item id "${id}" does not match filename "${expectedName}.json"`);
+              if (!indexIds.has(id)) problems.push(`${f}: catalog.json has no index entry for "${id}" — regenerate the index`);
+              const entry = catalog.items.find((i) => i.id === id);
+              if (entry && item.profile && entry.version !== item.profile.version) {
+                problems.push(`${f}: catalog version ${entry.version} != manifest version ${item.profile.version}`);
+              }
+            }
+            for (const p of problems) console.error(p);
+            process.exit(problems.length === 0 ? 0 : 1);
+          NODE
+
+      - name: Comment verdict
+        if: always() && steps.changed.outputs.count != '0'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const count = '${{ steps.changed.outputs.count }}';
+            const valid = '${{ steps.validate.outcome }}' !== 'failure' && '${{ steps.catalog.outcome }}' !== 'failure';
+            const s = count === '1' ? '' : 's';
+            const L = [];
+            if (valid) {
+              L.push(`✅ **${count} marketplace item${s} pass the deterministic validator(s).**`);
+              L.push('', 'Maintainers: verify the design, then merge to publish.');
+            } else {
+              L.push('❌ **Marketplace validation failed** — see the "Validate changed items" step for the exact PA03x/CREW problems.');
+              L.push('', 'Push a fix commit to this branch to re-run automatically.');
+            }
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: L.join('\n'),
+            });

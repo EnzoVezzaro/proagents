@@ -48,6 +48,14 @@ proagent equip staff-engineer security-engineer   # compose professions
 proagent compile security-engineer --target codex # explicit harness
 ```
 
+### Remote vs local equip
+
+`npx proagent equip <slug>` resolves in order: package built-ins → local `./profiles/` →
+the marketplace catalog (fetched from the catalog repo). Consequence: a profile you just
+built **works locally immediately** (drop the JSON in `profiles/`), but the same one-liner
+only works remotely for other people **after the profile is merged into the catalog repo**
+— which is exactly what publishing does.
+
 ### The `profile` command group
 
 Everything the marketplace offers for profiles is also available as explicit
@@ -104,6 +112,28 @@ crews show the full worker table with **permission badges**
 (write/production/secrets/approval gates/MCP). Everything is free and MIT-licensed —
 every item installs directly.
 
+### Build a profile (the guided walkthrough)
+`Build a profile` opens a five-step walkthrough — each step shows its own completion state
+in the rail, with Next/Back navigation and draft persistence across reloads:
+
+1. **Identity** — name, slug, version, tags, author, one-line description, operating
+   summary. The slug is checked against the live catalog **as you type**: a slug that
+   already exists is blocked with an inline warning (publishing would collide).
+2. **Expertise & rules** — expertise areas, methods, normative rules, and **standards**
+   (one per line — as many as the profession follows: OWASP ASVS, ISO 27001, NIST SSDF…).
+3. **Tools & MCP** — everything the profession needs from its environment: native
+   required/forbidden tools, **MCP servers** (name, transport, command/URL, health-check
+   endpoint — with a live **health check** button probing http/sse endpoints from the
+   browser), and **registry packages** (`npm:<pkg>[@v]` or `github:owner/repo[@ref]`).
+4. **Skills** — install from a package registry (`npm:`/`github:` refs) or **write your
+   own** inline (name, description, markdown body). Written skills install as standalone
+   `.agents/skills/<name>/SKILL.md` at equip time.
+5. **Verification → Ship** — required/optional verification, then the Ship tab: download
+   the JSON for local use, **Publish via pull request**, or file a proposal issue.
+
+Validation (PA030–PA040) runs live on every step; the Ship tab gates on it before any
+publish action.
+
 ### Build a crew (the main event)
 `Build a crew` opens a two-path entry — both end in the same builder and the same output:
 
@@ -123,21 +153,25 @@ Either way you end with a **CrewDefinition JSON** that:
   any repo (skills, agent contracts, merged `.mcp.json`), or
 - publishes to the marketplace by **filing a proposal issue** (next section).
 
-### Publishing = a proposal issue, not a direct commit
-Marketplace submissions are GitHub issues, gated by CI:
+### Publishing = a PR or a proposal issue — never a silent direct commit
+Marketplace submissions are gated by CI on two paths:
 
-1. **File the proposal** — the builder's *Ship* tab (or `proagent crew submit crew.json` /
-   `proagent profile submit profile.json`) opens an issue with the full JSON in a parseable
-   block.
-2. **CI validates instantly** — the `Crew proposal pipeline` workflow extracts the JSON and
-   runs the same deterministic validator the CLI uses, commenting ✅ or ❌ with exact
-   problems. Editing the issue re-runs the check.
-3. **A maintainer merges it** — commenting `/publish` on a green proposal commits it to the
-   catalog (`items/<id>.json` + index update); `/close <reason>` rejects. Nothing goes live
-   without that human review.
+1. **Pull request (recommended — used by the profile builder's *Ship* tab).** Sign in with
+   GitHub, press **Publish via pull request**: the app creates a branch
+   (`proagent-profile/<slug>`), commits `items/<slug>.json` + the catalog index, and opens
+   a PR. The `Marketplace PR validation` workflow validates every changed item with the
+   same deterministic validator and checks index consistency. Contributors without push
+   access are supported automatically (the branch lands on a fork). A maintainer merge
+   publishes.
+2. **Proposal issue.** `proagent crew submit crew.json` / `proagent profile submit
+   profile.json` (or the builders' *File proposal issue* buttons) open an issue with the
+   full JSON in a parseable block; the `Crew proposal pipeline` workflow extracts and
+   validates it, commenting ✅ or ❌ with exact problems. A maintainer comments `/publish`
+   to commit, `/close <reason>` to reject.
 
-The issue form (`.github/ISSUE_TEMPLATE/crew-proposal.yml`) also works by hand: paste a
-crew JSON block into a new *🧩 Crew proposal* issue and CI takes it from there.
+Both paths run the identical validators — the PR path adds the catalog-index consistency
+check. The issue forms (`.github/ISSUE_TEMPLATE/crew-proposal.yml`,
+`profile-proposal.yml`) also work by hand.
 
 ### Preview an agent on your repo
 `Dashboard → Preview on a repo`: sign in with GitHub (device flow — see below), pick one of
@@ -218,8 +252,8 @@ available to maintainers via `proagent crew publish` / `proagent profile publish
 ## Known limitations
 
 - The catalog has no server-side identity: authorship is an `author` field, and publishing
-  requires write access to the catalog repo. A separate catalog repo with PR-based
-  submissions is the natural next step for third-party listings.
+  requires GitHub sign-in. PR-based publishing supports fork workflows, so any signed-in
+  contributor can propose; a maintainer merge is still required.
 - Preview runs send the repo's *file tree* (paths only) to your chosen provider — not file
   contents. Reviews that need contents should use the installed crew locally.
 - Clerk is wired as an optional settings field (publishable key only); full Clerk UI

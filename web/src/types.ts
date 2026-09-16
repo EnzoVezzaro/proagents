@@ -1,5 +1,24 @@
 /** Marketplace SPA types — mirror src/crew/types.ts and src/profiles/types.ts (kept in sync manually). */
 
+/** Mirror of src/profiles/types.ts ProfileMcpServer. */
+export interface ProfileMcpServer {
+  name: string;
+  transport: "stdio" | "http" | "sse";
+  command?: string;
+  args?: string[];
+  url?: string;
+  env?: Record<string, string>;
+  allowedTools?: string[];
+  healthCheck?: string;
+  healthy?: boolean;
+}
+
+/** Mirror of src/profiles/types.ts ProfilePackage. */
+export interface ProfilePackage {
+  registry: string;
+  reason?: string;
+}
+
 /** Mirror of src/profiles/types.ts ProfileManifest — profile catalog items. */
 export interface ProfileManifest {
   version: string;
@@ -16,9 +35,16 @@ export interface ProfileManifest {
   knowledge?: string[];
   methods?: string[];
   skills?: string[];
+  skillBodies?: Record<string, { description: string; body: string }>;
   rules?: string[];
   standards?: string[];
-  tools: { required: string[]; optional?: string[]; forbidden?: string[] };
+  tools: {
+    required: string[];
+    optional?: string[];
+    forbidden?: string[];
+    mcp?: ProfileMcpServer[];
+    packages?: ProfilePackage[];
+  };
   verification: { required: string[]; optional?: string[] };
 }
 
@@ -131,7 +157,7 @@ export function emptyProfile(): ProfileManifest {
     profile: { name: "", slug: "", version: "1.0.0" },
     identity: { title: "" },
     expertise: [],
-    tools: { required: ["filesystem", "shell", "git"] },
+    tools: { required: ["filesystem", "shell", "git"], mcp: [], packages: [] },
     verification: { required: ["tests"] },
   };
 }

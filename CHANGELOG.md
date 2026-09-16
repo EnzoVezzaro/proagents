@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — the profile builder becomes a guided, publishable walkthrough
+
+- **Guided profile-builder walkthrough** — the SPA builder is now a 5-step rail
+  (identity → expertise & rules → tools & MCP → skills → verification → ship) with
+  per-step completion checkmarks, Next/Back navigation, live PA030–PA040 validation on
+  every step, draft persistence, and a Ship tab that gates on validation before any
+  publish action.
+- **Slug collision blocking** — the builder loads the live marketplace catalog and blocks
+  a slug that already exists inline while typing (PA038), so publish-time collisions are
+  caught at authoring time.
+- **Multiple standards** — standards are one-per-line free text (any number), replacing
+  the single comma-separated field.
+- **MCP servers in profiles** (`tools.mcp`, PA039) — name/transport/command-or-URL/
+  health-check/allowedTools, validated deterministically (duplicate names, stdio without
+  command, http/sse without URL all fail). The SPA Tools tab adds servers with a **live
+  health check** (browser-side probe for http/sse; shape check for stdio). At equip time
+  profile MCP servers merge into the harness `.mcp.json` (existing entries preserved) and
+  render in the compiled SKILL.md.
+- **Registry packages in profiles** (`tools.packages`, PA040) — `npm:<pkg>[@v]` or
+  `github:owner/repo[@ref]` refs with a reason, validated at authoring and publish time;
+  equip surfaces them as explicit follow-ups (the harness never installs packages
+  silently).
+- **Skills in the profile builder** — a dedicated Skills tab: install from a registry
+  (`npm:`/`github:` refs, PA040-checked) or **write your own** (name, description, markdown
+  body). Written skills (`skillBodies`) install as standalone
+  `.agents/skills/<name>/SKILL.md` at equip time alongside the profile skill.
+- **PR-based publishing** — "Publish via pull request" in the Ship tab (GitHub sign-in
+  required): creates `proagent-profile/<slug>`, commits `items/<slug>.json` + catalog
+  index, opens the PR (fork fallback for contributors without push access, idempotent on
+  retry). New `Marketplace PR validation` workflow validates every changed marketplace
+  item with the same deterministic validators plus catalog-index consistency, and comments
+  the verdict on the PR. The proposal-issue path remains as an alternative.
+- **Docs** — MARKETPLACE.md Publish and Builder-UX sections updated for both paths;
+  marketplace guide gains "Remote vs local equip" (why `npx proagent equip <slug>` needs
+  a merged catalog) and the walkthrough reference.
+
 ### Added — profiles are the atoms; marketplace is a spec repository
 
 - **Crew workers can carry a profession**: `CrewWorker.profile` references a profile spec

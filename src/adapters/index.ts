@@ -279,6 +279,20 @@ function profileSkillMarkdown(profile: EffectiveProfile, manifest: ProfileManife
   lines.push(`- required: ${profile.tools.required.join(", ")}`);
   if (profile.tools.optional.length > 0) lines.push(`- optional: ${profile.tools.optional.join(", ")}`);
   if (profile.tools.forbidden.length > 0) lines.push(`- forbidden: ${profile.tools.forbidden.join(", ")}`);
+  if (profile.tools.mcp.length > 0) {
+    lines.push("");
+    lines.push("### MCP servers");
+    lines.push("Installed alongside the profile (merged into the harness .mcp.json):");
+    for (const s of profile.tools.mcp) {
+      const detail = s.transport === "stdio" ? `${s.command}${(s.args ?? []).join(" ")}` : s.url;
+      lines.push(`- **${s.name}** (${s.transport}): ${detail}${s.healthCheck ? ` — health: ${s.healthCheck}` : ""}`);
+    }
+  }
+  if (profile.tools.packages.length > 0) {
+    lines.push("");
+    lines.push("### Registry packages");
+    for (const p of profile.tools.packages) lines.push(`- ${p.registry}${p.reason ? ` — ${p.reason}` : ""}`);
+  }
   lines.push("");
   lines.push("## Verification");
   lines.push("Required before reporting completion:");
@@ -321,6 +335,19 @@ export async function compileForHarness(
     files.push({ path: manifestPath, mechanism: "canonical-manifest" });
   } else {
     limitations.push("target has no skills directory — profile expressed as project instructions only");
+  }
+
+  // 1b. Written skills — skill bodies shipped inside the manifest
+  // (skillBodies) install as standalone skills alongside the profile skill.
+  if (caps.skills) {
+    for (const [name, body] of Object.entries(manifest.skillBodies ?? {})) {
+      const dir = path.join(".agents", "skills", name);
+      await fs.mkdir(path.join(root, dir), { recursive: true });
+      const skillPath = path.join(dir, "SKILL.md");
+      const md = ["---", `name: ${name}`, `description: ${body.description || name}`, "---", "", body.body.trim(), ""].join("\n");
+      await fs.writeFile(path.join(root, skillPath), md, "utf8");
+      files.push({ path: skillPath, mechanism: "written-skill" });
+    }
   }
 
   // 2. Project instructions (all harnesses with a known instructions file).
@@ -387,6 +414,37 @@ export async function compileForHarness(
     limitations.push("rule enforcement falls back to project instructions (no native hooks/policy support)");
   } else if (caps.ruleEnforcement === "none" && profile.rules.length > 0) {
     limitations.push("target has no rule enforcement — rules are advisory in SKILL.md only");
+  }
+
+  // 3b. MCP servers declared by the profile merge into the harness .mcp.json
+  // (same mechanism as crew installs; profile server names are the keys).
+  if (caps.mcp && profile.tools.mcp.length > 0) {
+    const mcpPath = ".mcp.json";
+    const abs = path.join(root, mcpPath);
+    let existing: Record<string, unknown> = {};
+    try {
+      existing = JSON.parse(await fs.readFile(abs, "utf8")) as Record<string, unknown>;
+    } catch {
+      // New file.
+    }
+    const servers = (existing.mcpServers ?? {}) as Record<string, unknown>;
+    for (const s of profile.tools.mcp) {
+      servers[s.name] = {
+        ...(s.transport === "stdio" ? { command: s.command, args: s.args ?? [] } : { url: s.url }),
+        ...(s.env && Object.keys(s.env).length > 0 ? { env: s.env } : {}),
+        ...(s.allowedTools && s.allowedTools.length > 0 ? { allowedTools: s.allowedTools } : {}),
+      };
+    }
+    await fs.writeFile(abs, JSON.stringify({ ...existing, mcpServers: servers }, null, 2) + "\n", "utf8");
+    files.push({ path: mcpPath, mechanism: "mcp-config" });
+  }
+
+  // Registry packages are declared, not installed: no harness lets a profile
+  // run arbitrary installs, so surface them as an explicit follow-up.
+  if (profile.tools.packages.length > 0) {
+    limitations.push(
+      `profile declares ${profile.tools.packages.length} registry package(s) (${profile.tools.packages.map((p) => p.registry).join(", ")}) — install them in the target environment; the harness does not install packages`,
+    );
   }
 
   // 4. Verification notes — never silently pretend enforcement exists.

@@ -179,3 +179,126 @@ export async function listRepoTree(token: string, repo: string, ref?: string): P
   const body = (await res.json()) as { tree: Array<{ path: string; type: string }> };
   return body.tree.filter((e) => e.type === "blob").map((e) => e.path);
 }
+
+// ---------------------------------------------------------------------------
+// Marketplace publishing — a PR, not a direct commit.
+//
+// The marketplace is a Git repository; publishing means getting the profile
+// JSON INTO that repository, and the reviewable path is a pull request:
+// branch → commit items/<slug>.json + catalog.json → open PR.
+// CI validates the PR; maintainers merge to publish.
+// ---------------------------------------------------------------------------
+
+/** True when the marketplace already has an item with this slug. */
+export async function slugExistsInMarketplace(repo: string, slug: string): Promise<boolean> {
+  const res = await fetch(`https://api.github.com/repos/${repo}/contents/.marketplace/items/${encodeURIComponent(slug)}.json`, {
+    headers: { accept: "application/vnd.github+json", "user-agent": "proagents-marketplace" },
+  });
+  if (res.status === 404) return false;
+  if (res.ok) return true;
+  throw new Error(`slug check failed: HTTP ${res.status}`);
+}
+
+export interface CreatePrResult {
+  url: string;
+  branch: string;
+  number: number;
+}
+
+/**
+ * Publish a profile by opening a PR against the marketplace repo:
+ * creates a branch, commits the item + catalog index, opens the PR.
+ * Falls back to a fork when the token has no push access to the repo.
+ */
+export async function publishProfileAsPr(
+  token: string,
+  repo: string,
+  slug: string,
+  itemJson: string,
+  catalogJson: string,
+): Promise<CreatePrResult> {
+  const base = await (async () => {
+    const res = await fetch(`https://api.github.com/repos/${repo}`, { headers: authHeaders(token) });
+    if (!res.ok) throw new Error(`repo fetch failed: HTTP ${res.status}`);
+    return (await res.json()) as { default_branch: string; permissions?: { push?: boolean } };
+  })();
+  const branch = `proagent-profile/${slug}`;
+  const refUrl = `https://api.github.com/repos/${repo}/git/refs/heads/${encodeURIComponent(branch)}`;
+
+  // Does the branch already exist (a retry)?
+  const existingRef = await fetch(refUrl, { headers: authHeaders(token) });
+  const branchExists = existingRef.ok;
+
+  if (!branchExists) {
+    let headRepo = repo;
+    // No push access → create a fork and branch there.
+    if (base.permissions?.push === false) {
+      const forkRes = await fetch(`https://api.github.com/repos/${repo}/forks`, {
+        method: "POST",
+        headers: { ...authHeaders(token), "content-type": "application/json" },
+        body: "{}",
+      });
+      if (!forkRes.ok) throw new Error(`fork creation failed: HTTP ${forkRes.status}`);
+      const me = await getAuthenticatedUser(token);
+      headRepo = `${me.login}/${repo.split("/")[1]}`;
+    }
+    const headRes = await fetch(`https://api.github.com/repos/${headRepo}/git/ref/heads/${base.default_branch}`, {
+      headers: authHeaders(token),
+    });
+    if (!headRes.ok) throw new Error(`head ref fetch failed: HTTP ${headRes.status}`);
+    const head = (await headRes.json()) as { object: { sha: string } };
+    const createRef = await fetch(`https://api.github.com/repos/${headRepo}/git/refs`, {
+      method: "POST",
+      headers: { ...authHeaders(token), "content-type": "application/json" },
+      body: JSON.stringify({ ref: `refs/heads/${branch}`, sha: head.object.sha }),
+    });
+    if (!createRef.ok) {
+      const t = await createRef.text();
+      throw new Error(`branch creation failed: HTTP ${createRef.status} ${t.slice(0, 200)}`);
+    }
+    if (headRepo !== repo) {
+      // Cross-repo PRs commit to the fork; putRepoFile handles fork paths too.
+      await putRepoFile(token, headRepo, `.marketplace/items/${slug}.json`, itemJson, `profile: publish ${slug}`, null, branch);
+      await putRepoFile(token, headRepo, ".marketplace/catalog.json", catalogJson, `profile: update catalog index for ${slug}`, null, branch);
+    } else {
+      await putRepoFile(token, repo, `.marketplace/items/${slug}.json`, itemJson, `profile: publish ${slug}`, null, branch);
+      await putRepoFile(token, repo, ".marketplace/catalog.json", catalogJson, `profile: update catalog index for ${slug}`, null, branch);
+    }
+  } else {
+    // Retry: update the existing branch files.
+    const item = await getRepoFile(token, repo, `.marketplace/items/${slug}.json`, branch);
+    await putRepoFile(token, repo, `.marketplace/items/${slug}.json`, itemJson, `profile: update ${slug}`, item?.sha ?? null, branch);
+    const cat = await getRepoFile(token, repo, ".marketplace/catalog.json", branch);
+    await putRepoFile(token, repo, ".marketplace/catalog.json", catalogJson, `profile: update catalog index for ${slug}`, cat?.sha ?? null, branch);
+  }
+
+  // Open the PR (idempotent-ish: reuse the existing PR when present).
+  const prSearch = await fetch(`https://api.github.com/repos/${repo}/pulls?head=${repo.split("/")[0]}:${branch}&state=open`, {
+    headers: authHeaders(token),
+  });
+  if (prSearch.ok) {
+    const existing = (await prSearch.json()) as Array<{ number: number; html_url: string }>;
+    if (existing.length > 0) return { url: existing[0].html_url, branch, number: existing[0].number };
+  }
+  const prRes = await fetch(`https://api.github.com/repos/${repo}/pulls`, {
+    method: "POST",
+    headers: { ...authHeaders(token), "content-type": "application/json" },
+    body: JSON.stringify({
+      title: `[profile] add ${slug}`,
+      head: branch,
+      base: base.default_branch,
+      body: [
+        `Automated profile proposal via the [ProAgents marketplace builder](https://enzovezzaro.github.io/proagents/app/).`,
+        ``,
+        `Adds \`.marketplace/items/${slug}.json\` + catalog index entry. The deterministic validator runs on this PR.`,
+        `Maintainers: verify the profession is sound, then merge to publish.`,
+      ].join("\n"),
+    }),
+  });
+  if (!prRes.ok) {
+    const t = await prRes.text();
+    throw new Error(`PR creation failed: HTTP ${prRes.status} ${t.slice(0, 200)}`);
+  }
+  const pr = (await prRes.json()) as { number: number; html_url: string };
+  return { url: pr.html_url, branch, number: pr.number };
+}

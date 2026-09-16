@@ -80,6 +80,8 @@ export function composeProfiles(manifests: ProfileManifest[]): {
       required: dedupe(unique.flatMap((m) => m.tools.required)),
       optional: dedupe(unique.flatMap((m) => m.tools.optional ?? [])),
       forbidden: dedupe(unique.flatMap((m) => m.tools.forbidden ?? [])),
+      mcp: dedupeBy((unique.flatMap((m) => m.tools.mcp ?? [])), (s) => s.name),
+      packages: dedupeBy(unique.flatMap((m) => m.tools.packages ?? []), (p) => p.registry),
     },
     verification: {
       required: dedupe(unique.flatMap((m) => m.verification.required)),
@@ -174,6 +176,17 @@ function dedupeBySlug(manifests: ProfileManifest[]): ProfileManifest[] {
   return manifests.filter((m) => {
     if (seen.has(m.profile.slug)) return false;
     seen.add(m.profile.slug);
+    return true;
+  });
+}
+
+/** Dedupe structured objects by a key (first occurrence wins). */
+function dedupeBy<T>(items: T[], key: (item: T) => string): T[] {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    const k = key(item);
+    if (seen.has(k)) return false;
+    seen.add(k);
     return true;
   });
 }

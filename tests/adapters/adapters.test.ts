@@ -125,4 +125,53 @@ describe("profile compilation (ADAPT-COMPILE)", () => {
     expect(result.limitations.length).toBeGreaterThan(0);
     expect(result.limitations.join(" ")).toMatch(/skills directory|rule enforcement/i);
   });
+
+  it("ADAPT-COMPILE-005: profile MCP servers merge into .mcp.json; packages surface as limitations", async () => {
+    const root = await makeRepo({ "CLAUDE.md": "# App\n", ".mcp.json": "{\"mcpServers\":{\"existing\":{\"command\":\"keep\"}}}" });
+    const { effective, manifest } = await loadEffective("security-engineer");
+    manifest.tools.mcp = [
+      { name: "context7", transport: "stdio", command: "npx -y context7", args: ["-y", "context7"] },
+      { name: "remote", transport: "http", url: "https://mcp.example.com/sse" },
+    ];
+    manifest.tools.packages = [{ registry: "npm:@org/skill-pack", reason: "skill bundle" }];
+    // Recompose so the effective profile carries the new mcp/packages.
+    const { effective: eff2 } = composeProfiles([manifest]);
+    const detected = await detectHarnesses(root, {});
+    const result = await compileForHarness(eff2, manifest, detected.primary, root);
+
+    const mechanisms = result.files.map((f) => f.mechanism);
+    expect(mechanisms).toContain("mcp-config");
+    const mcp = JSON.parse(await fs.readFile(path.join(root, ".mcp.json"), "utf8")) as {
+      mcpServers: Record<string, { command?: string; url?: string }>;
+    };
+    expect(mcp.mcpServers.existing).toEqual({ command: "keep" }); // preserved
+    expect(mcp.mcpServers.context7.command).toContain("context7");
+    expect(mcp.mcpServers.remote.url).toBe("https://mcp.example.com/sse");
+
+    // The skill documents the servers and packages.
+    const skill = await fs.readFile(path.join(root, ".agents", "skills", "security-engineer", "SKILL.md"), "utf8");
+    expect(skill).toContain("MCP servers");
+    expect(skill).toContain("context7");
+    expect(skill).toContain("Registry packages");
+    expect(result.limitations.join(" ")).toContain("npm:@org/skill-pack");
+  });
+
+  it("ADAPT-COMPILE-006: written skills (skillBodies) install as standalone skills", async () => {
+    const root = await makeRepo({ "CLAUDE.md": "# App\n" });
+    const { effective, manifest } = await loadEffective("security-engineer");
+    manifest.skillBodies = {
+      "threat-model-playbook": {
+        description: "Run a STRIDE threat model",
+        body: "1. Enumerate components.\n2. Score threats.\n",
+      },
+    };
+    const detected = await detectHarnesses(root, {});
+    const result = await compileForHarness(effective, manifest, detected.primary, root);
+    const written = result.files.find((f) => f.mechanism === "written-skill");
+    expect(written?.path).toBe(".agents/skills/threat-model-playbook/SKILL.md");
+    const md = await fs.readFile(path.join(root, written!.path), "utf8");
+    expect(md).toContain("name: threat-model-playbook");
+    expect(md).toContain("Run a STRIDE threat model");
+    expect(md).toContain("1. Enumerate components.");
+  });
 });

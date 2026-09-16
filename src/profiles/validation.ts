@@ -94,6 +94,43 @@ export function validateProfile(
     push("PA038", "warning", `slug "${slug}" is defined in more than one profile source — the last discovered wins`, [slug], "Rename one of the profiles or remove the shadowed file.");
   }
 
+  // PA039 — MCP server entries must be well-formed and self-consistent.
+  const mcpServers = manifest.tools?.mcp ?? [];
+  const mcpNames = new Set<string>();
+  for (const [i, s] of mcpServers.entries()) {
+    const label = s?.name || `mcp[${i}]`;
+    if (s?.name && mcpNames.has(s.name)) {
+      push("PA039", "error", `tools.mcp duplicate server name "${s.name}"`, [slug, s.name], "MCP server names are keys in .mcp.json — they must be unique.");
+      continue;
+    }
+    if (s?.name) mcpNames.add(s.name);
+    if (!/^[a-z0-9][a-z0-9-]*$/.test(s?.name ?? "")) {
+      push("PA039", "error", `tools.mcp server "${label}" has an invalid name (lowercase kebab-case expected)`, [slug, s?.name ?? ""], "This name becomes the key in .mcp.json.");
+    }
+    if (!s || !s.transport) {
+      push("PA039", "error", `tools.mcp server "${label}" is missing transport`, [slug], "Use \"stdio\", \"http\" or \"sse\".");
+    } else if (s.transport === "stdio") {
+      if (!s.command) push("PA039", "error", `tools.mcp server "${s.name}" uses stdio but has no command`, [slug, s.name], "Set command, e.g. \"npx -y <package>\".");
+    } else if (!s.url) {
+      push("PA039", "error", `tools.mcp server "${s.name}" uses ${s.transport} but has no url`, [slug, s.name], "Set the server URL.");
+    }
+  }
+
+  // PA040 — package refs must name a registry: npm:<pkg>[@v] or github:o/r[@ref].
+  const registryRef = /^(npm|github):\S+$/;
+  for (const [i, pkg] of (manifest.tools?.packages ?? []).entries()) {
+    if (!pkg || !registryRef.test(pkg.registry ?? "")) {
+      push("PA040", "error", `tools.packages[${i}] "${pkg?.registry ?? ""}" is not a registry reference`, [slug], "Use npm:<package>[@version] or github:owner/repo[@ref].");
+    }
+  }
+
+  // Cross-check: skills entries that look like registry refs must be valid.
+  for (const [i, sk] of (manifest.skills ?? []).entries()) {
+    if (sk.includes(":") && !registryRef.test(sk)) {
+      push("PA040", "error", `skills[${i}] "${sk}" looks like a registry reference but is not npm:/github:`, [slug], "Use npm:<package>[@version] or github:owner/repo[@ref].");
+    }
+  }
+
   const errors = findings.filter((f) => f.severity === "error").length;
   const warnings = findings.filter((f) => f.severity === "warning").length;
   return {
