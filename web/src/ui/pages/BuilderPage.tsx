@@ -13,6 +13,7 @@ import {
 } from "../../types.js";
 import { CATALOG_URL } from "../../catalog.js";
 import { issueBody, issueTitle } from "../../proposal.js";
+import { newWorker, renameMcpServer, stripEmptyContexts, validateCrewDraft } from "../../crew-draft.js";
 
 /**
  * Crew builder — the GUI counterpart of the CLI interview. Agentic-first:
@@ -27,73 +28,7 @@ const btnGhost: React.CSSProperties = { background: "transparent", color: "var(-
 const field: React.CSSProperties = { width: "100%", boxSizing: "border-box", background: "var(--ink)", color: "var(--cream)", border: "1px solid var(--line)", borderRadius: 8, padding: "8px 10px", fontSize: 13 };
 const label: React.CSSProperties = { display: "block", fontSize: 11, color: "var(--cream-dim)", marginBottom: 4, marginTop: 10, textTransform: "uppercase" as const, letterSpacing: 0.4 };
 
-function newWorker(index: number, profile?: string): CrewWorker {
-  const base: CrewWorker = {
-    id: `worker-${index + 1}`,
-    name: `Worker ${index + 1}`,
-    role: "researcher",
-    description: "",
-    permissions: { read: "repo", write: "none", production: "none", secrets: "none", tools: [], approvalGates: [] },
-    mcpServers: [],
-    // Start with no context rows: an empty placeholder row ships as silent
-    // garbage (a filesystem binding with no scope). Add rows deliberately.
-    context: [],
-    instructions: "",
-    receivesFrom: [],
-    emits: [],
-  };
-  return profile ? { ...base, profile } : base;
-}
-
-/** Client-side mirror of crewProblems (src/crew/validate.ts). */
-function validate(crew: CrewDefinition): string[] {
-  const problems: string[] = [];
-  const idOk = /^[a-z0-9][a-z0-9-]*[a-z0-9]$/;
-  if (!crew.id || !idOk.test(crew.id)) problems.push("Crew id must be a lowercase slug (a-z, 0-9, dashes).");
-  if (!crew.name) problems.push("Crew name is required.");
-  if (!/^\d+\.\d+\.\d+/.test(crew.version)) problems.push("Version must be semver.");
-  if (!crew.description) problems.push("Description is required.");
-  if (!crew.author) problems.push("Author is required (your GitHub handle).");
-  if (crew.workers.length === 0) problems.push("Add at least one worker.");
-  const nameCount = new Map<string, number>();
-  for (const s of crew.mcpServers) nameCount.set(s.name, (nameCount.get(s.name) ?? 0) + 1);
-  for (const [n, c] of nameCount) if (c > 1) problems.push(`Duplicate MCP server name: "${n}".`);
-  const ids = new Set<string>();
-  for (const w of crew.workers) {
-    if (!w.id || !idOk.test(w.id)) problems.push(`Worker "${w.id}": id must be a lowercase slug.`);
-    if (ids.has(w.id)) problems.push(`Duplicate worker id: ${w.id}`);
-    ids.add(w.id);
-    if (w.profile) {
-      // Profile-backed worker: profession supplies the operating model;
-      // instructions are optional extras.
-    } else if (!w.instructions.trim()) {
-      problems.push(`Worker "${w.id}": instructions are required (or assign a profile).`);
-    }
-    for (const m of w.mcpServers) {
-      if (!crew.mcpServers.some((s) => s.name === m)) problems.push(`Worker "${w.id}" references unknown MCP server "${m}".`);
-    }
-    for (const c of w.context) {
-      if (c.framework && !["filesystem", "git", "acc"].includes(c.framework)) {
-        problems.push(`Worker "${w.id}": context framework "${c.framework}" is not a builtin (filesystem | git | acc). Did you mean an artifact or a scope? Frameworks name the retrieval adapter.`);
-      }
-    }
-  }
-  for (const w of crew.workers) {
-    for (const up of w.receivesFrom) {
-      if (!ids.has(up)) problems.push(`Worker "${w.id}" receives from unknown worker "${up}".`);
-      if (up === w.id) problems.push(`Worker "${w.id}" cannot receive from itself.`);
-    }
-  }
-  const emits = new Map(crew.workers.map((w) => [w.id, new Set(w.emits)]));
-  for (const h of crew.handoffs) {
-    if (!ids.has(h.from) || !ids.has(h.to)) problems.push(`Handoff ${h.from}->${h.to} references unknown workers.`);
-    if (h.from === h.to) problems.push(`Handoff ${h.from}->${h.to} is a self-handoff.`);
-    if (!emits.get(h.from)?.has(h.artifact)) problems.push(`Handoff ${h.from}->${h.to}: "${h.artifact}" is not emitted by ${h.from}.`);
-  }
-  if (crew.entryPoints.length === 0) problems.push("Pick at least one entry point.");
-  else for (const ep of crew.entryPoints) if (!ids.has(ep)) problems.push(`Entry point "${ep}" is not a worker.`);
-  return problems;
-}
+/** Client-side mirror of crewProblems lives in crew-draft.ts (tested). */
 
 export function BuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
   const { settings, navigate } = props.ctx;
@@ -152,15 +87,12 @@ export function BuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
   const exportJson = () => {
     // Downloading an invalid spec just ships the problem downstream (the CLI
     // rejects it on the next step) — validate first and surface problems.
-    const errs = validate(crew);
+    const errs = validateCrewDraft(crew);
     setProblems(errs);
     if (errs.length > 0) return;
     // Drop context bindings with no scope — an empty placeholder row would
     // ship a meaningless binding (and older drafts still carry one).
-    const clean: CrewDefinition = {
-      ...crew,
-      workers: crew.workers.map((w) => ({ ...w, context: w.context.filter((c) => (c.scope ?? "").trim() !== "") })),
-    };
+    const clean = stripEmptyContexts(crew);
     const blob = new Blob([JSON.stringify(clean, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -176,7 +108,7 @@ export function BuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
    * comment (`/publish`) commits it to the catalog and Pages serves it.
    */
   const publish = async () => {
-    const errs = validate(crew);
+    const errs = validateCrewDraft(crew);
     setProblems(errs);
     if (errs.length > 0) return;
     if (!settings.githubToken) {
@@ -458,14 +390,7 @@ function McpTab(props: { crew: CrewDefinition; update: (p: Partial<CrewDefinitio
     update({ mcpServers: crew.mcpServers.map((m) => (m.name === name ? { ...m, ...patch } : m)) });
   // Renaming must move every worker reference too — the name IS the key
   // workers bind to, and "server-1" leaking into .mcp.json is useless.
-  const renameServer = (oldName: string, raw: string) => {
-    const name = raw.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "");
-    if (!name || name === oldName) return;
-    update({
-      mcpServers: crew.mcpServers.map((m) => (m.name === oldName ? { ...m, name } : m)),
-      workers: crew.workers.map((w) => ({ ...w, mcpServers: w.mcpServers.map((s) => (s === oldName ? name : s)) })),
-    });
-  };
+  const renameServer = (oldName: string, raw: string) => update(renameMcpServer(crew, oldName, raw));
   return (
     <div style={{ display: "grid", gap: 14 }}>
       {crew.mcpServers.map((m) => (

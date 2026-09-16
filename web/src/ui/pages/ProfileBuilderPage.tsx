@@ -3,6 +3,7 @@ import type { AppCtx } from "../AppShell.js";
 import { ErrorNote } from "../cards.js";
 import { emptyProfile, slugify, type ProfileManifest } from "../../types.js";
 import { profileIssueBody, profileIssueTitle } from "../../proposal.js";
+import { validateProfileDraft } from "../../profile-draft.js";
 
 /**
  * Profile builder — the primary creation flow. Deliberately simple: a
@@ -17,23 +18,7 @@ const btnGhost: React.CSSProperties = { background: "transparent", color: "var(-
 const field: React.CSSProperties = { width: "100%", boxSizing: "border-box", background: "var(--ink)", color: "var(--cream)", border: "1px solid var(--line)", borderRadius: 8, padding: "8px 10px", fontSize: 13 };
 const label: React.CSSProperties = { display: "block", fontSize: 11, color: "var(--cream-dim)", marginBottom: 4, marginTop: 10, textTransform: "uppercase" as const, letterSpacing: 0.4 };
 
-/** Client-side mirror of the deterministic profile validator (PA03x subset). */
-function validate(p: ProfileManifest): string[] {
-  const problems: string[] = [];
-  const idOk = /^[a-z0-9][a-z0-9-]*[a-z0-9]$/;
-  if (!p.profile.slug || !idOk.test(p.profile.slug)) problems.push("Slug must be a lowercase kebab-case slug (PA031).");
-  if (!p.profile.name) problems.push("Name is required (PA030).");
-  if (!/^\d+\.\d+\.\d+/.test(p.profile.version)) problems.push("Profile version must be semver (PA032).");
-  if (!p.identity.title) problems.push("Identity title is required (PA030).");
-  if (!p.expertise || p.expertise.length === 0) problems.push("Add at least one expertise area (PA033).");
-  if (!p.tools.required || p.tools.required.length === 0) problems.push("Add at least one required tool (PA034).");
-  if (!p.verification.required || p.verification.required.length === 0) problems.push("Add at least one verification requirement (PA035).");
-  const forbidden = new Set(p.tools.forbidden ?? []);
-  for (const t of p.tools.required) {
-    if (forbidden.has(t)) problems.push(`Tool \"${t}\" is both required and forbidden (PA036).`);
-  }
-  return problems;
-}
+/** Client-side PA03x mirror lives in profile-draft.ts (tested). */
 
 export function ProfileBuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
   const { settings, navigate } = props.ctx;
@@ -78,7 +63,7 @@ export function ProfileBuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
   };
 
   const publish = async () => {
-    const errs = validate(profile);
+    const errs = validateProfileDraft(profile);
     setProblems(errs);
     if (errs.length > 0) return;
     if (!settings.githubToken) {
