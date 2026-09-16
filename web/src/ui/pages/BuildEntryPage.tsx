@@ -112,7 +112,7 @@ export function BuildEntryPage(props: { ctx: AppCtx; navigate: (to: string) => v
 
           {!token ? (
             <p style={{ color: "var(--cream-dim)", fontSize: 13 }}>
-              <a href="#/catalog" style={{ color: "var(--cyan)", textDecoration: "none" }}>Sign in with GitHub</a> (header) to list your repositories.
+              <a href="#/catalog" style={{ color: "var(--cyan)", textDecoration: "none" }}>Sign in with GitHub</a> in ⚙ Settings to list your repositories.
             </p>
           ) : (
             <div style={{ display: "grid", gap: 10 }}>

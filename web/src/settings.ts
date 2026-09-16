@@ -1,8 +1,8 @@
 /**
  * Settings store — user-provided configuration kept in localStorage.
- * Nothing here is a server secret: LLM keys, GitHub tokens and the Clerk
- * *publishable* key live in the operator's browser only. The modal exists
- * precisely so no credentials are ever baked into the deployed bundle.
+ * Nothing here is a server secret: LLM keys and GitHub tokens live in the
+ * operator's browser only. The modal exists precisely so no credentials are
+ * ever baked into the deployed bundle.
  */
 
 export type LlmProvider = "openai" | "anthropic" | "google" | "openrouter" | "custom";
@@ -24,18 +24,9 @@ export interface AppSettings {
   githubRefreshToken: string;
   /** Refresh-token expiry (epoch ms). Refresh tokens live ~6 months. */
   githubRefreshExpiresAt: number;
-  /** Clerk publishable key (pk_...) — enables optional Clerk identity UI. */
-  clerkPublishableKey: string;
 }
 
 const KEY = "proagents-marketplace-settings-v1";
-
-/** Build-time defaults from VITE_* env vars (see .env.example); localStorage wins. */
-function envDefaults(): Partial<AppSettings> {
-  return {
-    clerkPublishableKey: (import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string | undefined) ?? "",
-  };
-}
 
 export const DEFAULT_SETTINGS: AppSettings = {
   provider: { provider: "anthropic", model: "claude-sonnet-4-5", apiKey: "" },
@@ -43,7 +34,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
   githubTokenExpiresAt: 0,
   githubRefreshToken: "",
   githubRefreshExpiresAt: 0,
-  clerkPublishableKey: "",
 };
 
 export function loadSettings(): AppSettings {
@@ -51,23 +41,64 @@ export function loadSettings(): AppSettings {
     const raw = localStorage.getItem(KEY);
     if (!raw) return { ...DEFAULT_SETTINGS };
     const parsed = JSON.parse(raw) as Partial<AppSettings>;
-    const defaults = envDefaults();
     return {
       provider: { ...DEFAULT_SETTINGS.provider, ...(parsed.provider ?? {}) },
       githubToken: parsed.githubToken ?? "",
       githubTokenExpiresAt: parsed.githubTokenExpiresAt ?? 0,
       githubRefreshToken: parsed.githubRefreshToken ?? "",
       githubRefreshExpiresAt: parsed.githubRefreshExpiresAt ?? 0,
-      clerkPublishableKey: parsed.clerkPublishableKey ?? defaults.clerkPublishableKey ?? "",
     };
   } catch {
-    return { ...DEFAULT_SETTINGS, ...envDefaults() };
+    return { ...DEFAULT_SETTINGS };
   }
 }
 
 export function saveSettings(settings: AppSettings): void {
   localStorage.setItem(KEY, JSON.stringify(settings));
   window.dispatchEvent(new CustomEvent("proagents-settings-changed"));
+}
+
+/** Storage keys the app owns beyond settings (builder drafts & wizard step). */
+const DRAFT_STORAGE_KEYS = [
+  "proagents-crew-draft",
+  "proagents-builder-draft",
+  "proagents-profile-draft",
+  "proagents-profile-step",
+] as const;
+
+/** Sign out: drop GitHub credentials, keep every other setting. */
+export function clearGithubSession(): AppSettings {
+  const next: AppSettings = {
+    ...loadSettings(),
+    githubToken: "",
+    githubTokenExpiresAt: 0,
+    githubRefreshToken: "",
+    githubRefreshExpiresAt: 0,
+  };
+  saveSettings(next);
+  return next;
+}
+
+/**
+ * Sign out AND wipe everything the app stored in this browser: settings,
+ * builder drafts, wizard state. Dispatches `proagents-app-cache-cleared`
+ * (AppShell reloads on it) so in-memory state cannot resurrect stale data.
+ */
+export function clearAllAppCache(): void {
+  try {
+    localStorage.removeItem(KEY);
+  } catch {
+    /* private mode */
+  }
+  for (const k of DRAFT_STORAGE_KEYS) {
+    try {
+      sessionStorage.removeItem(k);
+    } catch {
+      /* ignore */
+    }
+  }
+  saveSettings({ ...DEFAULT_SETTINGS });
+  window.dispatchEvent(new CustomEvent("proagents-app-cache-cleared"));
 }
 
 /**
@@ -85,6 +116,7 @@ export function githubRefreshExpired(s: AppSettings): boolean {
   if (!s.githubRefreshToken) return true;
   return s.githubRefreshExpiresAt !== 0 && Date.now() >= s.githubRefreshExpiresAt;
 }
+
 
 export const PROVIDER_PRESETS: Record<Exclude<LlmProvider, "custom">, { label: string; models: string[] }> = {
   openai: { label: "OpenAI", models: ["gpt-4.1", "gpt-4.1-mini", "gpt-4o", "o4-mini"] },

@@ -113,7 +113,7 @@ export function BuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
     setProblems(errs);
     if (errs.length > 0) return;
     if (!settings.githubToken) {
-      setPublishState("Sign in with GitHub (header) to publish — publishing files a proposal issue on the catalog repo.");
+      setPublishState("Sign in with GitHub in ⚙ Settings to publish — publishing files a proposal issue on the catalog repo.");
       return;
     }
     setPublishState("Filing marketplace proposal…");

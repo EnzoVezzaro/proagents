@@ -36,7 +36,16 @@ export function DashboardPage(props: { ctx: AppCtx; user: { login: string } | nu
       {!user ? (
         <>
           <p style={{ color: "var(--cream-dim)" }}>Sign in with GitHub to manage your crews.</p>
-          <ErrorNote message="Not signed in — use the “Sign in with GitHub” button in the header. Publishing crews requires a token with repo write access." />
+          <div style={{ display: "flex", gap: 10, alignItems: "center", margin: "10px 0 4px" }}>
+            <button
+              onClick={props.onOpenSettings}
+              style={{ background: "var(--grad)", color: "#ffffff", border: "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontWeight: 700, fontSize: 13 }}
+            >
+              Sign in with GitHub
+            </button>
+            <span style={{ color: "var(--cream-dim)", fontSize: 12 }}>opens ⚙ Settings → GitHub account</span>
+          </div>
+          <ErrorNote message="Not signed in — publishing crews requires a token with repo write access." />
         </>
       ) : (
         <p style={{ color: "var(--cream-dim)" }}>Signed in as <strong style={{ color: "var(--cream)" }}>{user.login}</strong></p>
@@ -53,7 +62,7 @@ export function DashboardPage(props: { ctx: AppCtx; user: { login: string } | nu
         </a>
         <button onClick={props.onOpenSettings} style={{ background: "var(--ink-2)", border: "1px solid var(--line)", color: "var(--cream)", borderRadius: 14, padding: 24, textAlign: "left", cursor: "pointer" }}>
           <div style={{ fontSize: 20, fontWeight: 800 }}>Settings</div>
-          <p style={{ margin: "8px 0 0", fontSize: 13, color: "var(--cream-dim)", lineHeight: 1.5 }}>Provider & model keys, GitHub token, Clerk publishable key — stored only in this browser.</p>
+          <p style={{ margin: "8px 0 0", fontSize: 13, color: "var(--cream-dim)", lineHeight: 1.5 }}>Provider & model keys and your GitHub login — stored only in this browser.</p>
         </button>
       </div>
 

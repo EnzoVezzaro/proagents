@@ -187,14 +187,18 @@ Everything user-specific lives in the browser's localStorage — there is no ser
 - **Provider & model** for previews: OpenAI, Anthropic, Google, OpenRouter, or any
   OpenAI-compatible endpoint + your API key
 - **GitHub**: device-flow sign-in (recommended) or a PAT with `repo` scope
-- **Clerk**: optional publishable key (`pk_…`) for identity UI. Secret keys (`sk_…`) are
-  rejected — they can never be safely embedded in a static site.
 
 ### Auth: GitHub device flow
 The app signs in with the **ProAgents GitHub App** using the OAuth Device Flow — designed
 for input-limited clients and, importantly for a static site, requiring **no client
-secret**. Press *Sign in with GitHub*, enter the one-time code at
-`github.com/login/device`, done. The token stays in your browser.
+secret**. Open **⚙ Settings → GitHub account** and press *Sign in with GitHub*, enter the
+one-time code at `github.com/login/device`, done. The token stays in your browser.
+
+**Why a proxy?** `github.com/login/*` sends no CORS headers, so the browser cannot call
+the device-flow endpoints directly. In `vite` dev a local proxy serves `/github-oauth/*`;
+GitHub Pages deployments relay the same two endpoints through a tiny Cloudflare Worker
+(`workers/github-oauth-proxy.mjs`, deployed once, URL set via `VITE_OAUTH_PROXY_URL`).
+All other GitHub traffic (`api.github.com`) allows CORS and is called directly.
 
 **Token lifetime.** GitHub App user tokens expire (8h by default). The SPA stores the
 refresh token issued alongside the access token and uses it to re-authenticate silently —
@@ -208,7 +212,7 @@ App's settings.
 **App settings checklist** (GitHub → Settings → Developer settings → GitHub Apps →
 `proagents`):
 
-- ✅ **Enable Device Flow** — required for the header sign-in button
+- ✅ **Enable Device Flow** — required for the Settings-modal sign-in button
 - ✅ **Request user authorization (OAuth) during installation** — identity is granted on
   install
 - **Callback URL** `https://enzovezzaro.github.io/proagents/auth` — used by web
@@ -244,8 +248,7 @@ cp .env.example .env
 |---|---|---|
 | `PROAGENT_MARKET_REPO` | CLI, SPA build | Catalog repo (default `EnzoVezzaro/proagents`) |
 | `GITHUB_TOKEN` | CLI | `contents:write` token for `crew publish` / `profile publish` / browser-less install |
-| `CLERK_SECRET_KEY` | server only | ⚠️ `sk_…` — never prefix with `VITE_` |
-| `VITE_*` | SPA build | Public values only (`VITE_GITHUB_APP_CLIENT_ID`, `VITE_MARKET_REPO`, `VITE_CLERK_PUBLISHABLE_KEY`) |
+| `VITE_*` | SPA build | Public values only (`VITE_GITHUB_APP_CLIENT_ID`, `VITE_MARKET_REPO`, `VITE_OAUTH_PROXY_URL`) |
 
 The rule: **a variable named `VITE_*` is public** and gets embedded in the deployed
 bundle; everything else stays local. Resolution order: real environment variables →
@@ -278,5 +281,5 @@ available to maintainers via `proagent crew publish` / `proagent profile publish
   contributor can propose; a maintainer merge is still required.
 - Preview runs send the repo's *file tree* (paths only) to your chosen provider — not file
   contents. Reviews that need contents should use the installed crew locally.
-- Clerk is wired as an optional settings field (publishable key only); full Clerk UI
-  integration (hosted pages component) is roadmap — GitHub device flow is the working path today.
+- Identity is GitHub device flow only — there is no third-party identity provider in the
+  product; the app's GitHub App grants permissions, not user roles.

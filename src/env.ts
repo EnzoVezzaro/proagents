@@ -11,7 +11,6 @@ import path from "node:path";
  *   - `PROAGENT_MARKET_REPO`  → marketplace catalog repository
  *   - `GITHUB_TOKEN`          → contents:write token for publishing
  *   - `GITHUB_APP_CLIENT_ID`  → device-flow client id (public)
- *   - `CLERK_SECRET_KEY`      → server-only; never read by web code
  *
  * Precedence: real process.env wins over .env.local wins over .env, so CI
  * secrets and per-command overrides always beat checked-out files.
@@ -21,7 +20,6 @@ export interface EnvConfig {
   marketRepo?: string;
   githubToken?: string;
   githubAppClientId?: string;
-  clerkSecretKey?: string;
 }
 
 /** Which names the loader recognizes (and .env.example documents). */
@@ -30,10 +28,8 @@ const KNOWN_KEYS = [
   "GITHUB_TOKEN",
   "GH_TOKEN",
   "GITHUB_APP_CLIENT_ID",
-  "CLERK_SECRET_KEY",
   "VITE_GITHUB_APP_CLIENT_ID",
   "VITE_MARKET_REPO",
-  "VITE_CLERK_PUBLISHABLE_KEY",
 ] as const;
 
 const SECRET_SUFFIXES = ["SECRET", "TOKEN", "KEY"];
@@ -122,6 +118,5 @@ export function getEnvConfig(): EnvConfig {
     marketRepo: process.env.PROAGENT_MARKET_REPO || process.env.VITE_MARKET_REPO || undefined,
     githubToken: process.env.GITHUB_TOKEN || process.env.GH_TOKEN || undefined,
     githubAppClientId: process.env.GITHUB_APP_CLIENT_ID || process.env.VITE_GITHUB_APP_CLIENT_ID || undefined,
-    clerkSecretKey: process.env.CLERK_SECRET_KEY || undefined,
   };
 }

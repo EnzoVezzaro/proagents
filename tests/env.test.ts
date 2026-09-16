@@ -125,10 +125,8 @@ describe("env loader", () => {
   it("ENV-004: sensitive names are classified correctly", () => {
     expect(isSensitiveEnvName("DATABASE_SECRET_KEY")).toBe(true);
     expect(isSensitiveEnvName("GITHUB_TOKEN")).toBe(true);
-    expect(isSensitiveEnvName("CLERK_SECRET_KEY")).toBe(true);
     expect(isSensitiveEnvName("PROAGENT_MARKET_REPO")).toBe(false);
     expect(isSensitiveEnvName("GITHUB_APP_CLIENT_ID")).toBe(false);
-    expect(isSensitiveEnvName("VITE_CLERK_PUBLISHABLE_KEY")).toBe(false);
     expect(isSensitiveEnvName("VITE_MARKET_REPO")).toBe(false);
   });
 
@@ -138,13 +136,11 @@ describe("env loader", () => {
       process.env.PROAGENT_MARKET_REPO = "r1";
       process.env.GITHUB_TOKEN = "t1";
       process.env.GITHUB_APP_CLIENT_ID = "cid1";
-      process.env.CLERK_SECRET_KEY = "c1";
       const cfg = getEnvConfig();
       expect(cfg).toEqual({
         marketRepo: "r1",
         githubToken: "t1",
         githubAppClientId: "cid1",
-        clerkSecretKey: "c1",
       });
     } finally {
       for (const key of Object.keys(saved)) {

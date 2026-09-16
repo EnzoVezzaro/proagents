@@ -14,9 +14,35 @@
  */
 export const GITHUB_APP_CLIENT_ID: string =
   (import.meta.env.VITE_GITHUB_APP_CLIENT_ID as string | undefined) ?? "Iv23liXnwihcnEIdrvJl";
-const DEVICE_CODE_URL = "https://github.com/login/device/code";
-const TOKEN_URL = "https://github.com/login/oauth/access_token";
 const API = "https://api.github.com";
+
+/**
+ * The device-flow endpoints live on github.com, which sends NO CORS headers —
+ * a browser fetch from the app origin always fails with "Failed to fetch"
+ * (api.github.com does allow CORS, so every other call stays direct).
+ * Login calls therefore go through a same-origin base:
+ *   dev:  vite.config.ts proxies /github-oauth/* → https://github.com/*
+ *   prod: deploy workers/github-oauth-proxy.mjs and set VITE_OAUTH_PROXY_URL
+ * The base keeps the final path segments identical so a proxy only rewrites
+ * its prefix.
+ */
+const OAUTH_BASE =
+  ((import.meta.env.VITE_OAUTH_PROXY_URL as string | undefined) ?? "").replace(/\/+$/, "") || "/github-oauth";
+const DEVICE_CODE_URL = `${OAUTH_BASE}/login/device/code`;
+const TOKEN_URL = `${OAUTH_BASE}/login/oauth/access_token`;
+
+/** fetch with a clear error when the CORS proxy is missing/misconfigured. */
+async function oauthFetch(url: string, init: RequestInit): Promise<Response> {
+  try {
+    return await fetch(url, init);
+  } catch (err) {
+    throw new Error(
+      "Could not reach the GitHub sign-in endpoint (network/CORS). " +
+        "In dev the Vite proxy must serve /github-oauth; in production set VITE_OAUTH_PROXY_URL " +
+        `to a deployed workers/github-oauth-proxy.mjs. Underlying error: ${(err as Error).message}`,
+    );
+  }
+}
 
 export interface DeviceFlowStart {
   deviceCode: string;
@@ -27,7 +53,7 @@ export interface DeviceFlowStart {
 }
 
 export async function startDeviceFlow(): Promise<DeviceFlowStart> {
-  const res = await fetch(DEVICE_CODE_URL, {
+  const res = await oauthFetch(DEVICE_CODE_URL, {
     method: "POST",
     headers: { "content-type": "application/json", accept: "application/json" },
     body: JSON.stringify({ client_id: GITHUB_APP_CLIENT_ID }),
@@ -55,7 +81,7 @@ export type DeviceFlowResult =
   | { status: "denied"; reason: string };
 
 export async function pollDeviceFlow(flow: DeviceFlowStart): Promise<DeviceFlowResult> {
-  const res = await fetch(TOKEN_URL, {
+  const res = await oauthFetch(TOKEN_URL, {
     method: "POST",
     headers: { "content-type": "application/json", accept: "application/json" },
     body: JSON.stringify({
@@ -94,7 +120,7 @@ export async function pollDeviceFlow(flow: DeviceFlowStart): Promise<DeviceFlowR
 /** Exchange a refresh token for a fresh user access token (silent re-auth). */
 export async function refreshAccessToken(refreshToken: string): Promise<DeviceFlowResult> {
   if (!refreshToken) return { status: "denied", reason: "no refresh token stored" };
-  const res = await fetch(TOKEN_URL, {
+  const res = await oauthFetch(TOKEN_URL, {
     method: "POST",
     headers: { "content-type": "application/json", accept: "application/json" },
     body: JSON.stringify({

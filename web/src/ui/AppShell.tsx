@@ -9,7 +9,6 @@ import { PreviewPage } from "./pages/PreviewPage.js";
 import { SettingsModal } from "./SettingsModal.js";
 import { loadSettings, saveSettings, githubTokenNeedsRefresh, githubRefreshExpired, type AppSettings } from "../settings.js";
 import { getAuthenticatedUser, refreshAccessToken } from "../github.js";
-import { GitHubAuth } from "./GitHubAuth.js";
 
 export interface AppCtx {
   settings: AppSettings;
@@ -25,7 +24,14 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
   useEffect(() => {
     const onChange = () => setSettings(loadSettings());
     window.addEventListener("proagents-settings-changed", onChange);
-    return () => window.removeEventListener("proagents-settings-changed", onChange);
+    // "Clear cache" wiped localStorage + drafts; reload so no stale in-memory
+    // state (catalog cache, wizard steps) survives the wipe.
+    const onCacheCleared = () => window.location.reload();
+    window.addEventListener("proagents-app-cache-cleared", onCacheCleared);
+    return () => {
+      window.removeEventListener("proagents-settings-changed", onChange);
+      window.removeEventListener("proagents-app-cache-cleared", onCacheCleared);
+    };
   }, []);
 
   // Session ensure: verify the stored GitHub token, refresh it proactively
@@ -145,8 +151,6 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
         <nav aria-label="Primary" style={{ display: "flex", gap: 18, fontSize: 14 }}>
           {nav("catalog", "Catalog")}
           {nav("dashboard", "Dashboard")}
-          {nav("build-profile", "Build a profile")}
-          {nav("build", "Build a crew")}
         </nav>
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 14 }}>
           <a
@@ -157,7 +161,6 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
           >
             ♥ <span style={{ color: "var(--cyan)", fontWeight: 700 }}>Donate</span>
           </a>
-          <GitHubAuth user={user} />
           <button
             onClick={openSettings}
             style={{
@@ -183,7 +186,7 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
         <a href="https://github.com/sponsors/EnzoVezzaro" style={{ color: "var(--cyan)", textDecoration: "none" }}>♥ Sponsor</a>{" "}·{" "}
         <a href="https://ko-fi.com/enzojuniorvezzaro" style={{ color: "var(--cyan)", textDecoration: "none" }}>☕ Ko-fi</a>
       </footer>
-      {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} />}
+      {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} user={user} />}
     </div>
   );
 }

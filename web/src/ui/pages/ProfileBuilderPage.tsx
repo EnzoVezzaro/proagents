@@ -99,7 +99,7 @@ export function ProfileBuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
     setProblems(errs);
     if (errs.length > 0) return;
     if (!settings.githubToken) {
-      setPublishState("Sign in with GitHub (header) to publish — publishing opens a pull request on the marketplace repo.");
+      setPublishState("Sign in with GitHub in ⚙ Settings to publish — publishing opens a pull request on the marketplace repo.");
       return;
     }
     setPublishState("Opening a publish PR on the marketplace repo…");
@@ -134,7 +134,7 @@ export function ProfileBuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
     setProblems(errs);
     if (errs.length > 0) return;
     if (!settings.githubToken) {
-      setPublishState("Sign in with GitHub (header) to file a proposal issue.");
+      setPublishState("Sign in with GitHub in ⚙ Settings to file a proposal issue.");
       return;
     }
     setPublishState("Filing marketplace proposal issue…");

@@ -123,7 +123,7 @@ export function PreviewPage(props: { id?: string; ctx: AppCtx }): React.JSX.Elem
       </p>
 
       {!token ? (
-        <ErrorNote message="Sign in with GitHub first (header button or Settings → token) to list your repositories." />
+        <ErrorNote message="Sign in with GitHub first (⚙ Settings → GitHub account) to list your repositories." />
       ) : (
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center", margin: "20px 0" }}>
           <select value={repo} onChange={(e) => setRepo(e.target.value)} style={select}>

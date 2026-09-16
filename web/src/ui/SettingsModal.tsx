@@ -1,40 +1,33 @@
 import React, { useState } from "react";
 import { DEFAULT_SETTINGS, loadSettings, PROVIDER_PRESETS, saveSettings, type LlmProvider, type ProviderSettings } from "../settings.js";
-
+import { GitHubSignIn, GitHubUserMenu, type GitHubUser } from "./GitHubAuth.js";
 /**
  * Settings modal — the single place credentials are entered. Everything is
- * stored in this browser's localStorage only. The Clerk field accepts the
- * PUBLISHABLE key (pk_…); secret keys never belong in a static site and are
- * actively rejected.
+ * stored in this browser's localStorage only.
  */
 
-export function SettingsModal(props: { onClose: () => void }): React.JSX.Element {
+export function SettingsModal(props: { onClose: () => void; user: GitHubUser | null }): React.JSX.Element {
   const [initial] = useState(loadSettings);
   const [provider, setProvider] = useState<ProviderSettings>(initial.provider);
-  const [githubToken, setGithubToken] = useState(initial.githubToken);
-  const [clerkKey, setClerkKey] = useState(initial.clerkPublishableKey);
+  const [githubToken, setGithubToken] = useState("");
   const [saved, setSaved] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const preset = provider.provider !== "custom" ? PROVIDER_PRESETS[provider.provider] : null;
 
   const save = () => {
-    if (clerkKey && !clerkKey.startsWith("pk_")) {
-      setError("Clerk keys in a browser bundle must be the PUBLISHABLE key (pk_…). Secret keys (sk_…) can never be safely embedded — leave this empty if you only have a secret.");
-      return;
-    }
     const prev = loadSettings();
-    // A hand-pasted PAT replaces device-flow credentials (no expiry).
+    // PAT field: paste to REPLACE the stored credential (a PAT has no expiry
+    // and no refresh token); leave empty to keep the current session.
+    const pat = githubToken.trim();
+    const patChanged = pat !== "" && pat !== prev.githubToken;
     saveSettings({
       provider,
-      githubToken: githubToken.trim(),
-      githubTokenExpiresAt: githubToken.trim() && githubToken.trim() !== prev.githubToken ? 0 : prev.githubTokenExpiresAt,
-      githubRefreshToken: githubToken.trim() && githubToken.trim() !== prev.githubToken ? "" : prev.githubRefreshToken,
-      githubRefreshExpiresAt: githubToken.trim() && githubToken.trim() !== prev.githubToken ? 0 : prev.githubRefreshExpiresAt,
-      clerkPublishableKey: clerkKey.trim(),
+      githubToken: patChanged ? pat : prev.githubToken,
+      githubTokenExpiresAt: patChanged ? 0 : prev.githubTokenExpiresAt,
+      githubRefreshToken: patChanged ? "" : prev.githubRefreshToken,
+      githubRefreshExpiresAt: patChanged ? 0 : prev.githubRefreshExpiresAt,
     });
     setSaved(true);
-    setError(null);
     setTimeout(props.onClose, 450);
   };
 
@@ -105,21 +98,30 @@ export function SettingsModal(props: { onClose: () => void }): React.JSX.Element
           </>
         )}
 
-        <h3 style={{ fontSize: 13, color: "var(--cyan)", margin: "22px 0 0" }}>GitHub</h3>
+        <h3 style={{ fontSize: 13, color: "var(--cyan)", margin: "22px 0 0" }}>GitHub account</h3>
+        {props.user ? (
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <GitHubUserMenu user={props.user} />
+            <span style={{ color: "var(--cream-dim)", fontSize: 12 }}>
+              Signed in — hover the account for sign out & cache options.
+            </span>
+          </div>
+        ) : (
+          <GitHubSignIn />
+        )}
+
         <label style={label}>Personal access token (alternative to device-flow login)</label>
-        <input type="password" value={githubToken} onChange={(e) => setGithubToken(e.target.value)} placeholder="ghp_… or github_pat_…" style={field} />
+        <input
+          type="password"
+          value={githubToken}
+          onChange={(e) => setGithubToken(e.target.value)}
+          placeholder={initial.githubToken ? "stored — leave empty to keep the current session" : "ghp_… or github_pat_…"}
+          style={field}
+        />
         <p style={{ color: "var(--cream-dim)", fontSize: 12, marginTop: 6 }}>
-          Needs <code>repo</code> scope for repo previews and publishing crews. Prefer the “Sign in with GitHub” device-flow button in the header — it never pastes a token.
+          Needs <code>repo</code> scope for repo previews and publishing crews. Pasting a token replaces the sign-in above; leaving it empty keeps your session.
         </p>
 
-        <h3 style={{ fontSize: 13, color: "var(--cyan)", margin: "22px 0 0" }}>Clerk (optional identity UI)</h3>
-        <label style={label}>Publishable key</label>
-        <input value={clerkKey} onChange={(e) => setClerkKey(e.target.value)} placeholder="pk_test_…" style={field} />
-        <p style={{ color: "var(--cream-dim)", fontSize: 12, marginTop: 6 }}>
-          Publishable keys (pk_…) are safe in browsers. Secret keys (sk_…) are rejected — they must never be embedded in a static site.
-        </p>
-
-        {error && <div style={{ marginTop: 14, color: "var(--danger)", fontSize: 13 }}>{error}</div>}
         {saved && <div style={{ marginTop: 14, color: "var(--ok)", fontSize: 13 }}>✓ Saved</div>}
 
         <div style={{ display: "flex", gap: 10, marginTop: 22, justifyContent: "flex-end" }}>
@@ -128,7 +130,7 @@ export function SettingsModal(props: { onClose: () => void }): React.JSX.Element
               saveSettings({ ...DEFAULT_SETTINGS });
               setProvider(DEFAULT_SETTINGS.provider);
               setGithubToken("");
-              setClerkKey("");
+              props.onClose();
             }}
             style={{ background: "transparent", color: "var(--cream-dim)", border: "1px solid var(--line)", borderRadius: 8, padding: "9px 14px", cursor: "pointer", fontSize: 13 }}
           >
