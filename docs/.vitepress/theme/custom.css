@@ -139,11 +139,13 @@ html.dark {
  * on carries the meaning. */
 .VPHero .name::before {
   content: "";
+  position: relative;
+  left: -15px;
   display: block;
-  width: 96px;
-  height: 96px;
+  width: 176px;
+  height: 176px;
   background: url("/proagents/bot-icon.png") no-repeat center / contain;
-  margin: 0 0 14px;
+  margin: 0;
 }
 
 /* Hero name: the color comes from --vp-home-hero-name-color above (solid in
