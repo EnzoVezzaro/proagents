@@ -132,17 +132,18 @@ html.dark {
   letter-spacing: -0.02em;
 }
 
-/* Hero image (bot icon): crisp icon, right of the text — no VitePress halo.
- * DESIGN.md bans atmosphere; the glow layer goes, the icon sits in normal
- * flow instead of the default absolute positioning over the glow. */
-.VPHero .image-bg {
-  display: none;
-}
-.VPHero .image-src {
-  position: static;
-  max-width: 230px;
-  height: auto;
-  margin: 0 auto;
+/* Hero bot icon: a small brand mark directly ABOVE the hero name, aligned
+ * with the type. VitePress renders hero images in a separate column that
+ * cannot sit on top of the text, so the icon is a ::before on .name instead
+ * (no halo — DESIGN.md bans atmosphere). Decorative mark: the name it sits
+ * on carries the meaning. */
+.VPHero .name::before {
+  content: "";
+  display: block;
+  width: 96px;
+  height: 96px;
+  background: url("/proagents/bot-icon.png") no-repeat center / contain;
+  margin: 0 0 14px;
 }
 
 /* Hero name: the color comes from --vp-home-hero-name-color above (solid in
