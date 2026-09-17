@@ -1,9 +1,15 @@
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import { DEFAULT_SETTINGS, loadSettings, PROVIDER_PRESETS, saveSettings, type LlmProvider, type ProviderSettings } from "../settings.js";
 import { GitHubSignIn, GitHubUserMenu, type GitHubUser } from "./GitHubAuth.js";
 /**
  * Settings modal — the single place credentials are entered. Everything is
  * stored in this browser's localStorage only.
+ *
+ * Rendered through a portal on document.body: inside the island, the modal's
+ * z-index competes in VitePress's own stacking contexts (the fixed navbar
+ * paints above it). Portaled to the body with a top-level z-index it covers
+ * the whole app, header included.
  */
 
 export function SettingsModal(props: { onClose: () => void; user: GitHubUser | null }): React.JSX.Element {
@@ -43,12 +49,12 @@ export function SettingsModal(props: { onClose: () => void; user: GitHubUser | n
   };
   const label: React.CSSProperties = { display: "block", fontSize: 12, color: "var(--cream-dim)", marginBottom: 6, marginTop: 16, letterSpacing: 0.4, textTransform: "uppercase" as const };
 
-  return (
+  return createPortal(
     <div
       onClick={(e) => {
         if (e.target === e.currentTarget) props.onClose();
       }}
-      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 20 }}
+      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 20 }}
     >
       <div style={{ background: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 14, width: 560, maxWidth: "100%", maxHeight: "90vh", overflowY: "auto", padding: 24 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -141,6 +147,7 @@ export function SettingsModal(props: { onClose: () => void; user: GitHubUser | n
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

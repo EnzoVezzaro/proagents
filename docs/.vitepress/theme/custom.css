@@ -132,6 +132,19 @@ html.dark {
   letter-spacing: -0.02em;
 }
 
+/* Hero image (bot icon): crisp icon, right of the text — no VitePress halo.
+ * DESIGN.md bans atmosphere; the glow layer goes, the icon sits in normal
+ * flow instead of the default absolute positioning over the glow. */
+.VPHero .image-bg {
+  display: none;
+}
+.VPHero .image-src {
+  position: static;
+  max-width: 230px;
+  height: auto;
+  margin: 0 auto;
+}
+
 /* Hero name: the color comes from --vp-home-hero-name-color above (solid in
  * both modes). Display font + tracking only — no background, no clip. */
 
@@ -225,8 +238,13 @@ html.dark {
  * navbar and consumes these aliases instead of owning a second token system.
  * Everything maps onto the same --pa-* / --vp-* vars, so the app follows the
  * theme in both modes with zero app-side mode logic.
+ *
+ * Scoped to :root (not .pa-app): the Settings modal portals itself to
+ * document.body to escape the island's stacking context, and portaled
+ * subtrees inherit custom properties only if they're defined above body.
+ * The aliases reference --vp-* vars, so they still flip with html.dark.
  * ------------------------------------------------------------------------- */
-.pa-app {
+:root {
   /* Canvases */
   --ink: var(--vp-c-bg);
   --ink-2: var(--vp-c-bg-alt);
@@ -257,7 +275,7 @@ html.dark {
   --ok: #3ddc97;
   --warn: #ffc857;
 }
-.dark .pa-app {
+.dark {
   --cyan: var(--pa-cyan-bright);
 }
 

@@ -7,6 +7,9 @@ hero:
   name: "ProAgents"
   text: "Professional profiles for coding agents"
   tagline: Equip the coding agent you already use with professional expertise, methods, skills, rules and verification — a portable Professional Agent Profile, compiled to your harness. Not another harness.
+  image:
+    src: /bot-icon.png
+    alt: The ProAgents bot
   actions:
     - theme: brand
       text: Get started
