@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-09-17
+
 ### Fixed — equip completeness
 
 - **Compiled skills are self-contained**: knowledge files referenced by a
