@@ -107,22 +107,14 @@ export const card: React.CSSProperties = {
   padding: 20,
 };
 
-/** Type ramp. */
+/** Type ramp. Headings inherit Geist; hero/page titles opt into
+ * `display` (Bricolage Grotesque) from AppShell per DESIGN.md. */
 export const type = {
   h1: { fontSize: 26, fontWeight: 800, letterSpacing: "-0.02em", margin: "0 0 6px" } as React.CSSProperties,
   h2: { fontSize: 17, fontWeight: 700, letterSpacing: "-0.01em", margin: "28px 0 10px" } as React.CSSProperties,
   h3: { fontSize: 14, fontWeight: 700, margin: "0 0 8px" } as React.CSSProperties,
   body: { fontSize: 14, lineHeight: 1.65, color: "var(--cream-dim)" } as React.CSSProperties,
   small: { fontSize: 12.5, lineHeight: 1.55, color: "var(--cream-dim)" } as React.CSSProperties,
-};
-
-/** The brand gradient as text (wordmark, hero numerals). */
-export const gradText: React.CSSProperties = {
-  background: "var(--grad)",
-  WebkitBackgroundClip: "text",
-  backgroundClip: "text",
-  color: "transparent",
-  WebkitTextFillColor: "transparent",
 };
 
 /** Cyan signal dot for live/active states. */

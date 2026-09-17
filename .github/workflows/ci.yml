@@ -30,23 +30,7 @@ jobs:
           node ./dist/cli/index.js --version
           node ./dist/cli/index.js --help
 
-  web:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: web
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: web/package-lock.json
-      - run: npm ci
-      - run: npm test
-      - run: npm run build
-
-  docs:
+  site:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -54,10 +38,13 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - uses: oven-sh/setup-bun@v2
       - run: npm ci
-      - run: bun --bun vitepress build docs
-      - uses: actions/upload-pages-artifact@v3
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        with:
-          path: docs/.vitepress/dist
+      - name: Build the merged site (SPA + docs + assembly)
+        run: npm run site:build
+      - name: Artifact sanity checks
+        run: |
+          test -f site/index.html
+          test -f site/404.html
+          test -f site/app/index.html
+          test -f site/docs/index.html
+          test -f site/.marketplace/catalog.json

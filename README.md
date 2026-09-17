@@ -991,9 +991,15 @@ npm test
 
 npm run typecheck
 
-# docs
-bun --bun vitepress dev docs
-bun --bun vitepress build docs
+# site (marketplace + docs in one dev server)
+npm run site:dev   # SPA on :5173/proagents/ + docs on :4173/proagents/docs/
+
+# individual surfaces
+npm run app:dev
+npm run docs:dev
+
+# production build of the whole artifact into site/
+npm run site:build
 ```
 
 ### Project layout
@@ -1012,8 +1018,9 @@ bun --bun vitepress build docs
 ├── .agents/              # ProAgents Agent Skill + generated skills
 ├── profiles/             # built-in professional profiles
 ├── .marketplace/         # Git-backed catalog: profiles & crews
-├── docs/                 # VitePress documentation
-├── web/                  # marketplace SPA
+├── web/                  # the site — marketplace SPA at the root,
+│   └── docs/             #   VitePress documentation under /docs/
+├── scripts/              # site:build assembly + unified dev runner
 └── tests/                # unit, integration, e2e
 ```
 

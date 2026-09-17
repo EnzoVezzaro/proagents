@@ -16,6 +16,12 @@ export interface AppCtx {
   navigate: (to: string) => void;
 }
 
+/** Display type (DESIGN.md): Bricolage Grotesque, tight tracking. Spread onto
+ * hero names and page titles; headline text renders solid — the gradient is
+ * reserved for CTA fills and the logo mark (hallmark "no gradient-clipped
+ * text" gate). */
+export const display = { fontFamily: "var(--font-display)", letterSpacing: "-0.02em" } as const;
+
 export function AppShell(props: { route: string; navigate: (to: string) => void }): React.JSX.Element {
   const { route, navigate } = props;
   const [settings, setSettings] = useState(loadSettings);
@@ -129,7 +135,7 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
   );
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--ink)", color: "var(--cream)", fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "var(--ink)", color: "var(--cream)", fontFamily: "var(--font-body)" }}>
       <header
         style={{
           display: "flex",

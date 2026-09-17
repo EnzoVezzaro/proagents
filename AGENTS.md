@@ -29,19 +29,22 @@ not a prompt generator.
 6. **Markdown is not enforcement.** Permissions/approval logic belongs in runtime
    boundaries and validation rules, not prose. Profile rules compile into enforcement
    where the harness supports it; where it does not, the limitation is reported.
+   (Site note: the SPA `web/` and the docs `web/docs/` are one project — one
+   package.json, one lockfile, one test runner; `scripts/assemble-site.mjs`
+   is the single source of the Pages artifact layout.)
 7. **Canonical profiles are portable.** `profiles/*.json` and the profile schema never
    reference a specific harness; only `src/adapters/` knows how to compile per target.
 
 ## Commands
 
 ```bash
-npm run typecheck    # tsc --noEmit (strict) — must pass
-npm test             # vitest — must pass
+npm run typecheck    # tsc --noEmit (strict, core + web) — must pass
+npm test             # vitest (core + web suites) — must pass
 npm run build        # tsc → dist/
 npm run cli          # run the built CLI
 
-bun --bun vitepress dev docs     # docs dev server
-bun --bun vitepress build docs   # docs build (must pass before PRs)
+npm run site:dev     # SPA (:5173/proagents/) + docs (:4173/proagents/docs/)
+npm run site:build   # full artifact → site/ (must pass before PRs)
 ```
 
 ## Conventions

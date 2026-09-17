@@ -19,7 +19,7 @@ records what each needs before a release.
 
 - **Flow:** every push to `main` builds VitePress (`ci.yml` `docs` job) and
   publishes to GitHub Pages. No release step — docs deploy on merge.
-- Docs must build (`bun --bun vitepress build docs`) before tagging; broken
+- Docs must build (`npm run site:build`) before tagging; broken
   docs block CI on main.
 
 ## Marketplace SPA
@@ -33,7 +33,7 @@ records what each needs before a release.
 
 1. Bump `package.json` version (semver: breaking → major, features → minor, fixes → patch)
 2. Update `CHANGELOG.md` with the new version and today's date
-3. `npm run typecheck && npm test && bun --bun vitepress build docs`
+3. `npm run typecheck && npm test && npm run site:build`
 4. Commit: `chore(release): v<version>`
 5. Tag: `git tag v<version>` and push with `--tags`
 6. `release.yml` publishes npm + creates the GitHub release automatically

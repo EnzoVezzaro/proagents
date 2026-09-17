@@ -15,7 +15,8 @@ npm run build && npm test
 - Node.js 20+
 - TypeScript strict mode — `npm run typecheck` must pass
 - Tests: `npm test` (vitest). New features need tests.
-- Docs: `bun --bun vitepress dev docs`, built with `bun --bun vitepress build docs`
+- Docs: part of the merged site — `npm run site:dev` runs the SPA and docs
+  together; `npm run docs:dev` runs docs alone; `npm run site:build` must pass
 
 ## Project rules
 
@@ -54,8 +55,8 @@ string. Add tests with a minimal broken architecture.
 
 ### Docs
 
-Pages live in `docs/` (VitePress). Keep the brand palette (ink/cream/lime) and run
-`bun --bun vitepress build docs` before opening a PR.
+Pages live in `web/docs/` (VitePress). Keep the brand palette (navy/blue/violet,
+cyan as the signal color) and run `npm run site:build` before opening a PR.
 
 ## Commit style
 

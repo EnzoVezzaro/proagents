@@ -1,5 +1,11 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
+// Typography (DESIGN.md): Bricolage Grotesque = display, Geist = body/UI,
+// JetBrains Mono = code. Self-hosted variable fonts via Fontsource — same
+// files the docs import (web/docs/.vitepress/theme/custom.css).
+import "@fontsource-variable/bricolage-grotesque";
+import "@fontsource-variable/geist";
+import "@fontsource-variable/jetbrains-mono";
 import { AppShell } from "./ui/AppShell.js";
 import "./ui/styles.css";
 

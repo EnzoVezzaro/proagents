@@ -3,8 +3,10 @@ node_modules/
 
 # Build output
 dist/
-docs/.vitepress/dist/
-docs/.vitepress/cache/
+web/dist/
+web/docs/.vitepress/dist/
+web/docs/.vitepress/cache/
+site/
 
 # ProAgents session state (inspectable, but session-local)
 .proagent/

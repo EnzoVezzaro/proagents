@@ -14,6 +14,11 @@
  */
 
 :root {
+  /* Typography (DESIGN.md — hallmark pairing; fonts imported in main.tsx) */
+  --font-display: "Bricolage Grotesque Variable", "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Geist Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
   /* Canvases */
   --ink: #000024;        /* page background — deep space */
   --ink-2: #040a33;      /* raised surfaces */
@@ -46,6 +51,10 @@ html, body {
   margin: 0;
   background: var(--ink);
   color: var(--cream);
+}
+
+body {
+  font-family: var(--font-body);
 }
 
 /* Keyboard focus ring — visible, brand cyan, consistent everywhere. */
@@ -86,6 +95,18 @@ a {
 /* Inputs */
 input, select, textarea {
   font-family: inherit;
+}
+
+/* Code — JetBrains Mono per DESIGN.md (hallmark pairing). */
+code, pre, kbd {
+  font-family: var(--font-mono);
+}
+
+/* Page titles — Bricolage Grotesque display per DESIGN.md (hallmark pairing).
+ * Body and UI stay Geist; headline text renders solid. */
+h1 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
 }
 input:focus, select:focus, textarea:focus {
   border-color: var(--cyan) !important;

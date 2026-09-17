@@ -469,7 +469,7 @@ function SkillsTab(props: { profile: ProfileManifest; update: (p: Partial<Profil
           <label style={label}>Description (one line)</label>
           <input style={field} value={b.description} onChange={(e) => update({ skillBodies: { ...bodies, [name]: { ...b, description: e.target.value } } })} placeholder="What this skill does and when to use it" aria-label="Written skill description" />
           <label style={label}>Skill body (markdown instructions)</label>
-          <textarea style={{ ...field, minHeight: 120, fontFamily: "ui-monospace, monospace" }} value={b.body} onChange={(e) => update({ skillBodies: { ...bodies, [name]: { ...b, body: e.target.value } } })} placeholder={"1. Do the thing.\n2. Verify the result."} aria-label="Written skill body" />
+          <textarea style={{ ...field, minHeight: 120, fontFamily: "var(--font-mono)" }} value={b.body} onChange={(e) => update({ skillBodies: { ...bodies, [name]: { ...b, body: e.target.value } } })} placeholder={"1. Do the thing.\n2. Verify the result."} aria-label="Written skill body" />
         </div>
       ))}
       <button onClick={addWritten} style={{ ...btnGhost, marginTop: 4 }}>+ Write a skill</button>

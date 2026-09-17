@@ -371,7 +371,7 @@ function WorkersTab(props: {
 
           <label style={label}>Extra instructions — optional with a profession (SKILL.md body)</label>
           <textarea
-            style={{ ...field, minHeight: 90, fontFamily: "ui-monospace, monospace" }}
+            style={{ ...field, minHeight: 90, fontFamily: "var(--font-mono)" }}
             value={w.instructions}
             onChange={(e) => updateWorker(w.id, { instructions: e.target.value })}
             placeholder={w.profile ? "Optional — the profession supplies the operating model. Add only pipeline-specific steps." : "Required without a profession: 1. Read inputs. 2. Do the bounded job. 3. Emit artifacts."}

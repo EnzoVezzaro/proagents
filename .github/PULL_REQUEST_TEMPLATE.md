@@ -20,7 +20,7 @@ confirm them so your change lands quickly.
 - [ ] New validation rules use the `PA0xx` code scheme + suggestion string + tests (PA001–PA013 agents, PA02x composition, PA03x profiles)
 - [ ] `npm run typecheck` passes (strict)
 - [ ] `npm test` passes — new behavior ships with tests
-- [ ] `bun --bun vitepress build docs` passes (if docs changed)
+- [ ] `npm run site:build` passes (if the site changed — SPA and/or docs)
 
 ## Product framing
 

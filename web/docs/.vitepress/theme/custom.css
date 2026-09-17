@@ -11,6 +11,12 @@
  *   :root  → light mode (ice paper, navy text, blue brand)
  *   .dark  → the logo's native deep-space world
  * VitePress toggles `html.dark` from the navbar switch + system preference.
+ *
+ * Typography: the hallmark pairing shared with the SPA (DESIGN.md) —
+ * Bricolage Grotesque display / Geist body / JetBrains Mono code. The font
+ * files are imported in theme/index.ts (`theme-without-fonts` + Fontsource
+ * JS imports), so both surfaces ship identical fonts and resolve identical
+ * family names.
  */
 
 /* ---------------------------------------------------------------------------
@@ -28,17 +34,19 @@
   --pa-ice: #f4f7ff;
   --pa-grad: linear-gradient(120deg, #0048e4 0%, #3b2fe0 55%, #5424e4 100%);
 
+  --pa-font-display: "Bricolage Grotesque Variable", "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --pa-font-body: "Geist Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --pa-font-mono: "JetBrains Mono Variable", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
   --vp-c-brand-1: var(--pa-blue-deep);
   --vp-c-brand-2: var(--pa-violet-deep);
   --vp-c-brand-3: var(--pa-blue);
   --vp-c-brand-soft: rgba(0, 72, 228, 0.12);
 
-  /* Same stack as the marketplace SPA (web/src/ui/AppShell.tsx) — one product,
-   * one voice; also drops VitePress's default Inter webfont. */
-  --vp-font-family-base: ui-sans-serif, system-ui, -apple-system,
-    "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-  --vp-font-family-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo,
-    Consolas, monospace;
+  /* Same stack as the marketplace SPA (web/src/ui/styles.css) — one product,
+   * one voice. Replaces VitePress's default Inter webfont. */
+  --vp-font-family-base: var(--pa-font-body);
+  --vp-font-family-mono: var(--pa-font-mono);
 
   /* VitePress applies --vp-button-brand-bg via `background-color`, where a
    * gradient is invalid and the button renders transparent (white text on
@@ -54,6 +62,13 @@
   --vp-button-brand-active-border: transparent;
 
   --vp-code-lang-color: #6b7290;
+
+  /* Hero name: solid brand blue via VitePress's sanctioned vars. The theme's
+   * built-in `.clip` rule carries background-clip:text — with a transparent
+   * background and a solid color it is a no-op, so the name can never paint
+   * as gradient text (DESIGN.md gate). */
+  --vp-home-hero-name-color: var(--pa-blue);
+  --vp-home-hero-name-background: transparent;
 }
 
 /* ---------------------------------------------------------------------------
@@ -100,15 +115,28 @@ html.dark {
 
   --vp-c-text-code: #8fb0ff;
   --vp-code-lang-color: #9aa6cf;
+  --vp-home-hero-name-color: #6f95ff;
 }
 
 /* ---------------------------------------------------------------------------
- * Shared decorations
+ * Typography — Bricolage Grotesque display over Geist body (hallmark
+ * pairing, DESIGN.md). Headline text renders SOLID: the "no gradient-clipped
+ * text" gate replaces the old gradient hero name.
  * ------------------------------------------------------------------------ */
-
 .VPHero .name,
-.VPHero .text {
+.VPHero .text,
+.VPDoc h1,
+.VPFeature .title {
+  font-family: var(--pa-font-display);
   letter-spacing: -0.02em;
+}
+
+/* Hero name: the color comes from --vp-home-hero-name-color above (solid in
+ * both modes). Display font + tracking only — no background, no clip. */
+
+.dark .VPHero .name::after {
+  /* Display cut carries the weight on dark — no shadow, no glow. */
+  content: none;
 }
 
 /* Cyan signal on the docs outline + sidebar active markers */
@@ -170,17 +198,6 @@ html.dark {
 }
 .VPButton.brand:hover {
   background-image: linear-gradient(120deg, #2e6bff 0%, #5a3bea 55%, #6b35f2 100%);
-}
-
-/* Hero name is the wordmark: the brand gradient, as on the logo lockup and the
- * SPA's gradText. Gradient text via background-clip, with solid blue as the
- * no-clip fallback. */
-.VPHero .name {
-  color: var(--pa-blue);
-  background-image: var(--pa-grad);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
 }
 
 /* Feature cards share the SPA's card family: 10px radius, tinted hairline. */
