@@ -39,6 +39,9 @@
     "semantic-versioning",
     "rollback-first-design"
   ],
+  "knowledge": [
+    "knowledge/release-checklist.md"
+  ],
   "rules": [
     "Never deploy without a tested rollback path.",
     "Never bump a version without a changelog entry.",
@@ -47,6 +50,5 @@
   "standards": [
     "Semantic Versioning",
     "Keep a Changelog"
-  ],
-  "knowledge": []
+  ]
 }

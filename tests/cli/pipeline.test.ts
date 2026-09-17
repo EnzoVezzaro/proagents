@@ -114,6 +114,9 @@ describe("pipeline e2e — profile → equip → compiled agent → performance"
     expect(skill).toContain("You operate as a release engineer");
     expect(skill).toContain("Never deploy without a tested rollback path.");
     expect(skill).toContain("## Expertise");
+    // Knowledge references ship with the marketplace item and render in the skill.
+    expect(skill).toContain("## Knowledge");
+    expect(skill).toContain("knowledge/release-checklist.md");
 
     // The canonical manifest round-trips from the target repo.
     const manifest = JSON.parse(fs.readFileSync(path.join(root, ".agents/skills/release-engineer/profile.json"), "utf8"));

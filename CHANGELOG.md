@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed — site
 
+- **Site build tolerates marketplace subdirectories**: the assembler copied
+  each `.marketplace/items/` entry non-recursively, so the knowledge
+  subdirectory crashed `site:build`. Items now copy recursively.
+
+### Fixed — site (earlier)
+
 - **Publish requires GitHub sign-in — visibly**: the builders' publish buttons
   (Publish via pull request / File proposal issue, File marketplace proposal)
   used to run anyway when signed out and just print "sign in with GitHub" into
@@ -39,7 +45,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Two new professional profiles**: `release-engineer` (release trains,
   changelog discipline, rollback-first deployments) and `privacy-engineer`
   (data minimization, PII flow verification, consent-before-collection).
-  Both ship as marketplace items with catalog entries.
+  Both ship as marketplace items with catalog entries and their first
+  knowledge references (`release-checklist.md`, `pii-handling-basics.md`),
+  which validate under PA037 and render as a `## Knowledge` section in the
+  compiled skill.
 
 ### Added — tests
 

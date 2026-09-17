@@ -39,6 +39,9 @@
     "privacy-threat-modeling",
     "data-flow-mapping"
   ],
+  "knowledge": [
+    "knowledge/pii-handling-basics.md"
+  ],
   "rules": [
     "Never log personal data, even at debug level.",
     "Never commit real user data into fixtures or seeds.",
@@ -47,6 +50,5 @@
   "standards": [
     "GDPR",
     "CCPA"
-  ],
-  "knowledge": []
+  ]
 }
