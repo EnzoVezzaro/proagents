@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — tests
+
+- **Session-command CLI test round** (`tests/cli/session.test.ts`, 24 e2e cases):
+  every agent-building command is now pinned to its documented contract in
+  `docs/cli/index.md` / `docs/cli/json.md` — `status`, `question` (+ `--all`),
+  `answer` (including the CONFLICTING_REQUIREMENTS contradiction flow),
+  `context` (+ `frameworks`), `spec`, `validate` (session, explicit file, and
+  the no-session profile fallback), `build` (+ `--agent`), `agents`, `inspect`,
+  `improve`/`self-improve`, `version`, and unknown-command handling.
+
+### Fixed — CLI (found by testing the commands against their documentation)
+
+- `validate <file>` now validates that file even when an agent-building session
+  exists — previously the session silently won, and without a session the file
+  was ignored entirely (the profile fallback ran instead), making the documented
+  `proagent validate arch.json` path unreachable. An explicit file always wins.
+- `validate` exits non-zero on validation errors in `--json` mode too — the
+  early JSON return skipped the exit-code setting, breaking the documented
+  "CI-friendly" contract.
+- `init --json` without an intent prints the documented
+  `{"status":"needs_input","error":"intent_required"}` on stdout — while keeping
+  the non-zero exit and stderr guidance (repo-derived proposals are still
+  auto-accepted, exactly as before).
+- `question --all` now actually returns/renders all open questions — the flag
+  the CLI itself suggests (`(+2 more — run proagent question --all)`) was parsed
+  but never used.
+
 ### Fixed — CI
 
 - jsdom pinned to 26: jsdom 30's dependency line (`html-encoding-sniffer` 5/6 →

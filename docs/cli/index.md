@@ -27,12 +27,12 @@ Full details: [Professional profiles](/guide/profiles).
 |---|---|
 | `init` | Start (or resume) an agent-building session |
 | `status` | Knowledge state, confidence and readiness |
-| `question` | Show the next high-value questions |
+| `question` | Show the next high-value questions (`--all` for every open question) |
 | `answer <id> "<text>"` | Answer a question and advance the interview |
 | `context` | Retrieve scoped context for a task |
 | `context frameworks` | List available context frameworks |
 | `spec` | Generate the agent architecture specification |
-| `validate` | Validate the architecture (non-zero exit on errors) |
+| `validate` | Validate the architecture (non-zero exit on errors) — or an explicit file: `validate arch.json` |
 | `build` | Generate deployable agent skills (`.agents/skills/<agent>/`) |
 | `agents` | List agents in the generated architecture |
 | `inspect` | Dump full session state (for agents/humans) |

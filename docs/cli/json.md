@@ -130,8 +130,11 @@ proagent init --intent "..." --non-interactive --json
 }
 ```
 
-Without `--intent` and without an existing session, init returns
-`{ "status": "needs_input", "error": "intent_required" }` instead of failing silently.
+Without `--intent` and without a repo-derived proposal, init prints
+`{ "status": "needs_input", "error": "intent_required" }` on stdout, prints usage
+guidance on stderr, and exits non-zero — a machine-readable failure, never a
+silent one. (Inside a recognized repo, the repo-derived intent is still
+auto-accepted, exactly as in the human workflow.)
 
 ## question / answer
 

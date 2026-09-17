@@ -198,6 +198,14 @@ async function resolveIntent(flags: Record<string, string | boolean>, args: stri
     console.error(`note: no --intent given; using repo-derived proposal: "${scan.proposedIntent}"`);
     return scan.proposedIntent;
   }
+  if (isJson(flags)) {
+    // Machine contract (docs/cli/json.md): a JSON caller gets a parseable
+    // needs_input instead of failing silently — but the exit stays non-zero
+    // and stderr carries the usage guidance, so scripts and humans both see
+    // why no session was started.
+    printJson({ status: "needs_input", error: "intent_required" });
+    fail(`No intent provided. Use: proagent init --intent "..."`);
+  }
   fail("No intent provided. Use: proagent init --intent \"...\"");
 }
 
@@ -253,13 +261,18 @@ async function cmdQuestion(flags: Record<string, string | boolean>): Promise<voi
   const orchestrator = new InterviewOrchestrator(new SessionStore());
   const questions = await orchestrator.nextQuestions();
   if (isJson(flags)) {
+    const list = flags.all === true ? questions : questions.slice(0, 1);
     return printJson({
       status: "needs_input",
-      questions: questions.map((q) => ({ id: q.id, question: q.question, reason: q.reason, impact: q.impact, topics: q.topics })),
+      questions: list.map((q) => ({ id: q.id, question: q.question, reason: q.reason, impact: q.impact, topics: q.topics })),
     });
   }
   if (questions.length === 0) {
     console.log("No open questions. Run `proagent spec` to generate the architecture.");
+    return;
+  }
+  if (flags.all === true) {
+    for (const [i, q] of questions.entries()) console.log(renderQuestion(q, i + 1, questions.length));
     return;
   }
   console.log(renderQuestion(questions[0]!, 1, questions.length));
@@ -338,17 +351,24 @@ async function cmdSpec(flags: Record<string, string | boolean>, args: string[]):
 async function cmdValidate(flags: Record<string, string | boolean>, args: string[]): Promise<void> {
   let arch: AgentArchitecture;
   const orchestrator = new InterviewOrchestrator(new SessionStore());
-  try {
-    arch = await orchestrator.spec();
-  } catch {
-    const file = args[0] ?? (typeof flags.file === "string" ? flags.file : null);
-    if (!file) fail("No session found. Run `proagent init` first, or pass an architecture file: proagent validate arch.json");
+  const file = args[0] ?? (typeof flags.file === "string" ? flags.file : null);
+  if (file) {
+    // An explicit file always wins over the session — silent fallback would
+    // validate the wrong artifact while reporting "ok".
     arch = JSON.parse(await fs.readFile(file, "utf8")) as AgentArchitecture;
+  } else {
+    try {
+      arch = await orchestrator.spec();
+    } catch {
+      fail("No session found. Run `proagent init` first, or pass an architecture file: proagent validate arch.json");
+    }
   }
   const report = validateArchitecture(arch);
+  // Non-zero on errors in BOTH modes — the JSON contract is CI-friendly
+  // (docs/cli/json.md: "validate exits non-zero when errors exist").
+  if (!report.ok) process.exitCode = 1;
   if (isJson(flags)) return printJson(report);
   console.log(renderValidation(report));
-  if (!report.ok) process.exitCode = 1;
 }
 
 async function cmdBuild(flags: Record<string, string | boolean>, args: string[]): Promise<void> {
@@ -599,6 +619,10 @@ async function main(): Promise<void> {
     case "spec": return cmdSpec(flags, args);
     case "validate":
       if (flags.profiles === true) return runValidateProfiles(isJson(flags));
+      // An explicit architecture file always wins (documented: `proagent
+      // validate arch.json` validates that file, session or not).
+      const vFile = args[0] ?? (typeof flags.file === "string" ? flags.file : null);
+      if (vFile) return cmdValidate(flags, args);
       // No agent-building session → fall back to profile validation, so the
       // equip quickstart (`detect → equip → validate`) works as documented.
       if (!(await new SessionStore().load())) return runValidateProfiles(isJson(flags));
