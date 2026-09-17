@@ -64,6 +64,28 @@ The schema is provider-agnostic and independent of any coding-agent harness.
 | `accessibility-engineer` | WCAG, assistive technology |
 | `systems-architect` | Boundaries, contracts, failure modes |
 
+## Marketplace profiles
+
+Beyond the built-ins, the Git-backed marketplace carries community profiles —
+browse them on the site's marketplace page, or with `proagent list`. Equip
+works identically on both origins (missing slugs are fetched from the
+catalog automatically):
+
+| Slug | Profession |
+|---|---|
+| `api-designer` | API contract design, versioning and deprecation strategy |
+| `code-reviewer` | Correctness analysis, API/schema review, test adequacy |
+| `data-engineer` | Batch and streaming pipelines, warehouse modeling |
+| `developer-experience-engineer` | Onboarding automation, local dev environments |
+| `legacy-modernizer` | Strangler-fig migrations, characterization testing |
+| `ml-engineer` | Training pipelines, evaluation methodology |
+| `mobile-engineer` | Offline-first architecture, performance budgets |
+| `platform-engineer` | Internal developer platforms, CI/CD architecture |
+| `privacy-engineer` | Data minimization, PII handling, privacy-by-design review |
+| `release-engineer` | Release trains, changelog discipline, rollback-first deployments |
+| `technical-writer` | API documentation, architecture explainers |
+| `test-automator` | Test pyramid architecture, flake diagnosis |
+
 ## Equip and compile
 
 ```bash

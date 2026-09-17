@@ -1,7 +1,7 @@
 {
   "name": "proagent",
-  "version": "0.7.0",
-  "description": "ProAgents \u2014 professional profiles for existing coding agents. Equip Claude Code, Codex, OpenCode and friends with professional expertise, methods, rules and verification. Also builds new specialized agent systems from incomplete ideas through progressive questioning.",
+  "version": "0.8.0",
+  "description": "ProAgents — professional profiles for existing coding agents. Equip Claude Code, Codex, OpenCode and friends with professional expertise, methods, rules and verification. Also builds new specialized agent systems from incomplete ideas through progressive questioning.",
   "type": "module",
   "license": "MIT",
   "author": "ProAgents contributors",

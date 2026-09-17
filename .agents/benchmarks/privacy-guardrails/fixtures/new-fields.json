@@ -1,0 +1,7 @@
+{
+  "migration": "0042_add_profile_fields",
+  "fields": [
+    { "name": "device_id", "column": "users.device_id", "type": "varchar(64)", "identifies_person": true },
+    { "name": "birth_date", "column": "users.birth_date", "type": "date", "identifies_person": true }
+  ]
+}

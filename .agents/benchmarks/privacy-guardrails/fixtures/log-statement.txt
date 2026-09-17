@@ -1,0 +1,2 @@
+// debug log captured in staging
+logger.debug(`login attempt: user=${user.email} ip=${req.ip} at=${new Date().toISOString()}`);
