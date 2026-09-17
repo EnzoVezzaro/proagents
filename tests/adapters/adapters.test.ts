@@ -150,9 +150,13 @@ describe("profile compilation (ADAPT-COMPILE)", () => {
     const [entry] = await resolveProfiles(["security-engineer"]);
     if (!entry) throw new Error("profile not found");
     // Ship a knowledge reference + file with the profile, like marketplace items do.
+    // The fixture file lands beside the shipped manifest (its source dir), so it
+    // must be removed afterwards — tests never leave residue in profiles/.
     entry.manifest.knowledge = ["knowledge/brief.md"];
     await fs.mkdir(path.join(entry.dir, "knowledge"), { recursive: true });
-    await fs.writeFile(path.join(entry.dir, "knowledge", "brief.md"), "# Brief\n", "utf8");
+    const fixture = path.join(entry.dir, "knowledge", "brief.md");
+    await fs.writeFile(fixture, "# Brief\n", "utf8");
+    try {
     const { effective } = composeProfiles([entry.manifest]);
     const detected = await detectHarnesses(root, {});
     const result = await compileForHarness(effective, entry.manifest, detected.primary, root, {
@@ -172,6 +176,9 @@ describe("profile compilation (ADAPT-COMPILE)", () => {
       knowledgeDirs: [entry.dir],
     });
     expect(result2.limitations.join(" ")).toContain("knowledge/absent.md");
+    } finally {
+      await fs.rm(path.join(entry.dir, "knowledge"), { recursive: true, force: true });
+    }
   });
 
   it("ADAPT-COMPILE-010: artifact contract per harness (sweep)", async () => {
