@@ -8,7 +8,6 @@ import { ProfileBuilderPage } from "./pages/ProfileBuilderPage.js";
 import { PreviewPage } from "./pages/PreviewPage.js";
 import { SettingsModal } from "./SettingsModal.js";
 import { loadSettings, saveSettings, githubTokenNeedsRefresh, githubRefreshExpired, type AppSettings } from "../settings.js";
-import { DOCS_URL } from "../links.js";
 import { getAuthenticatedUser, refreshAccessToken } from "../github.js";
 
 export interface AppCtx {
@@ -133,20 +132,6 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
     page = <CatalogPage ctx={ctx} />;
   }
 
-  const nav = (to: string, label: string) => (
-    <a
-      href={`#/${to}`}
-      aria-current={route === to || route.startsWith(to + "/") ? "page" : undefined}
-      style={{
-        color: route === to || route.startsWith(to + "/") ? "var(--vp-c-brand-1)" : "var(--vp-c-text-2)",
-        textDecoration: "none",
-        fontWeight: route === to || route.startsWith(to + "/") ? 700 : 400,
-      }}
-    >
-      {label}
-    </a>
-  );
-
   return (
     <div
       className="pa-app"
@@ -156,43 +141,31 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
         fontFamily: "var(--vp-font-family-base)",
       }}
     >
-      {/* App rail — the VitePress navbar stays above (with the site logo);
-          this rail is the app's own sub-navigation only, like the docs'
-          local nav. */}
+      {/* App rail — the VitePress navbar stays above (with the site logo and
+          the Docs link); this rail only carries the account actions. The
+          catalog is the landing view; detail pages link back to it. */}
       <div
         style={{
           display: "flex",
           alignItems: "center",
-          gap: 20,
-          flexWrap: "wrap",
+          justifyContent: "flex-end",
+          gap: 12,
           padding: "10px 2px",
           borderBottom: "1px solid var(--vp-c-divider)",
         }}
       >
-        <nav aria-label="Marketplace" style={{ display: "flex", gap: 16, fontSize: 14 }}>
-          {nav("catalog", "Catalog")}
-          {nav("dashboard", "Dashboard")}
-          <a
-            href={DOCS_URL}
-            style={{ color: "var(--vp-c-text-2)", textDecoration: "none" }}
-          >
-            Docs
-          </a>
-        </nav>
-        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12 }}>
-          <a
-            href="https://github.com/sponsors/EnzoVezzaro"
-            target="_blank"
-            rel="noreferrer"
-            className="pa-app-chip"
-            style={{ textDecoration: "none" }}
-          >
-            Donate
-          </a>
-          <button onClick={openSettings} className="pa-app-chip" style={{ cursor: "pointer" }}>
-            Settings
-          </button>
-        </div>
+        <a
+          href="https://github.com/sponsors/EnzoVezzaro"
+          target="_blank"
+          rel="noreferrer"
+          className="pa-app-chip"
+          style={{ textDecoration: "none" }}
+        >
+          Donate
+        </a>
+        <button onClick={openSettings} className="pa-app-chip" style={{ cursor: "pointer" }}>
+          Settings
+        </button>
       </div>
 
       <main style={{ padding: "32px 0 24px" }}>{page}</main>
