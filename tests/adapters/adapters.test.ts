@@ -126,6 +126,25 @@ describe("profile compilation (ADAPT-COMPILE)", () => {
     expect(result.limitations.join(" ")).toMatch(/skills directory|rule enforcement/i);
   });
 
+  it("ADAPT-COMPILE-008: opencode enforcement lands in opencode.json, not .claude/settings.json", async () => {
+    const root = await makeRepo({ "AGENTS.md": "# App\n", "opencode.json": "{\"$schema\":\"https://opencode.ai/config.json\",\"permission\":{\"bash\":{\"*\":\"allow\"}}}" });
+    const { effective, manifest } = await loadEffective("security-engineer");
+    const detected = await detectHarnesses(root, {});
+    const opencode = detected.all.find((h) => h.id === "opencode");
+    expect(opencode).toBeDefined();
+    const result = await compileForHarness(effective, manifest, opencode!, root);
+    expect(result.files.some((f) => f.mechanism === "rule-enforcement" && f.path === "opencode.json")).toBe(true);
+    await expect(fs.access(path.join(root, ".claude", "settings.json"))).rejects.toThrow();
+
+    // Deny rules are appended into the existing permission.bash map; the
+    // pre-existing catch-all allow survives (last matching rule wins).
+    const config = JSON.parse(await fs.readFile(path.join(root, "opencode.json"), "utf8"));
+    expect(config.permission.bash["*"]).toBe("allow");
+    expect(config.permission.bash["git push --force*"]).toBe("deny");
+    expect(config.permission.bash["rm -rf /*"]).toBe("deny");
+    expect(config.$schema).toBe("https://opencode.ai/config.json");
+  });
+
   it("ADAPT-COMPILE-005: profile MCP servers merge into .mcp.json; packages surface as limitations", async () => {
     const root = await makeRepo({ "CLAUDE.md": "# App\n", ".mcp.json": "{\"mcpServers\":{\"existing\":{\"command\":\"keep\"}}}" });
     const { effective, manifest } = await loadEffective("security-engineer");

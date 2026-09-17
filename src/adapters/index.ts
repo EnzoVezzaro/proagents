@@ -379,7 +379,32 @@ export async function compileForHarness(
   }
 
   // 3. Rule enforcement.
-  if (caps.ruleEnforcement === "native") {
+  if (caps.ruleEnforcement === "native" && target.id === "opencode") {
+    // OpenCode native enforcement: permission deny rules in opencode.json.
+    // (Claude-style .claude/settings.json hooks are never read by OpenCode.)
+    const hooksPath = "opencode.json";
+    const abs = path.join(root, hooksPath);
+    let settings: Record<string, unknown> = {};
+    try {
+      settings = JSON.parse(await fs.readFile(abs, "utf8")) as Record<string, unknown>;
+    } catch {
+      // New config file.
+    }
+    const perm = (settings.permission ?? {}) as Record<string, unknown>;
+    const bash = (perm.bash ?? {}) as Record<string, unknown>;
+    // Last matching rule wins in OpenCode; deny rules are appended so they
+    // override an existing catch-all allow.
+    settings.permission = {
+      ...perm,
+      bash: {
+        ...bash,
+        "git push --force*": "deny",
+        "rm -rf /*": "deny",
+      },
+    };
+    await fs.writeFile(abs, JSON.stringify(settings, null, 2) + "\n", "utf8");
+    files.push({ path: hooksPath, mechanism: "rule-enforcement" });
+  } else if (caps.ruleEnforcement === "native") {
     // Claude Code hooks: deny destructive git ops and secret reads at the
     // boundary. We write a settings snippet; the harness enforces it.
     const hooksPath = path.join(".claude", "settings.json");

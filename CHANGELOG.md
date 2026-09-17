@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed — CLI
 
+- **OpenCode rule enforcement writes `opencode.json`, not `.claude/settings.json`**
+  (found by a user equip on OpenCode): the "native" enforcement branch always
+  emitted Claude Code hook settings regardless of target, so OpenCode equips
+  produced a file OpenCode never reads. OpenCode's native enforcement is
+  `permission.bash` deny rules in `opencode.json`; deny rules now append there
+  (preserving existing config), and Claude Code keeps its hooks.
+
 - **PA025 no longer false-positives on prose verification outcomes** (found by a
   user equip of `developer-experience-engineer`): the capability-gap check
   assumed every `verification.required` entry must name a tool capability, so
