@@ -1018,9 +1018,10 @@ npm run site:build
 ├── profiles/             # built-in professional profiles
 ├── .marketplace/         # Git-backed catalog: profiles & crews
 ├── web/                  # marketplace app source (mounted as a client-only
-│   │                     #   island on the VitePress home page)
-├── docs/                 # the site — one VitePress project: app island at
-│   │                     #   the root, docs pages under guide/ cli/ context/
+│   │                     #   island on the /marketplace page)
+├── docs/                 # the site — one VitePress project: home at the
+│   │                     #   root, marketplace island under /marketplace,
+│   │                     #   docs pages under guide/ cli/ context/
 ├── scripts/              # site:build assembly + unified dev runner
 └── tests/                # unit, integration, e2e
 ```

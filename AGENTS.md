@@ -30,7 +30,7 @@ not a prompt generator.
    boundaries and validation rules, not prose. Profile rules compile into enforcement
    where the harness supports it; where it does not, the limitation is reported.
    (Site note: the app (`web/src`) and the docs (`docs/`) are ONE VitePress
-   project — the app mounts as a client-only island on the home page; one
+   project — the app mounts as a client-only island on /marketplace; one
    package.json, one lockfile, one test runner; `scripts/assemble-site.mjs`
    is the single source of the Pages artifact layout.)
 7. **Canonical profiles are portable.** `profiles/*.json` and the profile schema never

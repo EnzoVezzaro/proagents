@@ -29,7 +29,8 @@ function mustExist(dir, label) {
 }
 
 mustExist(DOCS_DIST, "docs build output");
-mustExist(join(DOCS_DIST, "index.html"), "app island entry (docs/index.md)");
+mustExist(join(DOCS_DIST, "index.html"), "home page (docs/index.md)");
+mustExist(join(DOCS_DIST, "marketplace.html"), "marketplace island page (docs/marketplace.md)");
 mustExist(join(DOCS_DIST, "404.html"), "branded 404 (docs/public/404.html)");
 mustExist(join(DOCS_DIST, "app/index.html"), "/app/ shim (docs/public/app/index.html)");
 
@@ -37,18 +38,19 @@ rmSync(SITE, { recursive: true, force: true });
 mkdirSync(SITE, { recursive: true });
 
 // The whole VitePress output IS the site:
-//   index.html   → hero + features + the marketplace island
-//   guide/ cli/ …→ the docs pages
-//   404.html     → branded catch-all + stale-URL redirects (from public/)
-//   app/         → old-URL redirect shim (from public/)
-//   assets/      → one bundle (docs + app code together)
+//   index.html      → hero + features
+//   marketplace.html→ the marketplace island page
+//   guide/ cli/ …   → the docs pages
+//   404.html        → branded catch-all + stale-URL redirects (from public/)
+//   app/            → old-URL redirect shim → /marketplace (from public/)
+//   assets/         → one bundle (docs + app code together)
 cpSync(DOCS_DIST, SITE, { recursive: true });
 
-// Git-backed catalog data → served at /proagents/docs/.marketplace/*.
+// Git-backed catalog data → served at /proagents/.marketplace/*.
 mkdirSync(join(SITE, ".marketplace", "items"), { recursive: true });
 cpSync(".marketplace/catalog.json", join(SITE, ".marketplace/catalog.json"));
 for (const item of existsSync(".marketplace/items") ? readdirSync(".marketplace/items") : []) {
   cpSync(join(".marketplace/items", item), join(SITE, ".marketplace/items", item));
 }
 
-console.log(`assemble-site: wrote ${resolve(SITE)} (VitePress site + island root + catalog)`);
+console.log(`assemble-site: wrote ${resolve(SITE)} (VitePress site + marketplace page + catalog)`);

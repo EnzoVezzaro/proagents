@@ -85,7 +85,7 @@ export default defineConfig({
     siteTitle: false,
     nav: [
       { text: "Docs", link: "/guide/what-is-proagents", activeMatch: "/guide/" },
-      { text: "Marketplace", link: "/", activeMatch: /^\/$/ },
+      { text: "Marketplace", link: "/marketplace", activeMatch: "/marketplace" },
       { text: "CLI", link: "/cli/", activeMatch: "/cli/" },
       {
         text: "Context",

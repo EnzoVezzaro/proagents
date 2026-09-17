@@ -6,7 +6,7 @@ sidebar: false
 hero:
   name: "ProAgents"
   text: "Professional profiles for coding agents"
-  tagline: Equip the coding agent you already use with professional expertise, methods, skills, rules and verification — a portable Professional Agent Profile, compiled to your harness. Not another harness. The marketplace below runs entirely in your browser.
+  tagline: Equip the coding agent you already use with professional expertise, methods, skills, rules and verification — a portable Professional Agent Profile, compiled to your harness. Not another harness.
   actions:
     - theme: brand
       text: Get started
@@ -14,6 +14,9 @@ hero:
     - theme: alt
       text: What is ProAgents?
       link: /guide/what-is-proagents
+    - theme: alt
+      text: Browse the marketplace
+      link: /marketplace
 
 features:
   - title: Professional Agent Profiles
@@ -42,18 +45,3 @@ features:
     linkText: Progressive agent creation
 ---
 
-## Marketplace
-
-Browse, preview and equip professional profiles and crews without leaving the site — everything below runs in your browser.
-
-<ClientOnly>
-  <AppIsland />
-</ClientOnly>
-
-<style>
-/* The island sits in the doc flow after the Marketplace section; keep the
-   seam tight between the section lede and the app rail. */
-.VPHome .pa-app {
-  margin-top: 8px;
-}
-</style>

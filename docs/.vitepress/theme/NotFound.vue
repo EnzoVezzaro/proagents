@@ -23,7 +23,7 @@ onMounted(() => {
       The page you asked for does not exist — but the marketplace and the docs do.
     </p>
     <div class="pa-404-actions">
-      <a class="pa-404-cta" href="/proagents/">Open the marketplace</a>
+      <a class="pa-404-cta" href="/proagents/marketplace">Open the marketplace</a>
       <a class="pa-404-alt" href="/proagents/guide/getting-started">Read the docs</a>
     </div>
   </div>
