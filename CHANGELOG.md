@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — marketplace
+
+- **Install skills from any GitHub repo via the marketplace search**: paste a repo URL
+  (or `owner/repo`, optionally with a `#anchor` subpath hint) into the marketplace search
+  and press Enter — the marketplace discovers the repo's agent skills (`**/SKILL.md`),
+  previews names + descriptions fetched client-side from the GitHub API, and hands out
+  the matching `npx skills add owner/repo --skill <name>` install command per skill.
+  Previously a pasted repo URL matched nothing and Enter was a dead end.
+
 ## [0.8.1] - 2026-09-17
 
 ### Fixed — equip completeness

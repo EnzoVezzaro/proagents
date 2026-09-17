@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import type { AppCtx } from "../AppShell.js";
 import { ItemCard, EmptyState, ErrorNote } from "../cards.js";
 import type { MarketplaceCatalog } from "../../types.js";
+import { looksLikeRepoRef } from "../../githubSkills.js";
+import { GitHubSkillsPanel } from "./GitHubSkillsPanel.js";
 
 /** Path of the Git-backed catalog relative to the app (site root). */
 import { CATALOG_URL } from "../../catalog.js";
@@ -11,6 +13,9 @@ export function CatalogPage(_props: { ctx: AppCtx }): React.JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [tag, setTag] = useState<string | null>(null);
+  // A pasted GitHub skills-repo URL opens the import panel (Enter or debounce).
+  const [importRepo, setImportRepo] = useState<string | null>(null);
+  const repoish = looksLikeRepoRef(query);
 
   useEffect(() => {
     let cancelled = false;
@@ -70,10 +75,25 @@ export function CatalogPage(_props: { ctx: AppCtx }): React.JSX.Element {
       <div style={{ display: "flex", gap: 10, margin: "22px 0 6px", flexWrap: "wrap", alignItems: "center" }}>
         <input
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search profiles, crews, tags…"
-          aria-label="Search the marketplace"
-          style={{ flex: 1, minWidth: 240, background: "var(--ink-2)", color: "var(--cream)", border: "1px solid var(--line)", borderRadius: 10, padding: "10px 14px", fontSize: 14 }}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            if (!looksLikeRepoRef(e.target.value)) setImportRepo(null);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && looksLikeRepoRef(query)) setImportRepo(query);
+          }}
+          placeholder="Search profiles, crews, tags — or paste a GitHub skills repo URL"
+          aria-label="Search the marketplace or paste a GitHub skills repo URL"
+          style={{
+            flex: 1,
+            minWidth: 240,
+            background: "var(--ink-2)",
+            color: "var(--cream)",
+            border: `1px solid ${repoish ? "var(--cyan)" : "var(--line)"}`,
+            borderRadius: 10,
+            padding: "10px 14px",
+            fontSize: 14,
+          }}
         />
         <a
           href="#/build-profile"
@@ -95,6 +115,25 @@ export function CatalogPage(_props: { ctx: AppCtx }): React.JSX.Element {
           <TagChip key={t} label={`${t} (${count})`} active={tag === t} onClick={() => setTag(t)} />
         ))}
       </div>
+
+      {repoish && importRepo ? (
+        <GitHubSkillsPanel input={importRepo} onDone={() => setImportRepo(null)} />
+      ) : repoish ? (
+        <div
+          style={{
+            background: "var(--ink-2)",
+            border: "1px solid var(--cyan)",
+            borderRadius: 12,
+            padding: "12px 16px",
+            margin: "14px 0",
+            color: "var(--cream-dim)",
+            fontSize: 13,
+          }}
+        >
+          Looks like a GitHub skills repo — press <strong style={{ color: "var(--cream)" }}>Enter</strong> to preview it,
+          or filter the catalog by clearing this search.
+        </div>
+      ) : null}
 
       {catalog === null ? (
         <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))" }} aria-label="Loading">
