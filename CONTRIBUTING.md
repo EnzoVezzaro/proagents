@@ -15,9 +15,9 @@ npm run build && npm test
 - Node.js 20+
 - TypeScript strict mode — `npm run typecheck` must pass
 - Tests: `npm test` (vitest). New features need tests.
-- Docs: part of the merged site — `npm run dev` runs the core watcher, the
-  SPA and docs together; `npm run docs:dev` runs docs alone; `npm run
-  site:build` must pass
+- Docs: part of the merged site — `npm run dev` runs the core watcher and the
+  whole VitePress site (app island + docs) on :5173; `npm run site:build`
+  must pass
 
 ## Project rules
 
@@ -56,8 +56,10 @@ string. Add tests with a minimal broken architecture.
 
 ### Docs
 
-Pages live in `web/docs/` (VitePress). Keep the brand palette (navy/blue/violet,
-cyan as the signal color) and run `npm run site:build` before opening a PR.
+The site is one VitePress project in `docs/` — the marketplace app mounts as
+a client-only island (`web/src/ui`) on the home page. Keep the brand palette
+(navy/blue/violet, cyan as the signal color) and run `npm run site:build`
+before opening a PR.
 
 ## Commit style
 

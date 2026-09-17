@@ -2,15 +2,15 @@
  * Catalog URLs — derived from Vite's BASE_URL instead of fragile
  * window.location relative-path math.
  *
- * The SPA is the Pages site root, so the Git-backed catalog lives beside it:
+ * The app is mounted inside the single VitePress site (base /proagents/), and
+ * the Git-backed catalog is copied beside the emitted index.html:
  *
- *   prod: BASE_URL "/proagents/"    →  /proagents/.marketplace/…
- *   dev:  BASE_URL "/"              →  /.marketplace/…   (vite dev middleware)
+ *   prod: BASE_URL "/proagents/"  →  /proagents/.marketplace/…
+ *   dev:  same base, served by vitepress dev from docs/public
+ *   test: BASE_URL "/"            →  /.marketplace/… (jsdom origin)
  */
 
-const APP_BASE = new URL(import.meta.env.BASE_URL, window.location.href).href;
-/** Site root that serves the dist: the app base itself. */
-const SITE_ROOT = APP_BASE;
+const SITE_ROOT = new URL(import.meta.env.BASE_URL, window.location.href).href;
 
 /** Full URL of a catalog file: "catalog.json" or "items/<id>.json". */
 export function catalogUrl(file: string): string {

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#000024" />
+    <title>Page not found — ProAgents</title>
+    <link rel="icon" type="image/png" href="/proagents/favicon.png" />
+    <style>
+      :root {
+        --ink: #000024;
+        --cream: #f4f7ff;
+        --cream-dim: #9aa6cf;
+        --line: #17245c;
+        --cyan: #0ccccc;
+        --grad: linear-gradient(120deg, #0048e4 0%, #3b2fe0 55%, #5424e4 100%);
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; background: var(--ink); color: var(--cream); }
+      body {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        padding: 24px;
+      }
+      main {
+        max-width: 560px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 40px 44px;
+        background: #040a33;
+      }
+      h1 { font-size: 28px; margin: 22px 0 10px; letter-spacing: -0.02em; }
+      p { margin: 0 0 8px; color: var(--cream-dim); line-height: 1.55; }
+      p code { color: var(--cream); font-size: 0.92em; }
+      .actions { display: flex; gap: 12px; margin-top: 26px; flex-wrap: wrap; }
+      .btn {
+        display: inline-block;
+        padding: 10px 18px;
+        border-radius: 9px;
+        background: var(--grad);
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 14px;
+        text-decoration: none;
+      }
+      .btn.ghost {
+        background: transparent;
+        border: 1px solid var(--line);
+        color: var(--cream);
+        font-weight: 500;
+      }
+      .btn:hover { filter: brightness(1.12); }
+      :focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+      @media (max-width: 560px) { main { padding: 28px 24px; } }
+    </style>
+    <script>
+      (function () {
+        // Old /proagents/docs/… URLs (the pre-merge docs location) recover
+        // into the merged site — every page name still exists at the root.
+        var m = location.pathname.match(/^\/proagents\/docs\/(.*)$/);
+        if (m) location.replace("/proagents/" + m[1]);
+      })();
+    </script>
+  </head>
+  <body>
+    <main>
+      <img src="/proagents/logo.png" alt="ProAgents" width="132" height="42" />
+      <h1>Page not found</h1>
+      <p>Old <code>/proagents/docs/…</code> links redirect into the merged site automatically; everything else was moved or never existed.</p>
+      <div class="actions">
+        <a class="btn" href="/proagents/">Open the marketplace</a>
+        <a class="btn ghost" href="/proagents/guide/getting-started">Read the docs</a>
+      </div>
+    </main>
+  </body>
+</html>

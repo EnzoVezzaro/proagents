@@ -1,4 +1,4 @@
-name: Deploy site (marketplace root + docs) to GitHub Pages
+name: Deploy the VitePress site (docs + marketplace island) to GitHub Pages
 
 on:
   push:
@@ -25,9 +25,9 @@ jobs:
           cache: npm
       - run: npm ci
 
-      # One project, one build: SPA at the site root, docs under /docs/,
-      # catalog + redirect shim + branded 404 assembled by the same script
-      # local builds use (scripts/assemble-site.mjs).
+      # One project, one build: a single VitePress site whose home page mounts
+      # the marketplace island. Catalog + redirect shim + branded 404 are
+      # assembled by the same script local builds use.
       - run: npm run site:build
 
       - uses: actions/configure-pages@v5

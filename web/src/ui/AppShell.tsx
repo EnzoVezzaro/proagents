@@ -8,7 +8,7 @@ import { ProfileBuilderPage } from "./pages/ProfileBuilderPage.js";
 import { PreviewPage } from "./pages/PreviewPage.js";
 import { SettingsModal } from "./SettingsModal.js";
 import { loadSettings, saveSettings, githubTokenNeedsRefresh, githubRefreshExpired, type AppSettings } from "../settings.js";
-import { DOCS_URL, SOURCE_URL } from "../links.js";
+import { DOCS_URL, SOURCE_URL, docsUrl, assetUrl } from "../links.js";
 import { getAuthenticatedUser, refreshAccessToken } from "../github.js";
 
 export interface AppCtx {
@@ -16,11 +16,24 @@ export interface AppCtx {
   navigate: (to: string) => void;
 }
 
-/** Display type (DESIGN.md): Bricolage Grotesque, tight tracking. Spread onto
- * hero names and page titles; headline text renders solid — the gradient is
- * reserved for CTA fills and the logo mark (hallmark "no gradient-clipped
- * text" gate). */
-export const display = { fontFamily: "var(--font-display)", letterSpacing: "-0.02em" } as const;
+/**
+ * The marketplace app runs as a client-only island inside VitePress: VitePress
+ * owns the document chrome (navbar, dark mode), this shell owns the app
+ * surface below it. Routing is hash-based — VitePress owns real URLs — so
+ * the app works under any base path and never fights the host router.
+ */
+export function AppIsland(): React.JSX.Element {
+  const [route, setRoute] = useState(() => window.location.hash.replace(/^#\/?/, "") || "catalog");
+  useEffect(() => {
+    const onHash = () => setRoute(window.location.hash.replace(/^#\/?/, "") || "catalog");
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+  const navigate = useCallback((to: string) => {
+    window.location.hash = `#/${to}`;
+  }, []);
+  return <AppShell route={route} navigate={navigate} />;
+}
 
 export function AppShell(props: { route: string; navigate: (to: string) => void }): React.JSX.Element {
   const { route, navigate } = props;
@@ -125,7 +138,7 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
       href={`#/${to}`}
       aria-current={route === to || route.startsWith(to + "/") ? "page" : undefined}
       style={{
-        color: route === to || route.startsWith(to + "/") ? "var(--cyan)" : "var(--cream-dim)",
+        color: route === to || route.startsWith(to + "/") ? "var(--vp-c-brand-1)" : "var(--vp-c-text-2)",
         textDecoration: "none",
         fontWeight: route === to || route.startsWith(to + "/") ? 700 : 400,
       }}
@@ -135,74 +148,85 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
   );
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--ink)", color: "var(--cream)", fontFamily: "var(--font-body)" }}>
-      <header
+    <div
+      className="pa-app"
+      style={{
+        minHeight: "60vh",
+        color: "var(--vp-c-text-1)",
+        fontFamily: "var(--vp-font-family-base)",
+      }}
+    >
+      {/* App rail — the VitePress navbar stays above; this is the app's own
+          sub-navigation (same pattern as the docs' local nav). */}
+      <div
         style={{
           display: "flex",
           alignItems: "center",
-          gap: 24,
-          padding: "14px 28px",
-          borderBottom: "1px solid transparent",
-          background: "rgba(0, 0, 36, 0.72)",
-          backdropFilter: "blur(14px)",
-          WebkitBackdropFilter: "blur(14px)",
-          position: "sticky",
-          top: 0,
-          zIndex: 10,
-          boxShadow: "inset 0 -1px 0 var(--line), 0 8px 24px rgba(0, 0, 12, 0.35)",
+          gap: 20,
+          flexWrap: "wrap",
+          padding: "10px 14px",
+          borderBottom: "1px solid var(--vp-c-divider)",
+          background: "var(--vp-c-bg-alt)",
         }}
       >
-        <a href="#/catalog" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", color: "var(--cream)" }}>
-          <img src={`${import.meta.env.BASE_URL}logo.png`} alt="ProAgents" width={88} height={28} style={{ display: "block" }} />
+        <a href="#/catalog" style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
+          <img
+            src={assetUrl("logo-dark.png")}
+            alt="ProAgents"
+            width={88}
+            height={28}
+            className="pa-app-logo"
+            style={{ display: "block" }}
+          />
         </a>
-        <nav aria-label="Primary" style={{ display: "flex", gap: 18, fontSize: 14 }}>
+        <nav aria-label="Marketplace" style={{ display: "flex", gap: 16, fontSize: 14 }}>
           {nav("catalog", "Catalog")}
           {nav("dashboard", "Dashboard")}
           <a
             href={DOCS_URL}
-            target="_blank"
-            rel="noreferrer"
-            style={{ color: "var(--cream-dim)", textDecoration: "none" }}
+            style={{ color: "var(--vp-c-text-2)", textDecoration: "none" }}
           >
             Docs
           </a>
         </nav>
-        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 14 }}>
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12 }}>
           <a
             href="https://github.com/sponsors/EnzoVezzaro"
             target="_blank"
             rel="noreferrer"
-            style={{ color: "var(--cream)", textDecoration: "none", border: "1px solid var(--line)", borderRadius: 8, padding: "6px 12px", fontSize: 13 }}
+            className="pa-app-chip"
+            style={{ textDecoration: "none" }}
           >
-            <span style={{ color: "var(--cyan)", fontWeight: 700 }}>Donate</span>
+            Donate
           </a>
-          <button
-            onClick={openSettings}
-            style={{
-              background: "transparent",
-              color: "var(--cream-dim)",
-              border: "1px solid var(--line)",
-              borderRadius: 8,
-              padding: "6px 12px",
-              cursor: "pointer",
-              fontSize: 13,
-            }}
-          >
+          <button onClick={openSettings} className="pa-app-chip" style={{ cursor: "pointer" }}>
             Settings
           </button>
         </div>
-      </header>
+      </div>
+
       <main style={{ maxWidth: 1180, margin: "0 auto", padding: "32px 24px 88px" }}>{page}</main>
-      <footer style={{ borderTop: "1px solid var(--line)", padding: "22px 28px", color: "var(--cream-dim)", fontSize: 12, textAlign: "center", background: "rgba(0, 0, 24, 0.5)" }}>
-        ProAgents Marketplace · fully open source (MIT) · runs entirely in your browser on GitHub Pages ·{" "}
-        <a href={DOCS_URL} style={{ color: "var(--cyan)", textDecoration: "none" }}>
+      <footer
+        style={{
+          borderTop: "1px solid var(--vp-c-divider)",
+          padding: "22px 28px",
+          color: "var(--vp-c-text-2)",
+          fontSize: 12,
+          textAlign: "center",
+        }}
+      >
+        ProAgents Marketplace · fully open source (MIT) · runs entirely in your browser ·{" "}
+        <a href={docsUrl("guide/marketplace")} style={{ color: "var(--vp-c-brand-1)", textDecoration: "none" }}>
           docs
-        </a>{" "}·{" "}
-        <a href={SOURCE_URL} style={{ color: "var(--cyan)", textDecoration: "none" }}>
+        </a>{" "}
+        ·{" "}
+        <a href={SOURCE_URL} style={{ color: "var(--vp-c-brand-1)", textDecoration: "none" }}>
           source
-        </a>{" "}·{" "}
-        <a href="https://github.com/sponsors/EnzoVezzaro" style={{ color: "var(--cyan)", textDecoration: "none" }}>Sponsor</a>{" "}·{" "}
-        <a href="https://ko-fi.com/enzojuniorvezzaro" style={{ color: "var(--cyan)", textDecoration: "none" }}>Ko-fi</a>
+        </a>{" "}
+        ·{" "}
+        <a href="https://github.com/sponsors/EnzoVezzaro" style={{ color: "var(--vp-c-brand-1)", textDecoration: "none" }}>
+          Sponsor
+        </a>
       </footer>
       {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} user={user} />}
     </div>

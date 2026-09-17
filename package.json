@@ -1,7 +1,7 @@
 {
   "name": "proagent",
   "version": "0.6.0",
-  "description": "ProAgents — professional profiles for existing coding agents. Equip Claude Code, Codex, OpenCode and friends with professional expertise, methods, rules and verification. Also builds new specialized agent systems from incomplete ideas through progressive questioning.",
+  "description": "ProAgents \u2014 professional profiles for existing coding agents. Equip Claude Code, Codex, OpenCode and friends with professional expertise, methods, rules and verification. Also builds new specialized agent systems from incomplete ideas through progressive questioning.",
   "type": "module",
   "license": "MIT",
   "author": "ProAgents contributors",
@@ -68,13 +68,11 @@
     "test": "npm run build --silent && vitest run",
     "test:watch": "vitest",
     "cli": "node ./dist/cli/index.js",
-    "app:dev": "vite web",
-    "app:build": "vite build web",
     "app:typecheck": "tsc -p web/tsconfig.json --noEmit",
-    "docs:dev": "vitepress dev web/docs --port 4173",
-    "docs:build": "vitepress build web/docs",
-    "docs:preview": "vitepress preview web/docs --port 4173",
-    "site:build": "npm run app:build && npm run docs:build && node scripts/assemble-site.mjs",
+    "docs:dev": "vitepress dev docs --port 5173",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs --port 5173",
+    "site:build": "npm run docs:build && node scripts/assemble-site.mjs",
     "gh:token": "node scripts/github-device-token.mjs"
   },
   "dependencies": {
@@ -83,7 +81,8 @@
     "@fontsource-variable/jetbrains-mono": "^5.3.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "yaml": "^2.6.0"
+    "yaml": "^2.6.0",
+    "vue": "^3.5.13"
   },
   "optionalDependencies": {
     "acc-code-context": "^0.6.9"

@@ -1,18 +1,28 @@
 /**
- * Cross-surface links for the marketplace SPA.
+ * Cross-surface links for the marketplace app — which lives INSIDE the
+ * VitePress site as a client-only island. "Docs" is no longer another origin:
+ * the app navigates between app routes and doc pages with plain relative
+ * hrefs resolved against the shared base (/proagents/ in production, the
+ * vitepress dev server root in development).
  *
- * DOCS_URL is environment-aware: while developing (`npm run dev` runs the
- * core watcher plus the SPA on :5173 and the VitePress docs on :4173 in one
- * terminal), the nav should hit the local docs at http://localhost:4173/proagents/docs/; the
- * production bundle points at the deployed docs site. VITE_DOCS_URL
- * overrides both — useful for forks that deploy their own docs (see
- * .env.example).
+ * VITE_DOCS_URL, if set, overrides the doc route prefix (forks serving docs
+ * elsewhere) — see .env.example.
  */
-const PROD_DOCS_URL = "https://enzovezzaro.github.io/proagents/docs/";
-const DEV_DOCS_URL = "http://localhost:4173/proagents/docs/";
 
-export const DOCS_URL: string =
-  (import.meta.env.VITE_DOCS_URL as string | undefined)?.trim() ||
-  (import.meta.env.DEV ? DEV_DOCS_URL : PROD_DOCS_URL);
+/** The docs route prefix — the site base itself in the merged site. */
+export const DOCS_BASE: string =
+  (import.meta.env.VITE_DOCS_URL as string | undefined)?.trim().replace(/\/+$/, "") ||
+  import.meta.env.BASE_URL.replace(/\/+$/, "");
 
+/** Doc pages (relative to the site base). */
+export const docsUrl = (route: string): string => `${DOCS_BASE}/${route.replace(/^\/+/, "")}`;
+
+/** Home doc page, for the nav "Docs" link. */
+export const DOCS_URL = docsUrl("guide/what-is-proagents");
+
+/** The repo. */
 export const SOURCE_URL = "https://github.com/EnzoVezzaro/proagents";
+
+/** Site-base-resolved asset path (logo lockup etc.). */
+export const assetUrl = (name: string): string =>
+  `${import.meta.env.BASE_URL.replace(/\/+$/, "")}/${name.replace(/^\/+/, "")}`;

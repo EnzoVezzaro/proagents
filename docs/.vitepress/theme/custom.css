@@ -43,7 +43,7 @@
   --vp-c-brand-3: var(--pa-blue);
   --vp-c-brand-soft: rgba(0, 72, 228, 0.12);
 
-  /* Same stack as the marketplace SPA (web/src/ui/styles.css) — one product,
+  /* Same stacks as the marketplace island (web/src/ui) — one product,
    * one voice. Replaces VitePress's default Inter webfont. */
   --vp-font-family-base: var(--pa-font-body);
   --vp-font-family-mono: var(--pa-font-mono);
@@ -211,6 +211,76 @@ html.dark {
   outline-offset: 2px;
 }
 
+/* ───────────────────────────────────────────────────────────────────────────
+ * Marketplace app island (web/src) — the app renders below the VitePress
+ * navbar and consumes these aliases instead of owning a second token system.
+ * Everything maps onto the same --pa-* / --vp-* vars, so the app follows the
+ * theme in both modes with zero app-side mode logic.
+ * ------------------------------------------------------------------------- */
+.pa-app {
+  /* Canvases */
+  --ink: var(--vp-c-bg);
+  --ink-2: var(--vp-c-bg-alt);
+  --ink-3: var(--vp-c-bg-elv);
+  --surface: var(--vp-c-bg-alt);
+  --raised: var(--vp-c-bg-elv);
+
+  /* Text */
+  --cream: var(--vp-c-text-1);
+  --cream-dim: var(--vp-c-text-2);
+  --font-mono: var(--pa-font-mono);
+
+  /* Brand */
+  --blue: var(--vp-c-brand-1);
+  --blue-bright: var(--vp-c-brand-2);
+  --violet: var(--vp-c-brand-2);
+  --accent: var(--vp-c-brand-1);
+  --accent-soft: var(--vp-c-brand-soft);
+  --cyan: var(--pa-cyan-bright);
+  --cyan-soft: rgba(12, 204, 204, 0.14);
+
+  /* Lines & semantics */
+  --line: var(--vp-c-divider);
+  --grad: linear-gradient(120deg, #0048e4 0%, #3b2fe0 55%, #5424e4 100%);
+  --danger: #ff6b7a;
+  --ok: #3ddc97;
+  --warn: #ffc857;
+}
+
+/* App chips (Donate / Settings / small buttons) — VitePress-styled. */
+.pa-app-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 8px;
+  background: var(--vp-c-bg-elv);
+  color: var(--vp-c-text-1);
+  font-size: 13px;
+  font-weight: 500;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.pa-app-chip:hover {
+  border-color: var(--vp-c-brand-1);
+  color: var(--vp-c-brand-1);
+}
+
+/* Navbar logo: swap to the white-text lockup in dark mode. */
+.pa-app-logo {
+  content: url("/proagents/logo-dark.png");
+}
+.dark .pa-app-logo {
+  content: url("/proagents/logo.png");
+}
+
+/* 404 view logo — same mode-aware lockup swap. */
+.pa-404-logo {
+  content: url("/proagents/logo-dark.png");
+}
+.dark .pa-404-logo {
+  content: url("/proagents/logo.png");
+}
+
 /* ---------------------------------------------------------------------------
  * Navbar logo per color mode — the lockups are background-specific:
  * light mode uses the dark-ink lockup (logo-dark.png), dark mode swaps to the
@@ -223,5 +293,5 @@ html.dark {
   width: auto;
 }
 .dark .VPNavBar img.VPImage {
-  content: url("/proagents/docs/logo.png");
+  content: url("/proagents/logo.png");
 }

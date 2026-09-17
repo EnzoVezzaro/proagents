@@ -39,12 +39,13 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Build the merged site (SPA + docs + assembly)
+      - name: Build the site (docs + marketplace island + assembly)
         run: npm run site:build
       - name: Artifact sanity checks
         run: |
           test -f site/index.html
           test -f site/404.html
           test -f site/app/index.html
-          test -f site/docs/index.html
+          test -f site/guide/what-is-proagents.html
           test -f site/.marketplace/catalog.json
+          grep -q "pa-app" site/index.html || (echo 'island marker missing' && exit 1)

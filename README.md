@@ -992,10 +992,9 @@ npm test
 npm run typecheck
 
 # site (marketplace + docs in one dev server)
-npm run dev        # everything: core watcher + SPA (:5173) + docs (:4173)
+npm run dev        # everything: core watcher + the merged VitePress site (SPA + docs) on :5173
 
-# individual surfaces
-npm run app:dev
+# docs alone (the app mounts inside them)
 npm run docs:dev
 
 # production build of the whole artifact into site/
@@ -1018,8 +1017,10 @@ npm run site:build
 ├── .agents/              # ProAgents Agent Skill + generated skills
 ├── profiles/             # built-in professional profiles
 ├── .marketplace/         # Git-backed catalog: profiles & crews
-├── web/                  # the site — marketplace SPA at the root,
-│   └── docs/             #   VitePress documentation under /docs/
+├── web/                  # marketplace app source (mounted as a client-only
+│   │                     #   island on the VitePress home page)
+├── docs/                 # the site — one VitePress project: app island at
+│   │                     #   the root, docs pages under guide/ cli/ context/
 ├── scripts/              # site:build assembly + unified dev runner
 └── tests/                # unit, integration, e2e
 ```

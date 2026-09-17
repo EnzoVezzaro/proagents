@@ -29,7 +29,8 @@ not a prompt generator.
 6. **Markdown is not enforcement.** Permissions/approval logic belongs in runtime
    boundaries and validation rules, not prose. Profile rules compile into enforcement
    where the harness supports it; where it does not, the limitation is reported.
-   (Site note: the SPA `web/` and the docs `web/docs/` are one project — one
+   (Site note: the app (`web/src`) and the docs (`docs/`) are ONE VitePress
+   project — the app mounts as a client-only island on the home page; one
    package.json, one lockfile, one test runner; `scripts/assemble-site.mjs`
    is the single source of the Pages artifact layout.)
 7. **Canonical profiles are portable.** `profiles/*.json` and the profile schema never
@@ -43,7 +44,7 @@ npm test             # vitest (core + web suites) — must pass
 npm run build        # tsc → dist/
 npm run cli          # run the built CLI
 
-npm run dev         # everything: core watcher + SPA (:5173) + docs (:4173)
+npm run dev         # everything: core watcher + the merged VitePress site (SPA + docs) on :5173
 npm run site:build  # full artifact → site/ (must pass before PRs)
 ```
 
