@@ -140,7 +140,7 @@ html.dark {
 .VPHero .name::before {
   content: "";
   position: relative;
-  left: -15px;
+  left: -30px;
   display: block;
   width: 176px;
   height: 176px;

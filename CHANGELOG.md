@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-09-16
+
+### Added — the site is one VitePress project; the marketplace gets its own page
+
+- **One project, one build**: the marketplace app and the docs merged into a single
+  VitePress project (`docs/`, base `/proagents/`). The app mounts as a client-only React
+  island (imperative `createRoot` in a Vue wrapper, automatic JSX runtime), consuming
+  VitePress theme vars through a `:root` alias bridge — one design system, one deploy,
+  one `npm run dev`, one `site:build` (artifact assembly lives in
+  `scripts/assemble-site.mjs`, so local and CI builds are byte-identical).
+- **`/marketplace` page** — the app has its own page with a proper header; the home page
+  returns to hero + features with a browse-the-marketplace CTA. The navbar link, the
+  `/app/` shim and the 404 CTA all point there.
+- **Branded hero** — the bot mark sits above the hero name (background-image on the
+  name, no atmosphere per DESIGN.md).
+- **Branded not-found** — a themed `not-found` slot view replaces VitePress's default
+  404 and recovers stale `/proagents/docs/…` bookmarks into the merged URL space.
+- **Dev catalog middleware** — `vitepress dev` serves the git-backed `.marketplace/`
+  at the production URLs, so the island works identically in dev and prod.
+- **Settings modal above everything** — the modal portals to `document.body` (z-index
+  200) so the fixed navbar can no longer paint over it.
+
+### Fixed
+
+- **Inline-code contrast**: `--vp-code-color` is the code TEXT color — a 7%-alpha value
+  had rendered inline code invisible in both themes. The tint moved to `--vp-code-bg`
+  and code blocks set `--vp-code-block-bg` so VitePress's dark rule cannot win the
+  cascade.
+- **Marketplace page layout**: `layout: page` has no doc container — the page header
+  and island now share one 1152px container instead of full-bleeding.
+- The island's `--cyan` is mode-aware (deep cyan on white, bright cyan on navy).
+- Docs pages keep the VPFooter; pages hosting the island no longer double-footer.
+
 ### Added — the profile builder becomes a guided, publishable walkthrough
 
 - **Guided profile-builder walkthrough** — the SPA builder is now a 5-step rail
