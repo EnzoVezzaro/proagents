@@ -15,6 +15,7 @@ import { CATALOG_URL } from "../../catalog.js";
 import { issueBody, issueTitle } from "../../proposal.js";
 import { newWorker, renameMcpServer, stripEmptyContexts, validateCrewDraft } from "../../crew-draft.js";
 import { btnSoft } from "../tokens.js";
+import { ListField } from "../ListField.js";
 
 /**
  * Crew builder — the GUI counterpart of the CLI interview. Agentic-first:
@@ -198,7 +199,7 @@ function IdentityTab(props: { crew: CrewDefinition; update: (p: Partial<CrewDefi
       <label style={label}>Description</label>
       <textarea style={{ ...field, minHeight: 70 }} value={crew.description} onChange={(e) => update({ description: e.target.value })} placeholder="What does this crew do, for whom, and what does it refuse to do?" />
       <label style={label}>Tags (comma-separated)</label>
-      <input style={field} value={crew.tags.join(", ")} onChange={(e) => update({ tags: e.target.value.split(",").map((t) => t.trim()).filter(Boolean) })} />
+      <ListField separator="," style={field} value={crew.tags} onChange={(tags) => update({ tags })} />
     </Card>
   );
 }
@@ -328,7 +329,7 @@ function WorkersTab(props: {
           </div>
 
           <label style={label}>Emits — artifacts this worker hands downstream (comma-separated)</label>
-          <input style={field} value={w.emits.join(", ")} onChange={(e) => updateWorker(w.id, { emits: e.target.value.split(",").map((t) => t.trim()).filter(Boolean) })} placeholder="e.g. draft-docs, review-notes" />
+          <ListField separator="," style={field} value={w.emits} onChange={(emits) => updateWorker(w.id, { emits })} placeholder="e.g. draft-docs, review-notes" />
 
           <label style={label}>Context bindings — where this worker retrieves knowledge (NOT artifacts)</label>
           {w.context.map((c, ci) => (
@@ -367,7 +368,7 @@ function WorkersTab(props: {
             ))}
           </div>
           <label style={label}>Tools — allowlist for this worker (comma-separated)</label>
-          <input style={field} value={w.permissions.tools.join(", ")} onChange={(e) => updateWorker(w.id, { permissions: { ...w.permissions, tools: e.target.value.split(",").map((t) => t.trim()).filter(Boolean) } })} placeholder="e.g. filesystem, shell, git" aria-label={`Worker ${w.id} tool allowlist`} />
+          <ListField separator="," style={field} value={w.permissions.tools} onChange={(tools) => updateWorker(w.id, { permissions: { ...w.permissions, tools } })} placeholder="e.g. filesystem, shell, git" aria-label={`Worker ${w.id} tool allowlist`} />
 
           <label style={label}>Extra instructions — optional with a profession (SKILL.md body)</label>
           <textarea
@@ -422,7 +423,7 @@ function McpTab(props: { crew: CrewDefinition; update: (p: Partial<CrewDefinitio
             </div>
           </div>
           <label style={label}>Allowed tools (empty = all)</label>
-          <input style={field} value={(m.allowedTools ?? []).join(", ")} onChange={(e) => setServer(m.name, { allowedTools: e.target.value.split(",").map((t) => t.trim()).filter(Boolean) })} />
+          <ListField separator="," style={field} value={m.allowedTools ?? []} onChange={(allowedTools) => setServer(m.name, { allowedTools })} />
         </Card>
       ))}
       <button

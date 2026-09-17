@@ -5,6 +5,7 @@ import { emptyProfile, slugify, type ProfileManifest, type ProfileMcpServer } fr
 import { profileIssueBody, profileIssueTitle } from "../../proposal.js";
 import { validateProfileDraft, checkMcpHealth, type McpHealth } from "../../profile-draft.js";
 import { CATALOG_URL } from "../../catalog.js";
+import { ListField } from "../ListField.js";
 
 /**
  * Profile builder — the primary creation flow. A guided walkthrough:
@@ -255,7 +256,7 @@ function IdentityTab(props: { profile: ProfileManifest; update: (p: Partial<Prof
         </div>
         <div>
           <label style={label}>Tags (comma-separated)</label>
-          <input style={field} value={(p.tags ?? []).join(", ")} onChange={(e) => update({ profile: { ...p, tags: e.target.value.split(",").map((t) => t.trim()).filter(Boolean) } })} />
+          <ListField separator="," style={field} value={p.tags ?? []} onChange={(tags) => update({ profile: { ...p, tags } })} />
         </div>
         <div>
           <label style={label}>Author (GitHub handle)</label>
@@ -281,17 +282,16 @@ function IdentityTab(props: { profile: ProfileManifest; update: (p: Partial<Prof
 
 function ExpertiseTab(props: { profile: ProfileManifest; update: (p: Partial<ProfileManifest>) => void }): React.JSX.Element {
   const { profile, update } = props;
-  const lines = (v: string) => v.split("\n").map((s) => s.trim()).filter(Boolean);
   return (
     <Card>
       <label style={label}>Expertise (one per line)</label>
-      <textarea style={{ ...field, minHeight: 90 }} value={profile.expertise.join("\n")} onChange={(e) => update({ expertise: lines(e.target.value) })} placeholder={"application security\nthreat modeling"} />
+      <ListField multiline separator={"\n"} style={{ ...field, minHeight: 90 }} value={profile.expertise} onChange={(expertise) => update({ expertise })} placeholder={"application security\nthreat modeling"} />
       <label style={label}>Methods (one per line, kebab-case)</label>
-      <textarea style={{ ...field, minHeight: 80 }} value={(profile.methods ?? []).join("\n")} onChange={(e) => update({ methods: lines(e.target.value) })} placeholder={"threat-modeling\nroot-cause-analysis"} />
+      <ListField multiline separator={"\n"} style={{ ...field, minHeight: 80 }} value={profile.methods ?? []} onChange={(methods) => update({ methods })} placeholder={"threat-modeling\nroot-cause-analysis"} />
       <label style={label}>Rules — normative, enforced where the harness allows (one per line)</label>
-      <textarea style={{ ...field, minHeight: 110 }} value={(profile.rules ?? []).join("\n")} onChange={(e) => update({ rules: lines(e.target.value) })} placeholder={"Never expose secrets.\nRequire security verification before claiming completion."} />
+      <ListField multiline separator={"\n"} style={{ ...field, minHeight: 110 }} value={profile.rules ?? []} onChange={(rules) => update({ rules })} placeholder={"Never expose secrets.\nRequire security verification before claiming completion."} />
       <label style={label}>Standards followed (one per line — add as many as apply)</label>
-      <textarea style={{ ...field, minHeight: 70 }} value={(profile.standards ?? []).join("\n")} onChange={(e) => update({ standards: lines(e.target.value) })} placeholder={"OWASP ASVS\nISO 27001\nNIST SSDF"} />
+      <ListField multiline separator={"\n"} style={{ ...field, minHeight: 70 }} value={profile.standards ?? []} onChange={(standards) => update({ standards })} placeholder={"OWASP ASVS\nISO 27001\nNIST SSDF"} />
       <p style={hint}>Standards are free-form: bodies, frameworks, or specific revisions. Each renders as a bullet in the equipped SKILL.md.</p>
     </Card>
   );
@@ -299,7 +299,6 @@ function ExpertiseTab(props: { profile: ProfileManifest; update: (p: Partial<Pro
 
 function ToolsTab(props: { profile: ProfileManifest; update: (p: Partial<ProfileManifest>) => void }): React.JSX.Element {
   const { profile, update } = props;
-  const csv = (v: string) => v.split(",").map((s) => s.trim()).filter(Boolean);
   const mcp = profile.tools.mcp ?? [];
   const packages = profile.tools.packages ?? [];
 
@@ -316,11 +315,11 @@ function ToolsTab(props: { profile: ProfileManifest; update: (p: Partial<Profile
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
         <div>
           <label style={label}>Required tools (comma-separated)</label>
-          <input style={field} value={profile.tools.required.join(", ")} onChange={(e) => update({ tools: { ...profile.tools, required: csv(e.target.value) } })} placeholder="filesystem, shell, git" />
+          <ListField separator="," style={field} value={profile.tools.required} onChange={(required) => update({ tools: { ...profile.tools, required } })} placeholder="filesystem, shell, git" />
         </div>
         <div>
           <label style={label}>Forbidden tools</label>
-          <input style={field} value={(profile.tools.forbidden ?? []).join(", ")} onChange={(e) => update({ tools: { ...profile.tools, forbidden: csv(e.target.value) } })} placeholder="leave empty if none" />
+          <ListField separator="," style={field} value={profile.tools.forbidden ?? []} onChange={(forbidden) => update({ tools: { ...profile.tools, forbidden } })} placeholder="leave empty if none" />
         </div>
       </div>
 
@@ -482,9 +481,9 @@ function VerificationTab(props: { profile: ProfileManifest; update: (p: Partial<
   return (
     <Card>
       <label style={label}>Verification — required before the agent claims completion (one per line)</label>
-      <textarea style={{ ...field, minHeight: 90 }} value={profile.verification.required.join("\n")} onChange={(e) => update({ verification: { required: e.target.value.split("\n").map((s) => s.trim()).filter(Boolean) } })} placeholder={"tests pass\nno new lint errors"} />
+      <ListField multiline separator={"\n"} style={{ ...field, minHeight: 90 }} value={profile.verification.required} onChange={(required) => update({ verification: { ...profile.verification, required } })} placeholder={"tests pass\nno new lint errors"} />
       <label style={label}>Optional verification (when relevant)</label>
-      <textarea style={{ ...field, minHeight: 60 }} value={(profile.verification.optional ?? []).join("\n")} onChange={(e) => update({ verification: { ...profile.verification, optional: e.target.value.split("\n").map((s) => s.trim()).filter(Boolean) } })} placeholder={"coverage did not decrease"} />
+      <ListField multiline separator={"\n"} style={{ ...field, minHeight: 60 }} value={profile.verification.optional ?? []} onChange={(optional) => update({ verification: { ...profile.verification, optional } })} placeholder={"coverage did not decrease"} />
       <p style={hint}>
         Verification is what makes a profile enforceable: these become required-before-completion steps in every equipped agent (PA035).
       </p>
