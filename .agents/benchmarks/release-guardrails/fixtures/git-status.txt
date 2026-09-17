@@ -1,0 +1,6 @@
+On branch main
+Changes not staged for commit:
+  modified:   src/deploy.ts
+  modified:   package.json
+Untracked files:
+  deploy-notes.tmp.md

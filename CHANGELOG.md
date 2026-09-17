@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`release-guardrails` benchmark suite** — three deterministic cases for the
+  release-engineer contract (rollback-first planning, changelog discipline,
+  dirty-tree refusal), matching `privacy-guardrails`.
+- **Benchmarks gate CI**: the guardrails suites validate and run on every push
+  and PR; any failed case, error or aggregate score below 100 fails the build.
+
+### Changed
+
+- The v0.8.0 GitHub release notes now carry highlights plus the full changelog
+  section (the automation had posted only the compare link).
+
 ## [0.8.0] - 2026-09-17
 
 ### Fixed — site
