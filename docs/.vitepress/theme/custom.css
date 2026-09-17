@@ -89,7 +89,7 @@
   --vp-c-border: #d8deef;
 
   --vp-c-text-code: var(--pa-blue-deep);
-  --vp-code-color: rgba(0, 72, 228, 0.07);
+  --vp-code-bg: rgba(0, 72, 228, 0.07);
 }
 
 /* ---------------------------------------------------------------------------
@@ -114,6 +114,7 @@ html.dark {
   --vp-c-border: #22306e;
 
   --vp-c-text-code: #8fb0ff;
+  --vp-code-bg: rgba(12, 204, 204, 0.09);
   --vp-code-lang-color: #9aa6cf;
   --vp-home-hero-name-color: #6f95ff;
 }
@@ -166,13 +167,21 @@ html.dark {
   background: rgba(217, 164, 65, 0.1);
 }
 
-/* Code blocks: brand-tinted surface per mode */
+/* Code blocks: brand-tinted surface per mode. Background is also set through
+   the sanctioned --vp-code-block-bg var (VitePress's own rule uses it and
+   out-competes a plain `background` on the same selector). */
 .vp-doc div[class*="language-"] {
   background: #f4f6fd;
   border: 1px solid var(--vp-c-border);
 }
 .dark .vp-doc div[class*="language-"] {
   background: #030722;
+}
+:root {
+  --vp-code-block-bg: #f4f6fd;
+}
+.dark {
+  --vp-code-block-bg: #030722;
 }
 
 /* Selection in brand blue */
@@ -236,7 +245,9 @@ html.dark {
   --violet: var(--vp-c-brand-2);
   --accent: var(--vp-c-brand-1);
   --accent-soft: var(--vp-c-brand-soft);
-  --cyan: var(--pa-cyan-bright);
+  /* Light mode gets the deep cyan (the bright variant washes out on white);
+   * dark mode swaps to the bright one below. */
+  --cyan: var(--pa-cyan);
   --cyan-soft: rgba(12, 204, 204, 0.14);
 
   /* Lines & semantics */
@@ -245,6 +256,9 @@ html.dark {
   --danger: #ff6b7a;
   --ok: #3ddc97;
   --warn: #ffc857;
+}
+.dark .pa-app {
+  --cyan: var(--pa-cyan-bright);
 }
 
 /* The island renders inside .vp-doc: strip the doc-page decorations
@@ -255,6 +269,33 @@ html.dark {
 }
 .pa-app a {
   text-decoration: none;
+}
+
+/* Marketplace island page (layout: page has no doc container): the page
+   header and the island share one container, so nothing full-bleeds. */
+.pa-mp-head {
+  max-width: 1152px;
+  margin: 0 auto;
+  padding: 40px 24px 0;
+}
+.pa-mp-title {
+  margin: 0;
+  font-family: var(--pa-font-display);
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--vp-c-text-1);
+}
+.pa-mp-lede {
+  margin: 10px 0 0;
+  max-width: 660px;
+  color: var(--vp-c-text-2);
+  font-size: 16px;
+}
+.VPPage .pa-app {
+  max-width: 1152px;
+  margin: 0 auto;
+  padding: 0 24px 56px;
 }
 
 /* App chips (Donate / Settings / small buttons) — VitePress-styled. */

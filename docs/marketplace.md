@@ -4,18 +4,13 @@ sidebar: false
 outline: false
 ---
 
-# Marketplace
-
-Browse, preview and equip professional profiles and crews — everything below runs entirely in your browser.
+<div class="pa-mp-head">
+  <h1 class="pa-mp-title">Marketplace</h1>
+  <p class="pa-mp-lede">
+    Browse, preview and equip professional profiles and crews — everything below runs entirely in your browser.
+  </p>
+</div>
 
 <ClientOnly>
   <AppIsland />
 </ClientOnly>
-
-<style>
-/* The island owns this page below the lede: keep the seam tight and the
-   heading font consistent with the app's own h1. */
-.VPPage .pa-app {
-  margin-top: 8px;
-}
-</style>

@@ -8,7 +8,7 @@ import { ProfileBuilderPage } from "./pages/ProfileBuilderPage.js";
 import { PreviewPage } from "./pages/PreviewPage.js";
 import { SettingsModal } from "./SettingsModal.js";
 import { loadSettings, saveSettings, githubTokenNeedsRefresh, githubRefreshExpired, type AppSettings } from "../settings.js";
-import { DOCS_URL, SOURCE_URL, docsUrl } from "../links.js";
+import { DOCS_URL } from "../links.js";
 import { getAuthenticatedUser, refreshAccessToken } from "../github.js";
 
 export interface AppCtx {
@@ -195,32 +195,9 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
         </div>
       </div>
 
-      <main style={{ padding: "32px 0 64px" }}>{page}</main>
-      {/* Home-page footer: VitePress's themeConfig footer only renders on
-          doc pages, so the island owns the home page's footer. Doc pages get
-          the VPFooter instead — no duplication either way. */}
-      <footer
-        style={{
-          borderTop: "1px solid var(--vp-c-divider)",
-          padding: "20px 2px 28px",
-          color: "var(--vp-c-text-2)",
-          fontSize: 12,
-          textAlign: "center",
-        }}
-      >
-        Fully open source (MIT) · runs entirely in your browser ·{" "}
-        <a href={docsUrl("guide/marketplace")} style={{ color: "var(--vp-c-brand-1)", textDecoration: "none" }}>
-          docs
-        </a>{" "}
-        ·{" "}
-        <a href={SOURCE_URL} style={{ color: "var(--vp-c-brand-1)", textDecoration: "none" }}>
-          source
-        </a>{" "}
-        ·{" "}
-        <a href="https://github.com/sponsors/EnzoVezzaro" style={{ color: "var(--vp-c-brand-1)", textDecoration: "none" }}>
-          Sponsor
-        </a>
-      </footer>
+      <main style={{ padding: "32px 0 24px" }}>{page}</main>
+      {/* No island footer: the island only renders on /marketplace, which is
+          a VitePress page and carries the theme's VPFooter — no duplication. */}
       {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} user={user} />}
     </div>
   );
