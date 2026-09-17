@@ -16,6 +16,7 @@ import { issueBody, issueTitle } from "../../proposal.js";
 import { newWorker, renameMcpServer, stripEmptyContexts, validateCrewDraft } from "../../crew-draft.js";
 import { btnSoft } from "../tokens.js";
 import { ListField } from "../ListField.js";
+import { SettingsModal } from "../SettingsModal.js";
 
 /**
  * Crew builder — the GUI counterpart of the CLI interview. Agentic-first:
@@ -29,11 +30,13 @@ const btn: React.CSSProperties = { background: "var(--grad)", color: "#ffffff", 
 const btnGhost: React.CSSProperties = { background: "transparent", color: "var(--cream-dim)", border: "1px solid var(--line)", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 13 };
 const field: React.CSSProperties = { width: "100%", boxSizing: "border-box", background: "var(--ink)", color: "var(--cream)", border: "1px solid var(--line)", borderRadius: 8, padding: "8px 10px", fontSize: 13 };
 const label: React.CSSProperties = { display: "block", fontSize: 11, color: "var(--cream-dim)", marginBottom: 4, marginTop: 10, textTransform: "uppercase" as const, letterSpacing: 0.4 };
+const hint: React.CSSProperties = { color: "var(--cream-dim)", fontSize: 12, lineHeight: 1.55, marginTop: 8 };
 
 /** Client-side mirror of crewProblems lives in crew-draft.ts (tested). */
 
 export function BuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
-  const { settings, navigate } = props.ctx;
+  const { settings, navigate, user } = props.ctx;
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [crew, setCrew] = useState<CrewDefinition>(() => {
     // A draft from the build-entry (repo analysis) lands here via sessionStorage;
     // otherwise restore the in-progress draft so reloads don't lose work.
@@ -165,7 +168,11 @@ export function BuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
       {tab === "workers" && <WorkersTab crew={crew} update={update} updateWorker={updateWorker} />}
       {tab === "mcp" && <McpTab crew={crew} update={update} />}
       {tab === "graph" && <GraphTab crew={crew} update={update} />}
-      {tab === "ship" && <ShipTab crew={crew} problems={problems} publish={publish} publishState={publishState} exportJson={exportJson} navigate={navigate} />}
+      {tab === "ship" && <ShipTab crew={crew} problems={problems} publish={publish} publishState={publishState} exportJson={exportJson} navigate={navigate} signedIn={Boolean(settings.githubToken)} onSignIn={() => setSettingsOpen(true)} />}
+
+      {/* GitHub sign-in gate modal — saving a device-flow sign-in fires the
+          settings-changed event, which re-loads settings and enables publish. */}
+      {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} user={user ?? null} />}
     </div>
   );
 }
@@ -485,8 +492,10 @@ function ShipTab(props: {
   publishState: string;
   exportJson: () => void;
   navigate: (to: string) => void;
+  signedIn: boolean;
+  onSignIn: () => void;
 }): React.JSX.Element {
-  const { crew, problems, publish, publishState, exportJson, navigate } = props;
+  const { crew, problems, publish, publishState, exportJson, navigate, signedIn, onSignIn } = props;
   const [copied, setCopied] = useState("");
   const copy = async (text: string, what: string) => {
     try {
@@ -530,10 +539,17 @@ function ShipTab(props: {
           marketplace. Nothing goes live without a human review.
         </p>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <button onClick={publish} style={btn}>File marketplace proposal</button>
+          {/* Disabled until GitHub sign-in — same gate as the profile builder. */}
+          <button onClick={publish} disabled={!signedIn} title={signedIn ? undefined : "Sign in with GitHub first"} style={signedIn ? btn : { ...btn, opacity: 0.5, cursor: "not-allowed" }}>File marketplace proposal</button>
           <button onClick={() => copy(issueBody(crew), "json")} style={btnGhost}>{copied === "json" ? "✓ Copied proposal" : "Copy proposal markdown"}</button>
           <button onClick={() => navigate("catalog")} style={btnGhost}>Back to catalog</button>
         </div>
+        {!signedIn && (
+          <p style={{ ...hint, color: "var(--warn, #b98700)" }}>
+            Publishing needs a GitHub account — the proposal issue is created through the GitHub API on your behalf.{"\n"}
+            <button onClick={onSignIn} style={{ ...btnGhost, padding: "4px 10px", marginLeft: 8, verticalAlign: "middle" }}>Sign in with GitHub</button>
+          </p>
+        )}
         {publishState && (
           <p style={{ marginTop: 12, fontSize: 13, color: publishState.startsWith("✓") ? "var(--ok)" : "var(--cream-dim)", whiteSpace: "pre-wrap" }}>
             {publishState.includes("http") ? (

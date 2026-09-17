@@ -12,6 +12,13 @@ import { checkMcpHealth } from "../../profile-draft.js";
 const ctx: AppCtx = {
   settings: { provider: { provider: "anthropic", model: "m", apiKey: "" }, githubToken: "", githubTokenExpiresAt: 0, githubRefreshToken: "", githubRefreshExpiresAt: 0 },
   navigate: () => {},
+  user: null,
+} as AppCtx;
+
+const ctxSignedIn: AppCtx = {
+  ...ctx,
+  settings: { ...ctx.settings, githubToken: "tok" },
+  user: { login: "octocat", avatar_url: "" },
 };
 
 beforeEach(() => {
@@ -87,12 +94,33 @@ describe("ProfileBuilderPage walkthrough (PROFILE-BUILDER-WALK)", () => {
   });
 
   it("PROFILE-BUILDER-WALK-007: ship tab gates on validation problems", () => {
-    render(<ProfileBuilderPage ctx={ctx} />);
+    render(<ProfileBuilderPage ctx={ctxSignedIn} />);
     fireEvent.click(screen.getByRole("button", { name: /Skip to ship/ }));
     // Incomplete draft → ErrorNote with PA codes, publish button still present
     const note = document.body.textContent ?? "";
     expect(note).toContain("PA031"); // empty slug
     expect(screen.getByRole("button", { name: "Publish via pull request" })).toBeTruthy();
+  });
+
+  it("PROFILE-BUILDER-WALK-009: publish buttons are disabled until GitHub sign-in, with a visible hint and sign-in shortcut", () => {
+    render(<ProfileBuilderPage ctx={ctx} />);
+    fireEvent.click(screen.getByRole("button", { name: /Skip to ship/ }));
+    const publish = screen.getByRole("button", { name: "Publish via pull request" }) as HTMLButtonElement;
+    const fileIssue = screen.getByRole("button", { name: "File proposal issue instead" }) as HTMLButtonElement;
+    expect(publish.disabled).toBe(true);
+    expect(fileIssue.disabled).toBe(true);
+    // The requirement is visible, with the fix one click away.
+    expect(document.body.textContent).toContain("Publishing needs a GitHub account");
+    fireEvent.click(screen.getByRole("button", { name: "Sign in with GitHub" }));
+    expect(document.body.textContent).toContain("GitHub account"); // settings modal opened
+  });
+
+  it("PROFILE-BUILDER-WALK-010: a signed-in session keeps publish enabled and hides the hint", () => {
+    render(<ProfileBuilderPage ctx={ctxSignedIn} />);
+    fireEvent.click(screen.getByRole("button", { name: /Skip to ship/ }));
+    const publish = screen.getByRole("button", { name: "Publish via pull request" }) as HTMLButtonElement;
+    expect(publish.disabled).toBe(false);
+    expect(document.body.textContent).not.toContain("Publishing needs a GitHub account");
   });
 
   it("PROFILE-BUILDER-WALK-008: Start over resets the draft and step", () => {

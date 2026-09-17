@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed — site
+
+- **Publish requires GitHub sign-in — visibly**: the builders' publish buttons
+  (Publish via pull request / File proposal issue, File marketplace proposal)
+  used to run anyway when signed out and just print "sign in with GitHub" into
+  a status line — clicking them appeared to do nothing. They are now disabled
+  until sign-in, with an inline hint explaining why and a **Sign in with
+  GitHub** button that opens the Settings modal in place; completing the
+  device-flow sign-in enables publishing immediately.
+
 ### Changed — site
 
 - **Marketplace header is one row**: the page title and lede sit on the left,

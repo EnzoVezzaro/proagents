@@ -14,6 +14,8 @@ import { getAuthenticatedUser, refreshAccessToken } from "../github.js";
 export interface AppCtx {
   settings: AppSettings;
   navigate: (to: string) => void;
+  /** The signed-in GitHub account, when the session-ensure has verified one. */
+  user: { login: string; avatar_url: string } | null;
 }
 
 /**
@@ -114,7 +116,7 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
   }, [settings.githubToken]);
 
   const openSettings = useCallback(() => setSettingsOpen(true), []);
-  const ctx: AppCtx = { settings, navigate };
+  const ctx: AppCtx = { settings, navigate, user };
 
   // Header actions: the /marketplace page reserves a slot in its static header
   // row (#pa-mp-actions) — the chips portal into it so title, lede and actions
