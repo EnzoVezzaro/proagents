@@ -68,6 +68,21 @@ npm run site:build  # full artifact → site/ (must pass before PRs)
 - `.proagent/session.json` — interview state (gitignored, inspectable)
 - `.agents/skills/<agent>/` — generated agent skills (committed if the user wants)
 
+## Browser verification (ego-browser)
+
+One task space, always. Never create a new space per task:
+
+- Resume by name: `taskSpace("proagents-dev")` returns the same space every
+  time (a new name creates a new space — that's how 44 stale spaces piled up).
+  Print the `spaceId` at the end of a round so the next round can resume by ID.
+- Only create when `listTaskSpaces()` shows `proagents-dev` missing.
+- Close pages you opened before ending the round; on completion call
+  `finish({ keep: [] })`. Zombie `about:blank` tabs survive `page.close()` —
+  kill them via `t.cdp("Target.closeTarget", { targetId })` or the space never
+  closes.
+- When the user must act in the browser, `handOff()` — never claim their space
+  back unasked.
+
 ## When unsure
 
 The README is the product specification: it defines the Professional Agent Profile model
