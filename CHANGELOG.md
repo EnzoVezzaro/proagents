@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed — CI
+
+- jsdom pinned to 26: jsdom 30's dependency line (`html-encoding-sniffer` 5/6 →
+  `@exodus/bytes`) is ESM-only and breaks `require()` on Node 20, failing the CI
+  matrix. jsdom 26 is the last fully-CJS major and runs on all three CI nodes.
+- The site job's artifact checks now assert what exists statically
+  (`pa-mp-head` in `marketplace.html`, `pa-app` in the bundle): the island is
+  `<ClientOnly>`, so grepping static HTML for runtime classes never passed.
+
 ## [0.7.0] - 2026-09-16
 
 ### Added — the site is one VitePress project; the marketplace gets its own page

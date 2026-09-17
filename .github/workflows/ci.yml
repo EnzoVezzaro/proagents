@@ -44,8 +44,10 @@ jobs:
       - name: Artifact sanity checks
         run: |
           test -f site/index.html
+          test -f site/marketplace.html
           test -f site/404.html
           test -f site/app/index.html
           test -f site/guide/what-is-proagents.html
           test -f site/.marketplace/catalog.json
-          grep -q "pa-app" site/index.html || (echo 'island marker missing' && exit 1)
+          grep -q "pa-mp-head" site/marketplace.html || (echo 'marketplace page header missing' && exit 1)
+          grep -rq "pa-app" site/assets/ || (echo 'island code missing from the bundle' && exit 1)
