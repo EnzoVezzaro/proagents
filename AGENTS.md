@@ -43,8 +43,8 @@ npm test             # vitest (core + web suites) — must pass
 npm run build        # tsc → dist/
 npm run cli          # run the built CLI
 
-npm run site:dev     # SPA (:5173/proagents/) + docs (:4173/proagents/docs/)
-npm run site:build   # full artifact → site/ (must pass before PRs)
+npm run dev         # everything: core watcher + SPA (:5173) + docs (:4173)
+npm run site:build  # full artifact → site/ (must pass before PRs)
 ```
 
 ## Conventions

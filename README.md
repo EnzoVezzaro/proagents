@@ -992,7 +992,7 @@ npm test
 npm run typecheck
 
 # site (marketplace + docs in one dev server)
-npm run site:dev   # SPA on :5173/proagents/ + docs on :4173/proagents/docs/
+npm run dev        # everything: core watcher + SPA (:5173) + docs (:4173)
 
 # individual surfaces
 npm run app:dev

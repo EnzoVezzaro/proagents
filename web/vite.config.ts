@@ -3,9 +3,9 @@ import { aliases, appPlugins } from "./vite.shared.js";
 
 // The marketplace SPA is the site root (/proagents/); the docs live at
 // web/docs (base /proagents/docs/) and share this package's dev tooling —
-// `npm run site:dev` runs both servers together. envDir points at the repo
-// root so one .env file serves the CLI and the web build (only VITE_* vars
-// are embedded; they must never hold secrets).
+// `npm run dev` runs the core watcher and both servers together. envDir
+// points at the repo root so one .env file serves the CLI and the web build
+// (only VITE_* vars are embedded; they must never hold secrets).
 
 /** Dev-only proxy: github.com sends no CORS headers, so the SPA reaches the
  * OAuth device flow through this proxy. Production uses a Worker instead —

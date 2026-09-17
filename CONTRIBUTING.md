@@ -15,8 +15,9 @@ npm run build && npm test
 - Node.js 20+
 - TypeScript strict mode — `npm run typecheck` must pass
 - Tests: `npm test` (vitest). New features need tests.
-- Docs: part of the merged site — `npm run site:dev` runs the SPA and docs
-  together; `npm run docs:dev` runs docs alone; `npm run site:build` must pass
+- Docs: part of the merged site — `npm run dev` runs the core watcher, the
+  SPA and docs together; `npm run docs:dev` runs docs alone; `npm run
+  site:build` must pass
 
 ## Project rules
 

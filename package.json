@@ -63,7 +63,7 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "dev": "tsc -p tsconfig.json --watch",
+    "dev": "node scripts/dev.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p web/tsconfig.json --noEmit",
     "test": "npm run build --silent && vitest run",
     "test:watch": "vitest",
@@ -74,7 +74,6 @@
     "docs:dev": "vitepress dev web/docs --port 4173",
     "docs:build": "vitepress build web/docs",
     "docs:preview": "vitepress preview web/docs --port 4173",
-    "site:dev": "node scripts/dev.mjs",
     "site:build": "npm run app:build && npm run docs:build && node scripts/assemble-site.mjs",
     "gh:token": "node scripts/github-device-token.mjs"
   },

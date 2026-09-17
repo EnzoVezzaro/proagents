@@ -1,9 +1,9 @@
 /**
  * Cross-surface links for the marketplace SPA.
  *
- * DOCS_URL is environment-aware: while developing (`npm run site:dev` runs
- * the SPA on :5173 and the VitePress docs on :4173 in one terminal), the nav
- * should hit the local docs at http://localhost:4173/proagents/docs/; the
+ * DOCS_URL is environment-aware: while developing (`npm run dev` runs the
+ * core watcher plus the SPA on :5173 and the VitePress docs on :4173 in one
+ * terminal), the nav should hit the local docs at http://localhost:4173/proagents/docs/; the
  * production bundle points at the deployed docs site. VITE_DOCS_URL
  * overrides both — useful for forks that deploy their own docs (see
  * .env.example).
