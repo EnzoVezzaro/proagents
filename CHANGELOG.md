@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed — site
+
+- **Marketplace header is one row**: the page title and lede sit on the left,
+  the Donate/Settings account actions on the right (the React chips portal into
+  a static slot in the page header, so the static page and the island share a
+  single header line; on non-marketplace surfaces they fall back to a local row).
+- **Builder list fields accept separators again** — one-per-line textareas
+  (expertise, methods, rules, standards, verification) and comma-separated
+  inputs (tags, tools, emits, allowlists) killed the typed separator on the
+  same keystroke (`value={list.join(sep)}` + immediate split), so a second
+  item could never be added. The new shared `ListField` keeps the raw text
+  while focused and normalizes the list on every keystroke and on blur
+  (6 component tests pin the behavior).
+- The marketplace app rail no longer duplicates navigation: the
+  Catalog/Dashboard/Docs links are gone (the navbar carries Docs; the catalog
+  is the landing view), leaving Donate and Settings.
+
 ### Added — tests
 
 - **Session-command CLI test round** (`tests/cli/session.test.ts`, 24 e2e cases):

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { CatalogPage } from "./pages/CatalogPage.js";
 import { CrewDetailPage } from "./pages/CrewDetailPage.js";
 import { DashboardPage } from "./pages/DashboardPage.js";
@@ -115,6 +116,32 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
   const openSettings = useCallback(() => setSettingsOpen(true), []);
   const ctx: AppCtx = { settings, navigate };
 
+  // Header actions: the /marketplace page reserves a slot in its static header
+  // row (#pa-mp-actions) — the chips portal into it so title, lede and actions
+  // share one row. On any other surface (deep-linked hash routes, tests) the
+  // slot is absent and the chips fall back to a local row below the navbar.
+  const [actionsSlot, setActionsSlot] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    setActionsSlot(document.getElementById("pa-mp-actions"));
+  }, []);
+
+  const actionChips = (
+    <>
+      <a
+        href="https://github.com/sponsors/EnzoVezzaro"
+        target="_blank"
+        rel="noreferrer"
+        className="pa-app-chip"
+        style={{ textDecoration: "none" }}
+      >
+        Donate
+      </a>
+      <button onClick={openSettings} className="pa-app-chip" style={{ cursor: "pointer" }}>
+        Settings
+      </button>
+    </>
+  );
+
   let page: React.JSX.Element;
   if (route.startsWith("item/")) {
     page = <CrewDetailPage id={decodeURIComponent(route.slice("item/".length))} ctx={ctx} />;
@@ -141,32 +168,25 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
         fontFamily: "var(--vp-font-family-base)",
       }}
     >
-      {/* App rail — the VitePress navbar stays above (with the site logo and
-          the Docs link); this rail only carries the account actions. The
-          catalog is the landing view; detail pages link back to it. */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "flex-end",
-          gap: 12,
-          padding: "10px 2px",
-          borderBottom: "1px solid var(--vp-c-divider)",
-        }}
-      >
-        <a
-          href="https://github.com/sponsors/EnzoVezzaro"
-          target="_blank"
-          rel="noreferrer"
-          className="pa-app-chip"
-          style={{ textDecoration: "none" }}
+      {/* Account actions — portaled into the page header's reserved slot on
+          /marketplace (one row: title left, actions right), local row
+          elsewhere. */}
+      {actionsSlot ? (
+        createPortal(actionChips, actionsSlot, "pa-mp-actions")
+      ) : (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+            gap: 12,
+            padding: "10px 2px",
+            borderBottom: "1px solid var(--vp-c-divider)",
+          }}
         >
-          Donate
-        </a>
-        <button onClick={openSettings} className="pa-app-chip" style={{ cursor: "pointer" }}>
-          Settings
-        </button>
-      </div>
+          {actionChips}
+        </div>
+      )}
 
       <main style={{ padding: "32px 0 24px" }}>{page}</main>
       {/* No island footer: the island only renders on /marketplace, which is

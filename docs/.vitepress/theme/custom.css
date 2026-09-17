@@ -298,6 +298,13 @@ html.dark {
   max-width: 1152px;
   margin: 0 auto;
   padding: 40px 24px 0;
+  /* One row: intro text left, action chips right (the island's React chips
+   * portal into #pa-mp-actions below — static content stays static). */
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
 }
 .pa-mp-title {
   margin: 0;
@@ -312,6 +319,23 @@ html.dark {
   max-width: 660px;
   color: var(--vp-c-text-2);
   font-size: 16px;
+}
+/* Right slot in the header row: chips sit on the text baseline (align-end).
+   Empty while loading (or on narrow screens, where the head wraps). */
+.pa-mp-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 4px;
+}
+@media (max-width: 720px) {
+  .pa-mp-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .pa-mp-actions {
+    padding-bottom: 0;
+  }
 }
 .VPPage .pa-app {
   max-width: 1152px;
