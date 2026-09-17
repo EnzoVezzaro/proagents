@@ -247,6 +247,16 @@ html.dark {
   --warn: #ffc857;
 }
 
+/* The island renders inside .vp-doc: strip the doc-page decorations
+   VitePress puts on headings and links so the app keeps its own voice. */
+.pa-app :is(h1, h2, h3) {
+  border: none;
+  padding: 0;
+}
+.pa-app a {
+  text-decoration: none;
+}
+
 /* App chips (Donate / Settings / small buttons) — VitePress-styled. */
 .pa-app-chip {
   display: inline-flex;

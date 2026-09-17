@@ -28,3 +28,4 @@ Thumbs.db
 
 # Local state of the vendored skills install (the pack itself is not committed)
 skills-lock.json
+.tmp-e2e/

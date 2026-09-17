@@ -8,7 +8,7 @@ import { ProfileBuilderPage } from "./pages/ProfileBuilderPage.js";
 import { PreviewPage } from "./pages/PreviewPage.js";
 import { SettingsModal } from "./SettingsModal.js";
 import { loadSettings, saveSettings, githubTokenNeedsRefresh, githubRefreshExpired, type AppSettings } from "../settings.js";
-import { DOCS_URL, SOURCE_URL, docsUrl, assetUrl } from "../links.js";
+import { DOCS_URL, SOURCE_URL, docsUrl } from "../links.js";
 import { getAuthenticatedUser, refreshAccessToken } from "../github.js";
 
 export interface AppCtx {
@@ -156,29 +156,19 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
         fontFamily: "var(--vp-font-family-base)",
       }}
     >
-      {/* App rail — the VitePress navbar stays above; this is the app's own
-          sub-navigation (same pattern as the docs' local nav). */}
+      {/* App rail — the VitePress navbar stays above (with the site logo);
+          this rail is the app's own sub-navigation only, like the docs'
+          local nav. */}
       <div
         style={{
           display: "flex",
           alignItems: "center",
           gap: 20,
           flexWrap: "wrap",
-          padding: "10px 14px",
+          padding: "10px 2px",
           borderBottom: "1px solid var(--vp-c-divider)",
-          background: "var(--vp-c-bg-alt)",
         }}
       >
-        <a href="#/catalog" style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
-          <img
-            src={assetUrl("logo-dark.png")}
-            alt="ProAgents"
-            width={88}
-            height={28}
-            className="pa-app-logo"
-            style={{ display: "block" }}
-          />
-        </a>
         <nav aria-label="Marketplace" style={{ display: "flex", gap: 16, fontSize: 14 }}>
           {nav("catalog", "Catalog")}
           {nav("dashboard", "Dashboard")}
@@ -205,17 +195,20 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
         </div>
       </div>
 
-      <main style={{ maxWidth: 1180, margin: "0 auto", padding: "32px 24px 88px" }}>{page}</main>
+      <main style={{ padding: "32px 0 64px" }}>{page}</main>
+      {/* Home-page footer: VitePress's themeConfig footer only renders on
+          doc pages, so the island owns the home page's footer. Doc pages get
+          the VPFooter instead — no duplication either way. */}
       <footer
         style={{
           borderTop: "1px solid var(--vp-c-divider)",
-          padding: "22px 28px",
+          padding: "20px 2px 28px",
           color: "var(--vp-c-text-2)",
           fontSize: 12,
           textAlign: "center",
         }}
       >
-        ProAgents Marketplace · fully open source (MIT) · runs entirely in your browser ·{" "}
+        Fully open source (MIT) · runs entirely in your browser ·{" "}
         <a href={docsUrl("guide/marketplace")} style={{ color: "var(--vp-c-brand-1)", textDecoration: "none" }}>
           docs
         </a>{" "}

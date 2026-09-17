@@ -42,14 +42,18 @@ features:
     linkText: Progressive agent creation
 ---
 
+## Marketplace
+
+Browse, preview and equip professional profiles and crews without leaving the site — everything below runs in your browser.
+
 <ClientOnly>
   <AppIsland />
 </ClientOnly>
 
 <style>
-/* The island fills the sheet below the hero/features; VitePress home layout
-   centers content — let the app use the full VPContent width. */
+/* The island sits in the doc flow after the Marketplace section; keep the
+   seam tight between the section lede and the app rail. */
 .VPHome .pa-app {
-  margin-top: 24px;
+  margin-top: 8px;
 }
 </style>
