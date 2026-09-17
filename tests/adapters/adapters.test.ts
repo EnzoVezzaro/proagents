@@ -145,6 +145,73 @@ describe("profile compilation (ADAPT-COMPILE)", () => {
     expect(config.$schema).toBe("https://opencode.ai/config.json");
   });
 
+  it("ADAPT-COMPILE-009: knowledge files are copied into the skill (self-contained artifact)", async () => {
+    const root = await makeRepo({ "AGENTS.md": "# App\n" });
+    const [entry] = await resolveProfiles(["security-engineer"]);
+    if (!entry) throw new Error("profile not found");
+    // Ship a knowledge reference + file with the profile, like marketplace items do.
+    entry.manifest.knowledge = ["knowledge/brief.md"];
+    await fs.mkdir(path.join(entry.dir, "knowledge"), { recursive: true });
+    await fs.writeFile(path.join(entry.dir, "knowledge", "brief.md"), "# Brief\n", "utf8");
+    const { effective } = composeProfiles([entry.manifest]);
+    const detected = await detectHarnesses(root, {});
+    const result = await compileForHarness(effective, entry.manifest, detected.primary, root, {
+      knowledgeDirs: [entry.dir],
+    });
+
+    const knowledgeFile = result.files.find((f) => f.mechanism === "knowledge");
+    expect(knowledgeFile?.path).toBe(".agents/skills/security-engineer/knowledge/brief.md");
+    const copied = await fs.readFile(path.join(root, ".agents/skills/security-engineer/knowledge/brief.md"), "utf8");
+    expect(copied).toBe("# Brief\n");
+    expect(result.limitations.join(" ")).not.toContain("knowledge");
+
+    // Missing source file → honest limitation, not a broken reference.
+    entry.manifest.knowledge = ["knowledge/absent.md"];
+    const { effective: eff2 } = composeProfiles([entry.manifest]);
+    const result2 = await compileForHarness(eff2, entry.manifest, detected.primary, root, {
+      knowledgeDirs: [entry.dir],
+    });
+    expect(result2.limitations.join(" ")).toContain("knowledge/absent.md");
+  });
+
+  it("ADAPT-COMPILE-010: artifact contract per harness (sweep)", async () => {
+    const expectations: Record<string, { skills: boolean; enforcement: string | null; instructions: string }> = {
+      "claude-code": { skills: true, enforcement: "rule-enforcement", instructions: "CLAUDE.md" },
+      opencode: { skills: true, enforcement: "rule-enforcement", instructions: "AGENTS.md" },
+      codex: { skills: true, enforcement: null, instructions: "AGENTS.md" },
+      cursor: { skills: true, enforcement: null, instructions: "AGENTS.md" },
+      "gemini-cli": { skills: true, enforcement: null, instructions: "GEMINI.md" },
+      "generic-cli": { skills: false, enforcement: null, instructions: "AGENTS.md" },
+    };
+    const { effective, manifest } = await loadEffective("security-engineer");
+    const root = await makeRepo({});
+    const detected = await detectHarnesses(root, {});
+    for (const [target, want] of Object.entries(expectations)) {
+      // Explicit targets work regardless of repo layout (equipping is how a
+      // repo becomes a <target> repo).
+      const signal =
+        target === "generic-cli"
+          ? detected.primary
+          : {
+              id: target as never,
+              name: target,
+              capabilities: (await import("../../src/adapters/index.js")).HARNESS_SPECS.find((s) => s.id === target)!.capabilities,
+              evidence: ["--target override"],
+            };
+      const result = await compileForHarness(effective, manifest, signal, root);
+      const mechanisms = result.files.map((f) => f.mechanism);
+      const paths = result.files.map((f) => f.path);
+      expect(mechanisms, target).toContain("project-instructions");
+      if (want.skills) expect(mechanisms, target).toContain("canonical-manifest");
+      expect(paths, target).toContain(want.instructions);
+      expect(mechanisms.includes("agent-skill"), target).toBe(want.skills);
+      expect(mechanisms.includes("rule-enforcement"), target).toBe(want.enforcement !== null);
+      if (!want.skills) {
+        expect(result.limitations.join(" "), target).toMatch(/skills directory/);
+      }
+    }
+  });
+
   it("ADAPT-COMPILE-005: profile MCP servers merge into .mcp.json; packages surface as limitations", async () => {
     const root = await makeRepo({ "CLAUDE.md": "# App\n", ".mcp.json": "{\"mcpServers\":{\"existing\":{\"command\":\"keep\"}}}" });
     const { effective, manifest } = await loadEffective("security-engineer");

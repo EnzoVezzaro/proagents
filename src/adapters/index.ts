@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import fsSync from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import type { EffectiveProfile, ProfileManifest } from "../profiles/types.js";
@@ -85,7 +86,7 @@ const CAPS = {
   },
 } as const;
 
-const HARNESS_SPECS: Array<{
+export const HARNESS_SPECS: Array<{
   id: HarnessId;
   name: string;
   capabilities: HarnessCapabilities;
@@ -316,6 +317,7 @@ export async function compileForHarness(
   manifest: ProfileManifest,
   target: HarnessSignal,
   root: string = process.cwd(),
+  opts: { knowledgeDirs?: string[] } = {},
 ): Promise<CompileResult> {
   const files: CompileResult["files"] = [];
   const limitations: string[] = [];
@@ -333,6 +335,28 @@ export async function compileForHarness(
     const manifestPath = path.join(dir, "profile.json");
     await fs.writeFile(path.join(root, manifestPath), JSON.stringify(manifest, null, 2) + "\n", "utf8");
     files.push({ path: manifestPath, mechanism: "canonical-manifest" });
+
+    // Knowledge references (PA037 resolves them against the profile's source
+    // directory) are copied into the skill so the compiled artifact is
+    // self-contained — a SKILL.md that references files that were not
+    // installed is a broken skill, not a lean one.
+    for (const ref of profile.knowledge) {
+      if (ref.includes("..") || path.isAbsolute(ref)) {
+        limitations.push(`knowledge "${ref}" skipped (must be a relative path inside the profile)`);
+        continue;
+      }
+      const source = (opts.knowledgeDirs ?? []).map((d) => path.join(d, ref)).find((candidate) =>
+        fsSync.existsSync(candidate) && fsSync.statSync(candidate).isFile(),
+      );
+      if (!source) {
+        limitations.push(`knowledge "${ref}" not found locally — the compiled skill references a file that was not installed`);
+        continue;
+      }
+      const destRel = path.join(dir, ref);
+      await fs.mkdir(path.join(root, path.dirname(destRel)), { recursive: true });
+      await fs.writeFile(path.join(root, destRel), await fs.readFile(source, "utf8"), "utf8");
+      files.push({ path: destRel, mechanism: "knowledge" });
+    }
   } else {
     limitations.push("target has no skills directory — profile expressed as project instructions only");
   }
@@ -438,7 +462,9 @@ export async function compileForHarness(
   } else if (caps.ruleEnforcement === "instructions" && profile.rules.length > 0) {
     limitations.push("rule enforcement falls back to project instructions (no native hooks/policy support)");
   } else if (caps.ruleEnforcement === "none" && profile.rules.length > 0) {
-    limitations.push("target has no rule enforcement — rules are advisory in SKILL.md only");
+    limitations.push(caps.skills
+      ? "target has no rule enforcement — rules are advisory in SKILL.md only"
+      : "target has no rule enforcement — rules are advisory in project instructions only");
   }
 
   // 3b. MCP servers declared by the profile merge into the harness .mcp.json

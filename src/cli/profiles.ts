@@ -11,6 +11,7 @@ import path from "node:path";
 import {
   compileForHarness,
   detectHarnesses,
+  HARNESS_SPECS,
 } from "../adapters/index.js";
 import type { HarnessId } from "../adapters/index.js";
 import { validateProfile } from "../profiles/validation.js";
@@ -52,12 +53,33 @@ function requireSlugs(args: string[], usage: string): string[] {
 async function targetHarness(flags: Record<string, string | boolean>) {
   const detected = await detectHarnesses();
   if (typeof flags.target === "string" && flags.target) {
-    const found = detected.all.find((h) => h.id === flags.target);
-    if (!found) {
-      const known = [...detected.all.map((h) => h.id), "generic-cli"].join(", ");
+    // An explicit --target is a compile directive, not a detection claim: the
+    // harness may not be present in this repo yet (equipping is how you set it
+    // up). Validate against every known harness id instead of detected ones.
+    const spec = HARNESS_SPECS.find((s) => s.id === flags.target);
+    if (!spec && flags.target !== "generic-cli") {
+      const known = [...HARNESS_SPECS.map((s) => s.id), "generic-cli"].join(", ");
       fail(`unknown --target ${flags.target} (available: ${known})`);
     }
-    return found;
+    if (flags.target === "generic-cli") {
+      // The documented fallback: instructions-only, no skills directory.
+      const evidence = detected.all.find((h) => h.id === "generic-cli")?.evidence ?? ["--target override"];
+      return {
+        id: "generic-cli" as HarnessId,
+        name: "Generic CLI",
+        capabilities: {
+          projectInstructions: true,
+          skills: false,
+          ruleEnforcement: "none" as const,
+          mcp: false,
+          shell: true,
+          git: true,
+        },
+        evidence,
+      };
+    }
+    const evidence = detected.all.find((h) => h.id === spec!.id)?.evidence ?? [`--target override`];
+    return { id: spec!.id, name: spec!.name, capabilities: { ...spec!.capabilities }, evidence };
   }
   return detected.primary;
 }
@@ -150,15 +172,18 @@ export async function runInspectProfile(slug: string, json: boolean): Promise<vo
 async function resolveEquipManifests(
   slugs: string[],
   flags: Record<string, string | boolean>,
-): Promise<{ manifests: ProfileManifest[]; remote: string[] }> {
+): Promise<{ manifests: ProfileManifest[]; remote: string[]; knowledgeDirs: string[] }> {
   const remote: string[] = [];
   const manifests: ProfileManifest[] = [];
+  const knowledgeDirs: string[] = [];
   let registry: Awaited<ReturnType<typeof listProfiles>> = [];
   for (const slug of slugs) {
     registry = await listProfiles();
     const found = registry.find((e) => e.manifest.profile.slug === slug);
     if (found) {
       manifests.push(found.manifest);
+      // Knowledge refs (PA037) resolve against the profile's own directory.
+      knowledgeDirs.push(found.dir);
       continue;
     }
     const env = getEnvConfig();
@@ -168,7 +193,7 @@ async function resolveEquipManifests(
     manifests.push(await fetchProfileManifest(slug, repo, ref, token));
     remote.push(slug);
   }
-  return { manifests, remote };
+  return { manifests, remote, knowledgeDirs };
 }
 
 /**
@@ -189,7 +214,7 @@ async function equipPipeline(
     : process.cwd();
   const harness = await targetHarness(flags);
 
-  const { manifests, remote } = await resolveEquipManifests(slugs, flags);
+  const { manifests, remote, knowledgeDirs } = await resolveEquipManifests(slugs, flags);
 
   // Validate each profile first (PA03x errors block). Remote profiles have no
   // local directory, so knowledge-reference checks are skipped for them.
@@ -246,7 +271,7 @@ async function equipPipeline(
     return;
   }
 
-  const result = await compileForHarness(effective, manifests[0]!, harness, root);
+  const result = await compileForHarness(effective, manifests[0]!, harness, root, { knowledgeDirs });
   if (json) {
     return jsonOut({
       status: "ok",

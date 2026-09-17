@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed — equip completeness
+
+- **Compiled skills are self-contained**: knowledge files referenced by a
+  profile (`PA037` resolves them against the profile's directory) were never
+  installed — the compiled `SKILL.md` pointed at files that did not exist in
+  the target repo. The compiler now copies them into the skill (mechanism:
+  `knowledge`), reports missing sources as explicit limitations, and rejects
+  path-escaping references.
+- **`--target` is a compile directive, not a detection claim**:
+  `compile <slug> --target cursor|gemini-cli` failed in repos without that
+  layout — but equipping is how a repo becomes a `<target>` repo. Explicit
+  targets now validate against every known harness (including the
+  `generic-cli` fallback the help text itself advertises) instead of only the
+  locally detected ones.
+
 ### Fixed — CLI
 
 - **OpenCode rule enforcement writes `opencode.json`, not `.claude/settings.json`**
