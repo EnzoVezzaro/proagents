@@ -34,8 +34,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Catalog/Dashboard/Docs links are gone (the navbar carries Docs; the catalog
   is the landing view), leaving Donate and Settings.
 
+### Added — profiles
+
+- **Two new professional profiles**: `release-engineer` (release trains,
+  changelog discipline, rollback-first deployments) and `privacy-engineer`
+  (data minimization, PII flow verification, consent-before-collection).
+  Both ship as marketplace items with catalog entries.
+
 ### Added — tests
 
+- **Full-pipeline e2e round** (`tests/cli/pipeline.test.ts`, 10 cases): the
+  complete chain is now pinned end to end — new marketplace profiles validate
+  clean → equip compiles skill + canonical manifest + proagent instructions
+  block into an example repo → the compiled agent's content is verified
+  (frontmatter, identity, rules, marker pairs, composition merge, idempotent
+  re-equip) → `compile --output` really redirects artifacts outside the repo →
+  invalid profiles block with the PA03x finding → the equipped agent passes a
+  deterministic benchmark suite at score 100 with report/baseline/regression
+  tooling closing the loop.
 - **Session-command CLI test round** (`tests/cli/session.test.ts`, 24 e2e cases):
   every agent-building command is now pinned to its documented contract in
   `docs/cli/index.md` / `docs/cli/json.md` — `status`, `question` (+ `--all`),
@@ -46,6 +62,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed — CLI (found by testing the commands against their documentation)
 
+- `compile --output <dir>` is honored — previously the flag was parsed but
+  never forwarded, so the compile artifacts always landed in the working
+  directory regardless.
 - `validate <file>` now validates that file even when an agent-building session
   exists — previously the session silently won, and without a session the file
   was ignored entirely (the profile fallback ran instead), making the documented

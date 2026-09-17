@@ -182,6 +182,11 @@ async function equipPipeline(
 ): Promise<void> {
   const json = flags.json === true;
   const dryRun = flags["dry-run"] === true;
+  // `compile --output <dir>` redirects the compile target (the flag's whole
+  // point); equip always operates on the current repo.
+  const root = explicitCompile && typeof flags.output === "string" && flags.output
+    ? path.resolve(flags.output)
+    : process.cwd();
   const harness = await targetHarness(flags);
 
   const { manifests, remote } = await resolveEquipManifests(slugs, flags);
@@ -241,7 +246,7 @@ async function equipPipeline(
     return;
   }
 
-  const result = await compileForHarness(effective, manifests[0]!, harness);
+  const result = await compileForHarness(effective, manifests[0]!, harness, root);
   if (json) {
     return jsonOut({
       status: "ok",
