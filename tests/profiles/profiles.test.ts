@@ -274,6 +274,25 @@ describe("profile composition (PROFILES-COMP)", () => {
     expect(conflicts.map((c) => c.code)).toContain("PA025");
   });
 
+  it("PROFILES-COMP-007: PA025 never fires on prose outcomes — only named capabilities", () => {
+    // Prose verification (what marketplace profiles ship) is agent-executed
+    // within the session and cannot be matched to tools — no warning.
+    const prose = manifest("prose-profile", {
+      tools: { required: ["filesystem"] },
+      verification: { required: ["new-contributor setup under 15 minutes", "CI green on the release commit"] },
+    });
+    const proseResult = composeProfiles([prose]);
+    expect(proseResult.conflicts.filter((c) => c.code === "PA025")).toHaveLength(0);
+
+    // A named capability with no matching tool is still a real gap.
+    const keyword = manifest("keyword-profile", {
+      tools: { required: ["filesystem"] },
+      verification: { required: ["typecheck"] },
+    });
+    const keywordResult = composeProfiles([keyword]);
+    expect(keywordResult.conflicts.some((c) => c.code === "PA025" && c.message.includes("typecheck"))).toBe(true);
+  });
+
   it("PROFILES-COMP-006: composition is deterministic", () => {
     const a = manifest("profile-a", { rules: ["never expose secrets"] });
     const b = manifest("profile-b", { rules: ["require tests"] });

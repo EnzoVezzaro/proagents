@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed — CLI
+
+- **PA025 no longer false-positives on prose verification outcomes** (found by a
+  user equip of `developer-experience-engineer`): the capability-gap check
+  assumed every `verification.required` entry must name a tool capability, so
+  outcomes like "new-contributor setup under 15 minutes" warned that no tool
+  provides them — every marketplace profile warned, while built-ins (keyword
+  style) never did. PA025 now fires only when a verification entry names a
+  known capability (`tests`, `build`, `security-scan`, …) that no required tool
+  provides; prose outcomes are agent-executed within the session, exactly as
+  the equip output already states.
+
 ### Added
 
 - **`release-guardrails` benchmark suite** — three deterministic cases for the

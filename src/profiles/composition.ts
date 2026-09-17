@@ -140,8 +140,10 @@ export function composeProfiles(manifests: ProfileManifest[]): {
     }
   }
 
-  // PA025 — capability gap: verification requires a capability none of the
-  // required tools provide.
+  // PA025 — capability gap: verification names a concrete capability (tests,
+  // build, security-scan, …) that none of the required tools provide. Prose
+  // outcomes ("CI green on the release commit") are not capability names —
+  // they are executed by the agent within the session and never warn here.
   const toolKeys = new Set(effective.tools.required.map(conceptualKey));
   const verificationSatisfiers: Record<string, string[]> = {
     tests: ["test-runner", "tests", "shell"],
@@ -152,9 +154,10 @@ export function composeProfiles(manifests: ProfileManifest[]): {
     "runtime-validation": ["runtime", "shell"],
   };
   for (const req of effective.verification.required) {
-    const satisfiers = verificationSatisfiers[conceptualKey(req)] ?? [conceptualKey(req)];
+    const satisfiers = verificationSatisfiers[conceptualKey(req)];
+    if (!satisfiers) continue; // prose outcome, not a tool capability
     const satisfiable = satisfiers.some((s) => toolKeys.has(s));
-    if (!satisfiable && effective.tools.required.length > 0) {
+    if (!satisfiable) {
       conflicts.push({
         code: "PA025",
         severity: "warning",
