@@ -35,18 +35,7 @@ jobs:
           node ./dist/cli/index.js benchmark validate release-guardrails
           node ./dist/cli/index.js benchmark run privacy-guardrails --json > /tmp/pg.json
           node ./dist/cli/index.js benchmark run release-guardrails --json > /tmp/rg.json
-          node -e "
-            const fs = require('fs');
-            for (const [name, file] of [['privacy-guardrails', '/tmp/pg.json'], ['release-guardrails', '/tmp/rg.json']]) {
-              const run = JSON.parse(fs.readFileSync(file, 'utf8')).run;
-              const bad = run.summary.failed + run.summary.errors;
-              if (bad > 0 || run.aggregate.score < 100) {
-                console.error("${name} regressed: failed=${run.summary.failed} errors=${run.summary.errors} score=${run.aggregate.score}");
-                process.exit(1);
-              }
-              console.log("${name}: ${run.summary.cases}/${run.summary.cases} cases, score ${run.aggregate.score}");
-            }
-          "
+          node scripts/check-benchmarks.mjs /tmp/pg.json /tmp/rg.json
 
   site:
     runs-on: ubuntu-latest
