@@ -1,0 +1,25 @@
+{
+  "version": "1.0.0",
+  "crew": {
+    "id": "incidere-incident-response",
+    "name": "Incidere — Incident Response",
+    "description": "Three-worker incident response crew: triage the signal, draft stakeholder comms, execute approval-gated mitigation. Reads your repo's runbooks and incident history for context.",
+    "author": "proagents",
+    "tags": [
+      "incident-response",
+      "sre",
+      "on-call",
+      "comms",
+      "multi-agent"
+    ]
+  },
+  "workers": [
+    "workers/triage/worker.json",
+    "workers/comms/worker.json",
+    "workers/remediation/worker.json"
+  ],
+  "mcp": "mcp/servers.json",
+  "graph": "graph.json",
+  "createdAt": "2026-09-15T00:00:00.000Z",
+  "updatedAt": "2026-09-15T00:00:00.000Z"
+}

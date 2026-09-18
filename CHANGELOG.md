@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — crews follow the folder standard (and the subagent standards)
+
+- **Crews moved to the same folder standard as profiles.** The 3 shipped crews
+  (`pr-review-gate`, `incidere-incident-response`, `test-healer`) are now folders —
+  `items/<id>/crew.json` (index) + `workers/<w>/worker.json` + `instructions.md` +
+  `mcp/servers.json` + `graph.json` — instead of one flat JSON with inline worker
+  instructions. Same authority model as profiles: the manifest is the index, the
+  files are the source; hydration at load time, round-trip fixed point checked by
+  `node scripts/crew-folders.mjs check-all`.
+- **Subagent-standard validation for crews (PA043–PA047)**, mirroring the agent
+  architecture rules PA006–PA010: PA043 production-write-without-approval-gate
+  (error), PA044 secrets-without-gates, PA045 orphaned worker, PA046 excessive
+  intake (>5 upstreams), PA047 missing/unloaded/mismatched worker manifest
+  (error). Enforced by `proagent crew validate`, `crew publish`, and the
+  marketplace PR workflow.
+- CLI/registry/SPA read folder crews first with flat-JSON fallback; `crew publish`
+  now commits the folder layout file-by-file (each file a reviewable diff).
+
 ## [0.9.0] - 2026-09-17
 
 ### Changed — marketplace is the single source of profiles

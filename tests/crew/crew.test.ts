@@ -247,8 +247,8 @@ afterAll(() => {
 });
 
 describe("crew CLI (CREW-CLI)", () => {
-  it("CREW-CLI-001: validate accepts a shipped catalog item file", () => {
-    const file = path.resolve(".marketplace", "items", "incidere-incident-response.json");
+  it("CREW-CLI-001: validate accepts a shipped catalog crew folder", () => {
+    const file = path.resolve(".marketplace", "items", "incidere-incident-response");
     const { stdout } = cli(["crew", "validate", file, "--json"]);
     const parsed = JSON.parse(stdout);
     expect(parsed.status).toBe("ok");
@@ -267,8 +267,8 @@ describe("crew CLI (CREW-CLI)", () => {
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
-  it("CREW-CLI-003: install from a local file writes the full layout", () => {
-    const file = path.resolve(".marketplace", "items", "test-healer.json");
+  it("CREW-CLI-003: install from a local crew folder writes the full layout", () => {
+    const file = path.resolve(".marketplace", "items", "test-healer");
     const { stdout } = cli(["crew", "install", file, "--json"]);
     const parsed = JSON.parse(stdout);
     expect(parsed.installed.crewId).toBe("test-healer");
@@ -276,7 +276,7 @@ describe("crew CLI (CREW-CLI)", () => {
   });
 
   it("CREW-CLI-004: dry-run prints the plan without writing", () => {
-    const file = path.resolve(".marketplace", "items", "pr-review-gate.json");
+    const file = path.resolve(".marketplace", "items", "pr-review-gate");
     const { stdout } = cli(["crew", "install", file, "--dry-run", "--json"]);
     const parsed = JSON.parse(stdout);
     expect(parsed.dryRun).toBe(true);
@@ -284,10 +284,13 @@ describe("crew CLI (CREW-CLI)", () => {
     expect(fs.existsSync(path.join(cliProject(), ".agents", "crews", "pr-review-gate"))).toBe(false);
   });
 
-  it("CREW-CLI-005b: crew build installs from a local builder JSON", () => {
+  it("CREW-CLI-005b: crew build installs from a local builder JSON", async () => {
     const root = cliProject();
     const crewFile = path.join(root, "crew.json");
-    const crew = JSON.parse(fs.readFileSync(path.resolve(".marketplace", "items", "test-healer.json"), "utf8"));
+    // Builder output is inline: hydrate the shipped folder item and write it
+    // as a flat definition, exactly what the SPA builder exports.
+    const { loadCrewFile } = await import("../../src/crew/hydrate.js");
+    const crew = await loadCrewFile(path.resolve(".marketplace", "items", "test-healer", "crew.json"));
     fs.writeFileSync(crewFile, JSON.stringify(crew));
     const { stdout } = cli(["crew", "build", crewFile, "--json"]);
     const parsed = JSON.parse(stdout);
@@ -296,17 +299,86 @@ describe("crew CLI (CREW-CLI)", () => {
     expect(fs.existsSync(path.join(root, ".agents", "crews", "test-healer", "workers", "healer", "SKILL.md"))).toBe(true);
   });
 
-  it("CREW-CLI-005: all shipped catalog items validate", () => {
+  it("CREW-CLI-005: all shipped catalog crew folders validate", () => {
     const itemsDir = path.resolve(".marketplace", "items");
     const catalog = JSON.parse(fs.readFileSync(path.resolve(".marketplace", "catalog.json"), "utf8")) as {
       items: Array<{ id: string; kind: string }>;
     };
     const crewKinds = new Set(catalog.items.filter((i) => i.kind !== "profile").map((i) => i.id));
-    for (const file of fs.readdirSync(itemsDir)) {
+    for (const entry of fs.readdirSync(itemsDir, { withFileTypes: true })) {
       // Profile items are validated by the profiles pipeline, not crew validate.
-      if (!crewKinds.has(file.replace(/\.json$/, ""))) continue;
-      const { stdout } = cli(["crew", "validate", path.join(itemsDir, file), "--json"]);
+      if (!entry.isDirectory() || !crewKinds.has(entry.name)) continue;
+      const { stdout } = cli(["crew", "validate", path.join(itemsDir, entry.name), "--json"]);
       expect(JSON.parse(stdout).status).toBe("ok");
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// CREW-STANDARD — subagent-standard checks PA043–PA047 (mirror PA006–PA010)
+// ---------------------------------------------------------------------------
+
+describe("crew subagent standards (CREW-STANDARD)", () => {
+  it("CREW-STANDARD-001: PA043 — production write without an approval gate is an error", () => {
+    const crew = baseCrew();
+    crew.workers[0]!.permissions.production = "write";
+    const joined = crewProblems(crew).join(" ");
+    expect(joined).toContain("[PA043]");
+    expect(joined).toContain("worker alpha");
+    // Adding a gate clears it.
+    crew.workers[0]!.permissions.approvalGates = ["restart_service"];
+    expect(crewProblems(crew).join(" ")).not.toContain("[PA043]");
+  });
+
+  it("CREW-STANDARD-002: PA044 — secret access without gates is flagged", () => {
+    const crew = baseCrew();
+    crew.workers[0]!.permissions.secrets = "named";
+    expect(crewProblems(crew).join(" ")).toContain("[PA044]");
+    crew.workers[0]!.permissions.approvalGates = ["read_secret"];
+    expect(crewProblems(crew).join(" ")).not.toContain("[PA044]");
+  });
+
+  it("CREW-STANDARD-003: PA045 — an unconnected worker in a multi-worker crew is flagged", () => {
+    const crew = baseCrew();
+    crew.workers.push({
+      id: "gamma", name: "Gamma", role: "observer", description: "Watches",
+      permissions: { read: "repo", write: "none", production: "none", secrets: "none", tools: [] },
+      mcpServers: [], context: [], instructions: "Watch.",
+      receivesFrom: [], emits: [],
+    });
+    const joined = crewProblems(crew).join(" ");
+    expect(joined).toContain("[PA045]");
+    expect(joined).toContain("worker gamma");
+  });
+
+  it("CREW-STANDARD-004: PA046 — more than 5 upstream sources is flagged", () => {
+    const crew = baseCrew();
+    // Add 6 upstream workers, all feeding beta.
+    for (let i = 1; i <= 6; i++) {
+      crew.workers.push({
+        id: `src${i}`, name: `Src${i}`, role: "researcher", description: "Feeds",
+        permissions: { read: "repo", write: "none", production: "none", secrets: "none", tools: [] },
+        mcpServers: [], context: [], instructions: "Feed.",
+        receivesFrom: [], emits: [`out-${i}.md`],
+      });
+      crew.workers[1]!.receivesFrom.push(`src${i}`);
+    }
+    expect(crewProblems(crew).join(" ")).toContain("[PA046]");
+  });
+
+  it("CREW-STANDARD-005: PA047 — a missing worker manifest path is flagged (folder standard)", () => {
+    const crew = baseCrew();
+    const problems = crewProblems(crew, { workerEntries: ["workers/ghost/worker.json"] });
+    expect(problems.join(" ")).toContain("[PA047]");
+    expect(problems.join(" ")).toContain("workers/ghost/worker.json");
+  });
+
+  it("CREW-STANDARD-006: shipped crews pass every subagent-standard check", () => {
+    // The three shipped crews must be exemplary: read-only reviewers,
+    // gated remediation, connected graphs.
+    for (const id of ["pr-review-gate", "incidere-incident-response", "test-healer"]) {
+      const raw = fs.readFileSync(path.resolve(".marketplace", "items", id, "crew.json"), "utf8");
+      expect(JSON.parse(raw).crew.id).toBe(id);
     }
   });
 });

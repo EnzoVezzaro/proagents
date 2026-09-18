@@ -132,6 +132,28 @@ export interface CrewDefinition {
   updatedAt: string;
 }
 
+export interface CrewDefinitionSource {
+  version: string;
+  crew: {
+    id: string;
+    name: string;
+    description: string;
+    author: string;
+    tags: string[];
+  };
+  /** Paths to worker.json manifests, or inline worker objects. */
+  workers: string[] | CrewWorker[];
+  /** Path to mcp/servers.json, or an inline list (legacy/builder). */
+  mcp?: string;
+  mcpServers?: CrewMcpServer[];
+  /** Path to graph.json, or inline (legacy/builder). */
+  graph?: string;
+  handoffs?: CrewHandoff[];
+  entryPoints?: string[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface MarketplaceItem {
   id: string;
   name: string;

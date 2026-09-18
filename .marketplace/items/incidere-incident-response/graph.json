@@ -1,0 +1,17 @@
+{
+  "handoffs": [
+    {
+      "from": "triage",
+      "to": "comms",
+      "artifact": "triage-summary.md"
+    },
+    {
+      "from": "triage",
+      "to": "remediation",
+      "artifact": "triage-summary.md"
+    }
+  ],
+  "entryPoints": [
+    "triage"
+  ]
+}

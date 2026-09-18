@@ -4,11 +4,17 @@ import { ErrorNote } from "../cards.js";
 import type { CrewDefinition, MarketplaceCatalog, ProfileManifest } from "../../types.js";
 import { catalogUrl } from "../../catalog.js";
 import { hydrateProfile } from "../../profile-hydrate.js";
+import { hydrateCrew } from "../../crew-hydrate.js";
 import { ProfileDetail } from "./ProfileDetailPage.js";
 
 function itemUrl(id: string): string {
   // Folder layout first (items/<id>/profile.json), flat legacy fallback.
   return catalogUrl(`items/${id}/profile.json`);
+}
+
+function crewUrl(id: string): string {
+  // Crew folder standard first (items/<id>/crew.json), flat legacy fallback.
+  return catalogUrl(`items/${id}/crew.json`);
 }
 
 export function CrewDetailPage(props: { id: string; ctx: AppCtx }): React.JSX.Element {
@@ -20,31 +26,35 @@ export function CrewDetailPage(props: { id: string; ctx: AppCtx }): React.JSX.El
   useEffect(() => {
     let cancelled = false;
     // Kind dispatch: the catalog index names the kind; the item file may be a
-    // crew definition or a profile manifest. Sniff as a fallback for stale indexes.
-    // Profiles live at items/<id>/profile.json (folder standard); crews stay
-    // flat at items/<id>.json — try profile path first, then flat.
-    const loadItem = async (): Promise<CrewDefinition | ProfileManifest> => {
-      let res = await fetch(itemUrl(id));
-      if (!res.ok && res.status === 404) {
-        res = await fetch(catalogUrl(`items/${id}.json`));
+    // profile manifest or a crew definition. Folder standard first for both:
+    // items/<id>/profile.json and items/<id>/crew.json, flat legacy fallback.
+    const loadItem = async (): Promise<{ item: unknown; base: string }> => {
+      for (const url of [itemUrl(id), crewUrl(id), catalogUrl(`items/${id}.json`)]) {
+        const res = await fetch(url);
+        if (res.ok) return { item: await res.json(), base: url.replace(/[^/]*$/, "") };
+        if (res.status !== 404) throw new Error(`HTTP ${res.status}`);
       }
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return res.json() as Promise<CrewDefinition | ProfileManifest>;
+      throw new Error("item not found");
     };
     Promise.all([
       fetch(catalogUrl("catalog.json")).then((r) => (r.ok ? (r.json() as Promise<MarketplaceCatalog>) : null)),
       loadItem(),
     ])
-      .then(async ([catalog, item]) => {
+      .then(async ([catalog, loaded]) => {
         if (cancelled) return;
+        const { item, base } = loaded;
         const meta = catalog?.items.find((i) => i.id === id);
-        if (meta?.kind === "profile" || !(item as CrewDefinition).workers) {
+        const isProfile = meta?.kind === "profile" || (typeof item === "object" && item !== null && "profile" in item);
+        if (isProfile) {
           // Folder-standard manifests hold section paths — hydrate to content
           // (relative to items/<id>/) before rendering.
-          const manifest = await hydrateProfile(item as ProfileManifest, catalogUrl(`items/${id}/`));
+          const manifest = await hydrateProfile(item as ProfileManifest, base);
           if (!cancelled) setProfile(manifest);
         } else {
-          setCrew(item as CrewDefinition);
+          // Crew folder manifests hold worker/mcp/graph paths — hydrate the
+          // same way before rendering.
+          const def = await hydrateCrew(item as Parameters<typeof hydrateCrew>[0], base);
+          if (!cancelled) setCrew(def);
         }
       })
       .catch((err) => {

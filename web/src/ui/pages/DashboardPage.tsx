@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import type { AppCtx } from "../AppShell.js";
 import { ErrorNote, EmptyState } from "../cards.js";
-import type { CrewDefinition, MarketplaceCatalog } from "../../types.js";
+import type { CrewDefinition, CrewDefinitionSource, MarketplaceCatalog } from "../../types.js";
+import { hydrateCrew } from "../../crew-hydrate.js";
 
 import { CATALOG_URL, catalogUrl } from "../../catalog.js";
 
@@ -21,11 +22,20 @@ export function DashboardPage(props: { ctx: AppCtx; user: { login: string } | nu
           catalog.items
             .filter((i) => i.author.toLowerCase() === user.login.toLowerCase())
             .map(async (i) => {
-              const res = await fetch(catalogUrl(`items/${i.id}.json`));
-              return (await res.json()) as CrewDefinition;
+              // Folder standard first (crew.json for crews, profile.json for
+              // profiles), flat legacy fallback.
+              const base = catalogUrl(`items/${i.id}/`);
+              for (const rel of ["crew.json", "profile.json", `../${i.id}.json`]) {
+                const res = await fetch(new URL(rel, base).href);
+                if (!res.ok) continue;
+                const json = (await res.json()) as CrewDefinitionSource | { profile?: unknown };
+                if ("profile" in json) return null; // profile item — not a crew listing
+                return hydrateCrew(json as CrewDefinitionSource, base);
+              }
+              return null;
             }),
         );
-        setMine(definitions);
+        setMine(definitions.filter((c): c is NonNullable<typeof c> => c !== null));
       })
       .catch((err) => setError((err as Error).message));
   }, [user]);

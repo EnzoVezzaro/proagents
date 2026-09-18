@@ -126,6 +126,61 @@ export interface CrewDefinition {
 }
 
 // ---------------------------------------------------------------------------
+// Folder standard (source shape): crew.json is an index of paths
+// ---------------------------------------------------------------------------
+
+/** Crew identity/metadata block in crew.json (mirror of profile.meta). */
+export interface CrewMeta {
+  id: string;
+  name: string;
+  description: string;
+  author: string;
+  tags: string[];
+}
+
+/**
+ * worker.json shape: the structured contract plus a path to the prose.
+ * `instructions` holds a path ("instructions.md") in the folder standard and
+ * the prose itself in inline (builder/legacy) manifests.
+ */
+export type CrewWorkerSource = Omit<CrewWorker, "instructions"> & {
+  instructions?: string;
+};
+
+/**
+ * Source shape of the folder-standard crew.json — every content field is a
+ * path into the crew folder; hydration (crew/hydrate.ts) turns it into a
+ * plain CrewDefinition:
+ *
+ *   items/<id>/crew.json                     this index
+ *   items/<id>/workers/<w>/worker.json       per-worker contract
+ *   items/<id>/workers/<w>/instructions.md   per-worker prose
+ *   items/<id>/mcp/servers.json              crew-level MCP servers
+ *   items/<id>/graph.json                    { handoffs, entryPoints }
+ *
+ * Inline shapes (full CrewDefinition, or CrewDefinitionSource with inline
+ * workers/mcpServers/handoffs) are accepted everywhere a source is read, so
+ * builder output and legacy flat items keep working.
+ */
+export interface CrewDefinitionSource {
+  version: string;
+  crew: CrewMeta;
+  /** Paths to worker.json manifests, or inline worker objects. */
+  workers: string[] | CrewWorkerSource[];
+  /** Path to the crew-level MCP server list (mcp/servers.json). */
+  mcp?: string;
+  /** Inline MCP servers (builder/legacy). */
+  mcpServers?: CrewMcpServer[];
+  /** Path to graph.json ({ handoffs, entryPoints }). */
+  graph?: string;
+  handoffs?: CrewHandoff[];
+  entryPoints?: string[];
+  /** ISO dates (deterministic default: epoch, never "now"). */
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// ---------------------------------------------------------------------------
 // Catalog (Git-backed database)
 // ---------------------------------------------------------------------------
 

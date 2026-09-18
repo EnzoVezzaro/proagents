@@ -1,0 +1,12 @@
+{
+  "handoffs": [
+    {
+      "from": "reviewer",
+      "to": "standards",
+      "artifact": "review-findings.md"
+    }
+  ],
+  "entryPoints": [
+    "reviewer"
+  ]
+}

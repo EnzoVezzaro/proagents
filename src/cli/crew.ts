@@ -5,15 +5,16 @@ import { CrewError } from "../crew/types.js";
 import { crewProblems, crewWarnings } from "../crew/validate.js";
 import { installCrew, planInstall, mergeMcpConfig, crewSkillMarkdown } from "../crew/install.js";
 import { readCatalogRemote, fetchCrewDefinition, publishCrew } from "../crew/registry.js";
+import { loadCrewFile } from "../crew/hydrate.js";
 import type { GitHubCommitTarget } from "../crew/registry.js";
 import { jsonOut } from "./json.js";
 import { getEnvConfig } from "../env.js";
-import { listProfiles, loadProfileFile, fetchProfileManifest } from "../profiles/registry.js";
+import { listProfiles, fetchProfileManifest } from "../profiles/registry.js";
 import type { ProfileManifest } from "../profiles/types.js";
 
 /**
- * Profile resolver for crew installs: local profiles dir + built-ins first,
- * then the marketplace catalog (same precedence as equip). Returns null so
+ * Profile resolver for crew installs: local checkout + packaged marketplace
+ * first, then the remote catalog (same precedence as equip). Returns null so
  * installCrew can raise a precise, actionable error.
  */
 function crewProfileResolver(): (slug: string) => Promise<ProfileManifest | null> {
@@ -21,11 +22,6 @@ function crewProfileResolver(): (slug: string) => Promise<ProfileManifest | null
     const local = await listProfiles();
     const hit = local.find((e) => e.manifest.profile?.slug === slug);
     if (hit) return hit.manifest;
-    try {
-      return await loadProfileFile(path.join(".marketplace", "items", slug, "profile.json"));
-    } catch {
-      /* fall through to the catalog */
-    }
     try {
       const env = getEnvConfig();
       return await fetchProfileManifest(slug, env.marketRepo ?? "EnzoVezzaro/proagents", "main");
@@ -102,7 +98,9 @@ async function crewBuild(file: string | undefined, flags: Record<string, string 
   if (!target) fail("Usage: proagent crew build <crew.json> [--file <crew.json>]");
   let crew: CrewDefinition;
   try {
-    crew = JSON.parse(await fs.readFile(target, "utf8")) as CrewDefinition;
+    // loadCrewFile accepts builder output (inline) and folder manifests
+    // (hydrates paths), so both sources build identically.
+    crew = await loadCrewFile(target);
   } catch (err) {
     fail(`cannot read crew file: ${(err as Error).message}`);
   }
@@ -139,16 +137,18 @@ Subcommands:
     --ref branch            Catalog branch (default main)
     --token <gh-token>      Token for private catalogs (or GITHUB_TOKEN env)
   show <id>                 Print a crew definition (workers, permissions, MCP)
-  validate <file.json>      Validate a crew JSON file
+  validate <crew.json|dir>  Validate a crew manifest (folder standard hydrated) —
+                            subagent standards PA043–PA047 are enforced
   install <id>              Install a crew from the catalog into the current repo
-  build <crew.json>         Install a crew from a local JSON file (builder output)
-    --file <crew.json>      Explicit definition path
+  build <crew.json>         Install a crew from a local manifest (builder output
+                            or folder-standard crew.json)
+    --file <crew.json>      Explicit manifest path
     --dry-run               Show the plan without writing
     --repo / --ref / --token
-    --dry-run               Show the install plan without writing
-  publish <file.json>       Commit a crew definition directly to the catalog
+  publish <crew.json>       Commit a crew to the catalog (folder-standard layout:
+                            crew.json + workers/ + mcp/ + graph.json)
     --repo / --ref / --token (required token with contents:write)
-  submit <file.json>        File a marketplace proposal issue (recommended)
+  submit <crew.json>        File a marketplace proposal issue (recommended)
     --repo owner/name       Target repo (default: the marketplace repo)
     --token <gh-token>      Or GITHUB_TOKEN; needs issues:write
 
@@ -159,18 +159,31 @@ The one-liner: install a crew and everything it needs into the repo you run:
 }
 
 async function resolveCrew(idOrFile: string, flags: Record<string, string | boolean>): Promise<CrewDefinition> {
-  // Local file first (crew build/publish flows), then local marketplace dir,
-  // then the remote Git-backed catalog.
+  // Explicit path: a crew.json manifest (folder standard — hydrated) or a
+  // flat inline definition file.
   if (idOrFile.endsWith(".json")) {
     try {
-      return JSON.parse(await fs.readFile(idOrFile, "utf8")) as CrewDefinition;
+      return await loadCrewFile(idOrFile);
     } catch (err) {
       fail(`cannot read crew file: ${(err as Error).message}`);
     }
   }
-  const local = path.join(process.cwd(), ".marketplace", "items", `${idOrFile}.json`);
+  // A directory holding crew.json (folder standard).
   try {
-    return JSON.parse(await fs.readFile(local, "utf8")) as CrewDefinition;
+    return await loadCrewFile(path.join(idOrFile, "crew.json"));
+  } catch {
+    // fall through
+  }
+  // Local marketplace checkout: folder standard first, then legacy flat.
+  try {
+    return await loadCrewFile(path.join(process.cwd(), ".marketplace", "items", idOrFile, "crew.json"));
+  } catch {
+    // fall through to flat
+  }
+  try {
+    return JSON.parse(
+      await fs.readFile(path.join(process.cwd(), ".marketplace", "items", `${idOrFile}.json`), "utf8"),
+    ) as CrewDefinition;
   } catch {
     // fall through to remote
   }
@@ -195,20 +208,22 @@ async function crewList(flags: Record<string, string | boolean>, json: boolean):
   if (profileCount > 0) console.log(`  (…and ${profileCount} profile(s) — see: proagent profile list)`);
 }
 
-async function crewValidate(file: string | undefined, json: boolean): Promise<void> {
-  if (!file) fail("Usage: proagent crew validate <file.json>");
-  let raw: string;
-  try {
-    raw = await fs.readFile(file, "utf8");
-  } catch (err) {
-    fail(`cannot read ${file}: ${(err as Error).message}`);
-  }
+async function crewValidate(target: string | undefined, json: boolean): Promise<void> {
+  if (!target) fail("Usage: proagent crew validate <crew.json | crew-folder>");
+  // Folder standard (a crew.json manifest or a folder containing one) is
+  // hydrated — path entries load their content — then validated.
+  const manifestPath = target.endsWith("crew.json") ? target : path.join(target, "crew.json");
   let crew: CrewDefinition;
   try {
-    crew = JSON.parse(raw) as CrewDefinition;
-  } catch (err) {
-    if (json) return jsonOut({ status: "invalid", file, problems: [(err as Error).message] });
-    fail(`not valid JSON: ${(err as Error).message}`);
+    crew = await loadCrewFile(manifestPath);
+  } catch {
+    // Flat inline definition fallback.
+    try {
+      crew = JSON.parse(await fs.readFile(target, "utf8")) as CrewDefinition;
+    } catch (err) {
+      if (json) return jsonOut({ status: "invalid", file: target, problems: [(err as Error).message] });
+      fail(`cannot read crew manifest: ${(err as Error).message}`);
+    }
   }
   const problems = crewProblems(crew);
   const warnings = crewWarnings(crew);

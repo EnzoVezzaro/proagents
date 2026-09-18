@@ -1,0 +1,36 @@
+{
+  "id": "triage",
+  "name": "Triage Analyst",
+  "role": "researcher",
+  "description": "Investigates the incident: logs, metrics, recent deploys. Produces a grounded triage summary.",
+  "permissions": {
+    "read": "repo",
+    "write": "none",
+    "production": "read",
+    "secrets": "none",
+    "tools": [
+      "log_search",
+      "read_file",
+      "git_log"
+    ],
+    "approvalGates": []
+  },
+  "mcpServers": [
+    "github"
+  ],
+  "context": [
+    {
+      "framework": "filesystem",
+      "scope": "docs/runbooks/**"
+    },
+    {
+      "framework": "git",
+      "scope": "recent commits touching incident area"
+    }
+  ],
+  "instructions": "workers/triage/instructions.md",
+  "receivesFrom": [],
+  "emits": [
+    "triage-summary.md"
+  ]
+}

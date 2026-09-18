@@ -1,0 +1,36 @@
+{
+  "id": "reviewer",
+  "name": "Security & Architecture Reviewer",
+  "role": "researcher",
+  "description": "Deep review of the diff: security boundaries, permission drift, architectural fit.",
+  "permissions": {
+    "read": "repo",
+    "write": "none",
+    "production": "none",
+    "secrets": "none",
+    "tools": [
+      "read_file",
+      "git_diff",
+      "git_log"
+    ],
+    "approvalGates": []
+  },
+  "mcpServers": [
+    "github"
+  ],
+  "context": [
+    {
+      "framework": "filesystem",
+      "scope": "src/**"
+    },
+    {
+      "framework": "git",
+      "scope": "history of changed files"
+    }
+  ],
+  "instructions": "workers/reviewer/instructions.md",
+  "receivesFrom": [],
+  "emits": [
+    "review-findings.md"
+  ]
+}

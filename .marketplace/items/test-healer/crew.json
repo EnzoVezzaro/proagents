@@ -1,0 +1,22 @@
+{
+  "version": "1.0.0",
+  "crew": {
+    "id": "test-healer",
+    "name": "Test Healer",
+    "description": "Single agent that diagnoses failing tests, separates real regressions from brittle assertions, and proposes minimal patches for humans to review.",
+    "author": "proagents",
+    "tags": [
+      "testing",
+      "ci",
+      "debugging",
+      "single-agent"
+    ]
+  },
+  "workers": [
+    "workers/healer/worker.json"
+  ],
+  "mcp": "mcp/servers.json",
+  "graph": "graph.json",
+  "createdAt": "2026-09-15T00:00:00.000Z",
+  "updatedAt": "2026-09-15T00:00:00.000Z"
+}

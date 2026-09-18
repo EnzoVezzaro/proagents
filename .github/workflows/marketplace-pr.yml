@@ -37,7 +37,7 @@ jobs:
       - name: List changed marketplace items
         id: changed
         run: |
-          git diff --name-only --diff-filter=ACM "origin/${{ github.base_ref }}...HEAD" -- '.marketplace/items/*.json' '.marketplace/items/*/profile.json' > /tmp/items.txt || true
+          git diff --name-only --diff-filter=ACM "origin/${{ github.base_ref }}...HEAD" -- '.marketplace/items/*.json' '.marketplace/items/*/profile.json' '.marketplace/items/*/crew.json' > /tmp/items.txt || true
           echo "count=$(wc -l < /tmp/items.txt | tr -d ' ')" >> "$GITHUB_OUTPUT"
           echo "files<<FILES_EOF" >> "$GITHUB_OUTPUT"
           cat /tmp/items.txt >> "$GITHUB_OUTPUT"
@@ -56,21 +56,31 @@ jobs:
             kind=$(node --input-type=module -e "
               import fs from 'node:fs';
               const j = JSON.parse(fs.readFileSync('$f', 'utf8'));
-              console.log(j.profile ? 'profile' : 'crew');
+              console.log(j.profile ? 'profile' : (j.crew ? 'crew' : 'unknown'));
             ")
             node --input-type=module -e "
               import fs from 'node:fs';
               import path from 'node:path';
               import { crewProblems } from './dist/crew/validate.js';
+              import { loadCrewFile } from './dist/crew/hydrate.js';
               import { profileProblems } from './dist/profiles/marketplace.js';
-              const item = JSON.parse(fs.readFileSync('$f', 'utf8'));
+              const f = '$f';
               const kind = '$kind';
-              // Folder items get their directory so section-path checks (PA042) run.
-              const problems = kind === 'profile'
-                ? profileProblems(item, path.dirname('$f'))
-                : crewProblems(item);
+              let problems = [];
+              if (kind === 'profile') {
+                // Folder items get their directory so section-path checks (PA042) run.
+                const item = JSON.parse(fs.readFileSync(f, 'utf8'));
+                problems = profileProblems(item, path.dirname(f));
+              } else if (kind === 'crew') {
+                // Hydrate the folder-standard manifest first; PA043–PA047 run
+                // against the hydrated definition, PA047 against the folder.
+                const crew = await loadCrewFile(f);
+                problems = crewProblems(crew);
+              } else {
+                problems = ['unrecognized marketplace item shape'];
+              }
               if (problems.length > 0) {
-                for (const p of problems) console.error('$f: ' + p);
+                for (const p of problems) console.error(f + ': ' + p);
                 process.exit(1);
               }
             " || FAIL=1
@@ -89,10 +99,14 @@ jobs:
             const changed = fs.readFileSync("/tmp/items.txt", "utf8").split("\n").filter(Boolean);
             for (const f of changed) {
               const item = JSON.parse(fs.readFileSync(f, "utf8"));
-              const id = item.profile?.slug ?? item.id;
+              const id = item.profile?.slug ?? item.crew?.id ?? item.id;
               const rel = f.replace(".marketplace/items/", "");
-              const expectedName = rel.endsWith("/profile.json") ? rel.replace(/\/profile\.json$/, "") : rel.replace(/\.json$/, "");
-              if (id !== expectedName) problems.push(`${f}: item id "${id}" does not match filename "${expectedName}.json"`);
+              const expectedName = rel.endsWith("/profile.json")
+                ? rel.replace(/\/profile\.json$/, "")
+                : rel.endsWith("/crew.json")
+                  ? rel.replace(/\/crew\.json$/, "")
+                  : rel.replace(/\.json$/, "");
+              if (id !== expectedName) problems.push(`${f}: item id "${id}" does not match folder/file name "${expectedName}"`);
               if (!indexIds.has(id)) problems.push(`${f}: catalog.json has no index entry for "${id}" — regenerate the index`);
               const entry = catalog.items.find((i) => i.id === id);
               const version = item.version ?? item.profile?.version;

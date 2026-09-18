@@ -75,6 +75,36 @@ proagent profile submit <file.json>          # file a proposal issue (recommende
 it automatically and a maintainer `/publish` commits it, the same review-gated flow crews
 use. The issue form (`.github/ISSUE_TEMPLATE/profile-proposal.yml`) also works by hand.
 
+## Crew folder standard
+
+Crews follow the same folder standard as profiles — the manifest is an index,
+the folders are the source:
+
+```
+.marketplace/items/<crew-id>/
+├── crew.json                          # the index: version, crew metadata, section paths
+├── workers/<worker-id>/
+│   ├── worker.json                    # role, permissions, mcp, context, edges
+│   └── instructions.md                # the worker's prose (what used to be inline)
+├── mcp/servers.json                   # crew-level MCP servers
+└── graph.json                         # { handoffs, entryPoints }
+```
+
+Edit a worker by editing its `worker.json` / `instructions.md`; add a worker by
+adding a folder and listing it in `crew.json`. The CLI, SPA and CI all hydrate
+the paths at load time — same model as `profile.json`.
+
+Crews are also held to the **subagent standards** (the crew-side form of the
+PA001–PA013 architecture rules), enforced by the validator at publish and PR
+time:
+
+- **PA043** (error): production write without an approval gate
+- **PA044**: secret access without approval gates
+- **PA045**: an orphaned worker that exchanges no artifacts with the graph
+- **PA046**: a worker receiving from more than 5 upstreams
+- **PA047** (error): a worker manifest path that is missing, unloaded, or
+  living in a folder that doesn't match the worker id
+
 ## Install a crew (the one-liner)
 
 ```bash
@@ -100,6 +130,7 @@ Useful variants:
 ```bash
 proagent crew list                          # browse the catalog
 proagent crew show <id>                     # inspect workers + permissions + MCP
+proagent crew validate <dir>                # folder manifest + PA043–PA047 checks
 proagent crew install <id> --dry-run        # see the plan, write nothing
 proagent crew install <id> --repo owner/name --ref dev   # another catalog
 ```
