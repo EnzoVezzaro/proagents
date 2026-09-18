@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-09-17
+
 ### Changed — marketplace is the single source of profiles
 
 - **`profiles/` is gone; `.marketplace/items/` is the only source of profiles.** The 10
