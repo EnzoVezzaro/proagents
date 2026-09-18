@@ -1,0 +1,24 @@
+# Reference: Resource Modeling
+
+**Owner profile:** api-designer · **Covers:** "Resource modeling — nouns before verbs, state machines over CRUD boilerplate" · **Type:** practice reference
+
+Resources are the vocabulary of the API. Model them deliberately: the nouns, their states, and the transitions — endpoints fall out of that model instead of accreting.
+
+## The method
+
+1. **List the nouns** in the domain (Invoice, Shipment, User). Separate entities (have identity and lifecycle) from values (belong inside an entity's payload).
+2. **Draw each entity's state machine**: states (draft → issued → paid → voided), legal transitions, and who may trigger each. Endpoints are transitions; if a transition shouldn't be exposed, that's a decision to record, not an accident.
+3. **Model relationships explicitly:** `GET /orders/{id}/items` beats `GET /order-items?order={id}` for reads that follow the natural ownership. Deeply nested URIs beyond one level usually signal a modeling smell.
+4. **Resist verb-endpoints** (`/activateUser`) — but when a domain action genuinely isn't a state change on a resource, model it as a sub-resource with a verb field (`POST /users/{id}/credential-resets`) and document why.
+5. **Name for consistency:** plural nouns, same casing everywhere, no abbreviations-in-one-place-only. The naming table is part of the contract.
+
+## Smells
+
+- CRUD boilerplate with no state machine: the API exposes `PATCH` everywhere but nobody can say which transitions are legal.
+- One resource with 20 fields where 5 flows use 4 each — that's several read models fighting over one payload.
+- Endpoints named after the UI's buttons: the API has absorbed the frontend's shape.
+
+## Rules
+
+- Every resource has a documented state machine (even a trivial one) before its endpoints are designed.
+- Chatty round-trips (N calls to render one screen) are modeling bugs, not client inefficiency — fix the model.

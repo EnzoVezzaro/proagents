@@ -29,7 +29,7 @@ for (const file of (await fs.readdir(SRC)).sort()) {
   if (!("knowledge" in m)) m.knowledge = [];
   const out = path.join(ITEMS, `${slug}.json`);
   await fs.writeFile(out, JSON.stringify(m, null, 2) + "\n");
-  manifests.push({ slug, name: m.profile.name ?? m.identity.title, version: m.profile.version });
+  manifests.push({ slug, name: m.profile.name ?? m.identity.title, version: m.version });
   console.log("wrote", out);
 }
 

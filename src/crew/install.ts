@@ -24,7 +24,7 @@ export type ProfileResolver = (slug: string) => Promise<ProfileManifest | null>;
 export function profileSections(manifest: ProfileManifest): string[] {
   const lines: string[] = [];
   const profile = manifest.profile;
-  if (profile) lines.push(`**Profession:** ${profile.name} v${profile.version} (profile: \`${profile.slug}\`)`);
+  if (profile) lines.push(`**Profession:** ${profile.name} v${manifest.version} (profile: \`${profile.slug}\`)`);
   const identity = manifest.identity;
   if (identity?.summary) {
     lines.push("");

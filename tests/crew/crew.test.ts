@@ -329,8 +329,8 @@ describe("CREW-PROFILE — profile-backed workers", () => {
   };
 
   const securityProfile = {
-    version: "1",
-    profile: { name: "Security Engineer", slug: "security-engineer", version: "1.0.0" },
+    version: "1.0.0",
+    profile: { name: "Security Engineer", slug: "security-engineer" },
     identity: { title: "Security Engineer", summary: "You operate as a security engineer." },
     expertise: ["application security"],
     tools: { required: ["filesystem", "shell", "git"] },

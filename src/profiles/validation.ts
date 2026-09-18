@@ -40,7 +40,10 @@ export function validateProfile(
   if (!manifest.version) push("PA030", "error", "missing top-level version", [slug]);
   if (!p.name) push("PA030", "error", "missing profile.name", [slug]);
   if (!p.slug) push("PA030", "error", "missing profile.slug", [slug]);
-  if (!p.version) push("PA030", "error", "missing profile.version", [slug]);
+  if ("version" in p) {
+    push("PA030", "error", "profile.version is removed — use the single top-level version", [slug], "Move the semver to the outermost \"version\" field.");
+  }
+  if (!manifest.identity?.title) push("PA030", "error", "missing identity.title", [slug]);
   if (!manifest.identity?.title) push("PA030", "error", "missing identity.title", [slug]);
 
   // PA031 — slug shape.
@@ -48,9 +51,9 @@ export function validateProfile(
     push("PA031", "error", `slug "${p.slug}" is not kebab-case`, [slug], "Use lowercase words separated by hyphens.");
   }
 
-  // PA032 — semver.
-  if (p.version && !SEMVER.test(p.version)) {
-    push("PA032", "error", `profile.version "${p.version}" is not semver`, [slug], "Use major.minor.patch.");
+  // PA032 — semver (the single, outer version).
+  if (manifest.version && !SEMVER.test(manifest.version)) {
+    push("PA032", "error", `version "${manifest.version}" is not semver`, [slug], "Use major.minor.patch.");
   }
 
   // PA033 — expertise must say what makes this a profession.
@@ -128,6 +131,22 @@ export function validateProfile(
   for (const [i, sk] of (manifest.skills ?? []).entries()) {
     if (sk.includes(":") && !registryRef.test(sk)) {
       push("PA040", "error", `skills[${i}] "${sk}" looks like a registry reference but is not npm:/github:`, [slug], "Use npm:<package>[@version] or github:owner/repo[@ref].");
+    }
+  }
+
+  // skillsDetail keys must reference an entry of skills (no orphan details).
+  const skillsSet = new Set(manifest.skills ?? []);
+  for (const key of Object.keys(manifest.skillsDetail ?? {})) {
+    if (!skillsSet.has(key)) {
+      push("PA040", "error", `skillsDetail key "${key}" does not match any skills entry`, [slug, key], "Add the matching skills entry or rename the detail key.");
+    }
+  }
+
+  // PA041 — references must carry a credible authoritative URL.
+  const httpUrl = /^https:\/\/\S+$/;
+  for (const [name, ref] of Object.entries(manifest.references ?? {})) {
+    if (!ref || !httpUrl.test(ref.url ?? "")) {
+      push("PA041", "error", `references["${name}"] must carry an https:// URL for the standard/method/certification`, [slug, name], "Point to the official spec, body, or documentation page.");
     }
   }
 

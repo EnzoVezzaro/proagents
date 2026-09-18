@@ -42,7 +42,7 @@ function indexFields(manifest: ProfileManifest): {
   return {
     slug: manifest.profile?.slug ?? "unknown-profile",
     title: manifest.identity?.title ?? manifest.profile?.name ?? manifest.profile?.slug ?? "Unknown Profile",
-    version: manifest.profile?.version ?? "0.0.0",
+    version: manifest.version ?? "0.0.0",
     description: manifest.profile?.description ?? manifest.identity?.summary ?? "",
     author: manifest.profile?.author ?? "community",
     tags: ["profile", ...(manifest.profile?.tags ?? [])],
@@ -62,8 +62,9 @@ export async function publishProfile(manifest: ProfileManifest, target: GitHubCo
 
   const { slug, title, version, description, author, tags } = indexFields(manifest);
 
-  // 1. Upsert the full manifest.
-  const itemPath = `.marketplace/items/${slug}.json`;
+  // 1. Upsert the full manifest (standardized folder layout; the legacy flat
+  //    items/<slug>.json is left untouched for backward compatibility).
+  const itemPath = `.marketplace/items/${slug}/profile.json`;
   const itemFile = await getRemoteFile(target, itemPath);
   await putRemoteFile(target, itemPath, JSON.stringify(manifest, null, 2) + "\n", itemFile.sha, `profile: publish ${slug}@${version}`);
 

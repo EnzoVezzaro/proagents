@@ -1,0 +1,5 @@
+---
+title: Security findings follow responsible disclosure — details to the te…
+---
+
+Security findings follow responsible disclosure — details to the team, not public issues.

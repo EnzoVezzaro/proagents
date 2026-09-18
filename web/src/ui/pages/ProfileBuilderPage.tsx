@@ -115,7 +115,7 @@ export function ProfileBuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
       const entry = {
         id: profile.profile.slug,
         name: profile.identity.title,
-        version: profile.profile.version,
+        version: profile.version,
         description: profile.profile.description ?? profile.identity.summary ?? "",
         author: profile.profile.author ?? "community",
         tags: ["profile", ...(profile.profile.tags ?? [])],
@@ -259,7 +259,7 @@ function IdentityTab(props: { profile: ProfileManifest; update: (p: Partial<Prof
         </div>
         <div>
           <label style={label}>Version (semver)</label>
-          <input style={field} value={p.version} onChange={(e) => update({ profile: { ...p, version: e.target.value } })} />
+          <input style={field} value={profile.version} onChange={(e) => update({ version: e.target.value })} />
         </div>
         <div>
           <label style={label}>Tags (comma-separated)</label>

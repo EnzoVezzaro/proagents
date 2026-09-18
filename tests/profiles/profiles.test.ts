@@ -137,7 +137,7 @@ describe("profile validation (PROFILES-VAL)", () => {
 
   it("PROFILES-VAL-004: PA032 rejects non-semver versions", () => {
     const m = manifest("some-profile");
-    m.profile.version = "v1";
+    m.version = "v1";
     const report = validateProfile(m, { checkKnowledge: false });
     expect(report.findings.map((f) => f.code)).toContain("PA032");
   });
@@ -206,8 +206,13 @@ describe("shipped marketplace catalog (PROFILES-CATALOG)", () => {
     const profileIds = catalog.items.filter((i) => i.kind === "profile").map((i) => i.id);
     expect(profileIds.length).toBeGreaterThanOrEqual(13);
     for (const id of profileIds) {
-      const raw = await fs.readFile(path.resolve(".marketplace", "items", `${id}.json`), "utf8");
-      const manifest = JSON.parse(raw) as ProfileManifest;
+      // Folder layout (items/<id>/profile.json) with flat legacy fallback.
+      const folderPath = path.resolve(".marketplace", "items", id, "profile.json");
+      const flatPath = path.resolve(".marketplace", "items", `${id}.json`);
+      const raw = await fs
+        .readFile(folderPath, "utf8")
+        .catch(() => fs.readFile(flatPath, "utf8"));
+      const manifest = JSON.parse(await raw) as ProfileManifest;
       const problems = profileProblems(manifest);
       expect(problems, `catalog item ${id} has problems: ${JSON.stringify(problems)}`).toEqual([]);
     }

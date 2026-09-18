@@ -35,12 +35,50 @@ export interface ProfilePackage {
   reason?: string;
 }
 
+/**
+ * Section→file index for the profile folder standard. Arrays are ordered the
+ * same as the corresponding section arrays in the manifest.
+ */
+export interface ProfileFilesIndex {
+  identity?: string;
+  expertise?: string[];
+  knowledge?: string[];
+  methods?: string[];
+  skills?: string[];
+  rules?: string[];
+  policies?: string[];
+  standards?: string[];
+  tools?: string;
+  verification?: { required?: string[]; optional?: string[] };
+}
+
+/** Depth for a named standard, method, certification, or specification. */
+export interface ProfileReference {
+  /** Authoritative URL for the standard/method/certification. */
+  url: string;
+  /** Why this profile uses it / what part applies. */
+  note?: string;
+}
+
+/**
+ * Which skills inside a referenced skills repository/package this profile
+ * composes. Keys mirror entries of `skills` (the registry ref); the named
+ * skills stay in their repo — referenced, never duplicated.
+ */
+export interface ProfileSkillsDetail {
+  /** Skill names inside the referenced repo/package. */
+  skills: string[];
+  /** How to install the referenced skills (e.g. the npx skills add command). */
+  install?: string;
+  note?: string;
+}
+
 export interface ProfileManifest {
-  version: string; // schema version, "1"
+  /** The profile's own semver — the single, outer version. */
+  version: string;
   profile: {
     name: string;
     slug: string;
-    version: string; // semver of the profile itself
     description?: string;
     author?: string;
     tags?: string[];
@@ -56,12 +94,25 @@ export interface ProfileManifest {
   methods?: string[];
   /** Reusable skills the profile composes: "npm:<pkg>[@v]", "github:o/r", or a written skill's kebab-case name. */
   skills?: string[];
+  /** Per-ref detail: which skills inside the referenced repo this profile uses. */
+  skillsDetail?: Record<string, ProfileSkillsDetail>;
   /** Written skill bodies for skills entries that are not registry refs. */
   skillBodies?: Record<string, { description: string; body: string }>;
   /** Normative constraints — enforced by the harness where supported. */
   rules?: string[];
+  /** Governing policies of the profession (data handling, disclosure, safety). */
+  policies?: string[];
   /** Standards bodies / frameworks the profile follows (OWASP, ISO…). */
   standards?: string[];
+  /** Depth for named standards, methods, certifications: authoritative URLs. */
+  references?: Record<string, ProfileReference>;
+  /**
+   * Folder-standard index: every section entry linked to its file inside the
+   * profile folder (knowledge entries are paths already and are mirrored).
+   * Additive metadata — the engine reads the section arrays; tools and humans
+   * use `files` to find the editable source of each item.
+   */
+  files?: ProfileFilesIndex;
   tools: {
     required: string[];
     optional?: string[];
@@ -116,8 +167,11 @@ export interface EffectiveProfile {
   knowledge: string[];
   methods: string[];
   skills: string[];
+  skillsDetail: Record<string, ProfileSkillsDetail>;
   rules: string[];
+  policies: string[];
   standards: string[];
+  references: Record<string, ProfileReference>;
   tools: {
     required: string[];
     optional: string[];
@@ -151,7 +205,8 @@ export type ProfileValidationCode =
   | "PA037" // knowledge reference missing from profile directory
   | "PA038" // duplicate slug in registry
   | "PA039" // invalid MCP server entry (name/transport/url/command)
-  | "PA040"; // invalid package registry ref (not npm:/github:)
+  | "PA040" // invalid package registry ref (not npm:/github:)
+  | "PA041"; // reference entry without an https:// URL
 
 export interface ProfileValidationReport {
   ok: boolean;

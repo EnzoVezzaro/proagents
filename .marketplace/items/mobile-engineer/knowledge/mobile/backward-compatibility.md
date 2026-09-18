@@ -1,0 +1,22 @@
+# Reference: Backward Compatibility and API Aging
+
+**Owner profile:** mobile-engineer · **Covers:** "Backward compatibility and API aging" · **Type:** practice reference
+
+Mobile is a distributed system where one side (released binaries) cannot be updated. Backward compatibility is the discipline of changing the backend and the app while binaries from years ago keep working.
+
+## The compatibility inventory
+
+1. **Know your installed base:** version distribution with adoption curves (per release, per OS). Every backend change checks this dashboard — the oldest supported binary is a real user, not an edge case.
+2. **API changes follow expand/contract:** new fields added, old fields kept until the binaries that read them age out of the installed base. Removal dates come from *adoption data*, not from the sprint board.
+3. **Version-aware behavior is explicit:** when the app must behave differently by API level or backend capability, the branching is centralized and documented — scattered `if (sdkVersion >= …)` checks are how drift starts.
+4. **Data migrations on-device are forward-tested:** the schema upgrade from every supported released version to the new one is tested — including the user who skipped three releases (they always exist, in the thousands).
+
+## Deprecating things well
+
+- **Client deprecations:** mark, log usage, set a removal release, announce in the changelog — the same expand/contract applied inward.
+- **SDK/dependency aging:** minimum-OS bumps and major dependency upgrades are scheduled, adoption-aware, and tested on the matrix — not crammed into a feature branch at deadline.
+
+## Rules
+
+- No backend endpoint is removed or semantically changed without an installed-base check attached to the PR.
+- The oldest supported released binary boots, logs in, and completes the core journey against the *current* backend — verified in CI, continuously, not nostalgically.

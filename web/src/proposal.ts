@@ -62,7 +62,7 @@ export const PROFILE_JSON_BEGIN = "<!-- PROFILE-JSON-BEGIN -->";
 export const PROFILE_JSON_END = "<!-- PROFILE-JSON-END -->";
 
 export function profileIssueTitle(profile: ProfileManifest): string {
-  return `[profile-proposal] ${profile.profile.slug} v${profile.profile.version}`;
+  return `[profile-proposal] ${profile.profile.slug} v${profile.version}`;
 }
 
 export function profileIssueBody(profile: ProfileManifest): string {
@@ -74,7 +74,7 @@ ${profile.identity.summary ?? ""}
 | | |
 |---|---|
 | Slug | \`${profile.profile.slug}\` |
-| Version | ${profile.profile.version} |
+| Version | ${profile.version} |
 | Kind | profile |
 | Expertise | ${profile.expertise.length} areas |
 | Rules | ${(profile.rules ?? []).length} normative |

@@ -101,8 +101,8 @@ describe("profile CLI (PROFILES-CLI)", () => {
       // Two local profiles with contradictory rules → composition must block.
       await fs.mkdir(path.join(root, "profiles"), { recursive: true });
       const base = {
-        version: "1",
-        profile: { name: "A", slug: "conflict-a", version: "1.0.0" },
+        version: "1.0.0",
+        profile: { name: "A", slug: "conflict-a" },
         identity: { title: "A" },
         expertise: ["x"],
         tools: { required: ["shell"] },
@@ -114,7 +114,7 @@ describe("profile CLI (PROFILES-CLI)", () => {
       );
       await fs.writeFile(
         path.join(root, "profiles", "conflict-b.json"),
-        JSON.stringify({ ...base, profile: { name: "B", slug: "conflict-b", version: "1.0.0" }, rules: ["deploy on friday"] }),
+        JSON.stringify({ ...base, profile: { name: "B", slug: "conflict-b" }, rules: ["deploy on friday"] }),
       );
       let failed = false;
       try {
@@ -163,8 +163,8 @@ describe("profile CLI (PROFILES-CLI)", () => {
     try {
       await fs.mkdir(path.join(root, "profiles"), { recursive: true });
       const good = {
-        version: "1",
-        profile: { name: "G", slug: "good-profile", version: "1.0.0" },
+        version: "1.0.0",
+        profile: { name: "G", slug: "good-profile" },
         identity: { title: "G" },
         expertise: ["x"],
         tools: { required: ["shell"] },
@@ -199,8 +199,8 @@ describe("profile CLI (PROFILES-CLI)", () => {
     try {
       await fs.mkdir(path.join(root, ".marketplace", "items"), { recursive: true });
       const item = {
-        version: "1",
-        profile: { name: "Local M", slug: "marketplace-local", version: "1.0.0" },
+        version: "1.0.0",
+        profile: { name: "Local M", slug: "marketplace-local" },
         identity: { title: "Local M" },
         expertise: ["x"],
         tools: { required: ["filesystem", "shell", "git"] },

@@ -74,8 +74,11 @@ export function composeProfiles(manifests: ProfileManifest[]): {
     knowledge: dedupe(unique.flatMap((m) => m.knowledge ?? [])),
     methods: dedupe(unique.flatMap((m) => m.methods ?? [])),
     skills: dedupe(unique.flatMap((m) => m.skills ?? [])),
+    skillsDetail: Object.fromEntries(unique.flatMap((m) => Object.entries(m.skillsDetail ?? {}))),
     rules: dedupe(unique.flatMap((m) => m.rules ?? [])),
+    policies: dedupe(unique.flatMap((m) => m.policies ?? [])),
     standards: dedupe(unique.flatMap((m) => m.standards ?? [])),
+    references: Object.fromEntries(unique.flatMap((m) => Object.entries(m.references ?? {}))),
     tools: {
       required: dedupe(unique.flatMap((m) => m.tools.required)),
       optional: dedupe(unique.flatMap((m) => m.tools.optional ?? [])),

@@ -243,7 +243,7 @@ function profileSkillMarkdown(profile: EffectiveProfile, manifest: ProfileManife
   const lines: string[] = [];
   lines.push("---");
   lines.push(`name: ${profile.slugs.join("-")}`);
-  lines.push(`description: Professional profile ${profile.identity.title} (v${manifest.profile.version}). Equip when operating as this profession.`);
+  lines.push(`description: Professional profile ${profile.identity.title} (v${manifest.version}). Equip when operating as this profession.`);
   lines.push("---");
   lines.push("");
   lines.push(`# ${profile.identity.title}`);
@@ -262,19 +262,50 @@ function profileSkillMarkdown(profile: EffectiveProfile, manifest: ProfileManife
   if (profile.methods.length > 0) {
     lines.push("");
     lines.push("## Methods");
-    for (const m of profile.methods) lines.push(`- ${m}`);
+    for (const m of profile.methods) {
+      // Method playbooks convention: a method with a playbook ships it as a
+      // knowledge reference ending in methods/<method>.md (namespaced per
+      // slug). The compiled skill links to the installed copy so the agent
+      // reads the full procedure, not just the method's name.
+      const kebab = m.trim().toLowerCase().replace(/\s+/g, "-");
+      const ref = profile.knowledge.find((k) => k === `methods/${kebab}.md` || k.endsWith(`/${kebab}.md`));
+      lines.push(ref ? `- **${m}** — playbook: [${ref}](${ref})` : `- ${m}`);
+    }
   }
   if (profile.skills.length > 0) {
     lines.push("");
     lines.push("## Skills");
-    for (const s of profile.skills) lines.push(`- ${s}`);
+    for (const s of profile.skills) {
+      const detail = profile.skillsDetail[s];
+      if (detail) {
+        lines.push(`- ${s} — uses: ${detail.skills.join(", ")}${detail.install ? ` · install: ${detail.install}` : ""}${detail.note ? ` · ${detail.note}` : ""}`);
+      } else {
+        lines.push(`- ${s}`);
+      }
+    }
   }
   lines.push("");
   lines.push("## Rules (normative)");
   for (const r of profile.rules) lines.push(`- ${r}`);
+  if (profile.policies.length > 0) {
+    lines.push("");
+    lines.push("## Policies (governing the profession)");
+    for (const pol of profile.policies) lines.push(`- ${pol}`);
+  }
   lines.push("");
   lines.push("## Standards");
-  for (const s of profile.standards) lines.push(`- ${s}`);
+  for (const s of profile.standards) {
+    const ref = profile.references[s];
+    lines.push(ref ? `- ${s} — ${ref.url}${ref.note ? ` (${ref.note})` : ""}` : `- ${s}`);
+  }
+  if (Object.keys(profile.references).length > profile.standards.length) {
+    const extras = Object.entries(profile.references).filter(([k]) => !profile.standards.includes(k));
+    if (extras.length > 0) {
+      lines.push("");
+      lines.push("### Method and certification references");
+      for (const [k, ref] of extras) lines.push(`- ${k} — ${ref.url}${ref.note ? ` (${ref.note})` : ""}`);
+    }
+  }
   lines.push("");
   lines.push("## Tools");
   lines.push(`- required: ${profile.tools.required.join(", ")}`);

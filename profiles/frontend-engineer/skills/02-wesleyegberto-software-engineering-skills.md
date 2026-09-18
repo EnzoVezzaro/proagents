@@ -1,0 +1,8 @@
+---
+title: wesleyegberto-software-engineering-skills
+ref: github:wesleyegberto/software-engineering-skills
+install: npx skills add wesleyegberto/software-engineering-skills --skill e2e-testing-patterns
+skills: e2e-testing-patterns, frontend-design-everyday-things
+---
+
+

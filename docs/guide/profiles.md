@@ -26,25 +26,66 @@ composes skills, methods, rules and verification into a coherent operating model
 
 ```json
 {
-  "version": "1",
+  "version": "2.0.0",
   "profile": {
     "name": "Security Engineer",
-    "slug": "security-engineer",
-    "version": "1.0.0"
+    "slug": "security-engineer"
   },
   "identity": { "title": "Security Engineer", "summary": "…" },
   "expertise": ["application security", "threat modeling"],
-  "knowledge": [],
+  "knowledge": ["knowledge/threat-modeling-basics.md"],
   "methods": ["threat-modeling", "root-cause-analysis"],
-  "skills": ["security-audit", "secure-code-review"],
+  "skills": ["github:obra/superpowers"],
   "rules": ["never expose secrets", "require security verification…"],
-  "standards": ["OWASP"],
+  "policies": ["responsible disclosure timelines"],
+  "standards": ["OWASP Top 10"],
+  "references": { "OWASP Top 10": { "url": "https://owasp.org/Top10/" } },
   "tools": { "required": ["filesystem", "shell", "git"], "forbidden": [] },
   "verification": { "required": ["tests", "security-scan"] }
 }
 ```
 
 The schema is provider-agnostic and independent of any coding-agent harness.
+`version` is the profile's single, own semver.
+
+## Profile folder standard
+
+A profile is a **self-contained folder** — every section of the tree is a real
+folder of `NN-*.md` files (numeric prefix = display order), so any concept can
+be added, removed, swapped or extended without touching the others:
+
+```
+<profile>/
+├── profile.json          canonical manifest — an INDEX; every entry links to its file
+├── README.md             layout contract
+├── identity/01-….md      who the agent is
+├── expertise/NN-*.md     one file per domain
+├── knowledge/**          reference files installed at equip time
+├── methods/NN-*.md       one file per named method (playbooks)
+├── skills/NN-*.md        referenced skills (frontmatter: ref, install, skills)
+├── rules/NN-*.md         normative constraints
+├── policies/NN-*.md      governing policies of the profession
+├── standards/NN-*.md     frontmatter carries the authoritative url
+├── tools/requirements.md mirror of structured tool data
+└── verification/required|optional/NN-*.md
+```
+
+`profile.json` carries a `files` map linking every section entry to its file —
+the manifest is the index, the folders are the source. Two commands keep both
+representations in sync (round-trip is a pinned fixed point):
+
+```bash
+node scripts/profile-folders.mjs materialize <profile-dir>   # manifest → folders
+node scripts/profile-folders.mjs sync <profile-dir>          # folders → manifest
+```
+
+Skills entries **reference** real skill collections (e.g. `github:obra/superpowers`,
+`github:anthropics/skills`) with per-repo install commands — skills are composed,
+never duplicated into the profile.
+
+Built-ins live in `profiles/<slug>/`; marketplace items in
+`.marketplace/items/<slug>/profile.json` (the legacy flat `items/<id>.json`
+layout is still discovered and fetched for backward compatibility).
 
 ## Built-in profiles
 

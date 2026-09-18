@@ -64,6 +64,28 @@ async function listJson(dir: string): Promise<string[]> {
 }
 
 /**
+ * List candidate manifest files for a profile source directory. Both layouts
+ * are discovered so old checkouts keep working:
+ *   flat:    <dir>/<slug>.json
+ *   folder:  <dir>/<slug>/profile.json  (the standardized, extensible layout
+ *            — a profile is a self-contained folder: profile.json + knowledge/)
+ */
+async function listManifestCandidates(dir: string): Promise<string[]> {
+  const flat = await listJson(dir);
+  let folder: string[] = [];
+  try {
+    const entries = await fs.readdir(dir, { withFileTypes: true });
+    folder = entries
+      .filter((e) => e.isDirectory())
+      .map((e) => path.join(dir, e.name, "profile.json"))
+      .sort();
+  } catch {
+    // Directory missing entirely — flat already returned [].
+  }
+  return [...flat, ...folder];
+}
+
+/**
  * List all discoverable profiles. Precedence per slug (last write wins in
  * insertion order, marketplace never shadows the others):
  *   1. built-in (shipped with the package)
@@ -77,7 +99,7 @@ export async function listProfiles(root: string = process.cwd()): Promise<Profil
     bySlug.set(entry.manifest.profile.slug, entry);
   };
 
-  for (const file of await listJson(BUILTIN_DIR)) {
+  for (const file of await listManifestCandidates(BUILTIN_DIR)) {
     try {
       const manifest = await loadProfileFile(file);
       put({ manifest, origin: "builtin", dir: path.dirname(file) });
@@ -86,7 +108,7 @@ export async function listProfiles(root: string = process.cwd()): Promise<Profil
     }
   }
 
-  for (const file of await listJson(path.join(root, "profiles"))) {
+  for (const file of await listManifestCandidates(path.join(root, "profiles"))) {
     try {
       const manifest = await loadProfileFile(file);
       put({ manifest, origin: "local", dir: path.dirname(file) });
@@ -95,7 +117,7 @@ export async function listProfiles(root: string = process.cwd()): Promise<Profil
     }
   }
 
-  for (const file of await listJson(path.join(root, MARKETPLACE_ITEMS_DIR))) {
+  for (const file of await listManifestCandidates(path.join(root, MARKETPLACE_ITEMS_DIR))) {
     try {
       const manifest = await loadProfileFile(file);
       // Marketplace copies of builtin/local slugs never shadow them.
@@ -125,14 +147,23 @@ export async function resolveProfiles(slugs: string[], root: string = process.cw
   return entries;
 }
 
-/** Fetch a profile manifest from the remote Git-backed marketplace catalog. */
+/**
+ * Fetch a profile manifest from the remote Git-backed marketplace catalog.
+ * Tries the folder layout first (items/<id>/profile.json), then the legacy
+ * flat layout (items/<id>.json) so older catalogs keep working.
+ */
 export async function fetchProfileManifest(id: string, repo: string, ref: string, token?: string): Promise<ProfileManifest> {
-  const url = `https://raw.githubusercontent.com/${repo}/${ref}/${MARKETPLACE_ITEMS_DIR}/${id}.json`;
+  const base = `https://raw.githubusercontent.com/${repo}/${ref}/${MARKETPLACE_ITEMS_DIR}`;
+  const urls = [`${base}/${id}/profile.json`, `${base}/${id}.json`];
   // Mirrors fetchRaw in crew/registry.ts: retry unauthenticated on 404, since
   // an invalid token makes GitHub raw answer 404 even for public files.
-  let res = await fetch(url, { headers: token ? { authorization: `Bearer ${token}` } : {} });
-  if (res.status === 404 && token) {
-    res = await fetch(url);
+  let res!: Response;
+  for (const url of urls) {
+    res = await fetch(url, { headers: token ? { authorization: `Bearer ${token}` } : {} });
+    if (res.status === 404 && token) {
+      res = await fetch(url);
+    }
+    if (res.status !== 404) break;
   }
   if (res.status === 404) throw new Error(`profile not found in marketplace: ${id}`);
   if (!res.ok) throw new Error(`profile fetch failed: HTTP ${res.status}`);

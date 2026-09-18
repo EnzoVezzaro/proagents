@@ -1,0 +1,6 @@
+---
+title: CCPA
+url: https://oag.ca.gov/privacy/ccpa
+---
+
+

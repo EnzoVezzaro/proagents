@@ -123,7 +123,7 @@ export async function runListProfiles(json: boolean): Promise<void> {
       profiles: entries.map((e) => ({
         slug: e.manifest.profile.slug,
         name: e.manifest.profile.name,
-        version: e.manifest.profile.version,
+        version: e.manifest.version,
         description: e.manifest.profile.description ?? "",
         origin: e.origin,
         tags: e.manifest.profile.tags ?? [],
@@ -147,7 +147,7 @@ export async function runInspectProfile(slug: string, json: boolean): Promise<vo
   if (json) {
     return jsonOut({ status: "ok", command: "inspect", profile: manifest, origin: entry.origin });
   }
-  console.log(`\n${manifest.identity.title} (${manifest.profile.slug} v${manifest.profile.version})\n`);
+  console.log(`\n${manifest.identity.title} (${manifest.profile.slug} v${manifest.version})\n`);
   if (manifest.identity.summary) console.log(`  ${manifest.identity.summary}\n`);
   const section = (title: string, items: string[]): void => {
     if (items.length === 0) return;
@@ -448,7 +448,7 @@ async function profileValidate(file: string | undefined, json: boolean): Promise
     });
   }
   if (problems.length === 0) {
-    console.log(`✓ Profile "${manifest.profile.slug}" v${manifest.profile.version} is valid.`);
+    console.log(`✓ Profile "${manifest.profile.slug}" v${manifest.version} is valid.`);
     return;
   }
   console.error(`✗ Profile "${manifest.profile?.slug ?? "?"}" is invalid:`);
@@ -472,8 +472,8 @@ async function profilePublish(file: string | undefined, flags: Record<string, st
   if (!token) fail("publish requires a token with contents:write (--token, GITHUB_TOKEN, or a .env file)");
 
   const paths = await publishProfile(manifest, { repo, branch: ref, token });
-  if (json) return jsonOut({ status: "ok", slug: manifest.profile.slug, version: manifest.profile.version, repo, ref, ...paths });
-  console.log(`✓ Published ${manifest.profile.slug}@${manifest.profile.version} to ${repo}@${ref}`);
+  if (json) return jsonOut({ status: "ok", slug: manifest.profile.slug, version: manifest.version, repo, ref, ...paths });
+  console.log(`✓ Published ${manifest.profile.slug}@${manifest.version} to ${repo}@${ref}`);
   console.log(`  + ${paths.itemPath}`);
   console.log(`  ~ ${paths.catalogPath}`);
   console.log("  (GitHub Pages serves the catalog after the next Pages build)");
@@ -505,7 +505,7 @@ async function profileSubmit(file: string | undefined, flags: Record<string, str
     "",
     "### Profile summary",
     "",
-    `- **Slug**: \`${manifest.profile.slug}\` v${manifest.profile.version}`,
+    `- **Slug**: \`${manifest.profile.slug}\` v${manifest.version}`,
     `- **Expertise**: ${manifest.expertise.join(", ")}`,
     `- **Methods**: ${(manifest.methods ?? []).join(", ") || "—"}`,
     `- **Rules**: ${(manifest.rules ?? []).length} normative rule(s)`,
@@ -533,7 +533,7 @@ async function profileSubmit(file: string | undefined, flags: Record<string, str
       "user-agent": "proagent-cli",
     },
     body: JSON.stringify({
-      title: `[profile-proposal] ${manifest.profile.slug} v${manifest.profile.version}`,
+      title: `[profile-proposal] ${manifest.profile.slug} v${manifest.version}`,
       body,
       labels: ["profile-proposal"],
     }),
@@ -543,7 +543,7 @@ async function profileSubmit(file: string | undefined, flags: Record<string, str
     fail(`issue creation failed: HTTP ${res.status} ${text.slice(0, 200)}`);
   }
   const issue = (await res.json()) as { number: number; html_url: string };
-  if (json) return jsonOut({ status: "ok", slug: manifest.profile.slug, version: manifest.profile.version, repo, issue: issue.number, url: issue.html_url });
+  if (json) return jsonOut({ status: "ok", slug: manifest.profile.slug, version: manifest.version, repo, issue: issue.number, url: issue.html_url });
   console.log(`✓ Proposal filed: ${issue.html_url}`);
   console.log("  CI validates it within seconds; a maintainer /publish commits it to the marketplace.");
 }

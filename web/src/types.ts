@@ -25,7 +25,6 @@ export interface ProfileManifest {
   profile: {
     name: string;
     slug: string;
-    version: string;
     description?: string;
     author?: string;
     tags?: string[];
@@ -35,9 +34,24 @@ export interface ProfileManifest {
   knowledge?: string[];
   methods?: string[];
   skills?: string[];
+  skillsDetail?: Record<string, { skills: string[]; install?: string; note?: string }>;
   skillBodies?: Record<string, { description: string; body: string }>;
   rules?: string[];
+  policies?: string[];
   standards?: string[];
+  references?: Record<string, { url: string; note?: string }>;
+  files?: {
+    identity?: string;
+    expertise?: string[];
+    knowledge?: string[];
+    methods?: string[];
+    skills?: string[];
+    rules?: string[];
+    policies?: string[];
+    standards?: string[];
+    tools?: string;
+    verification?: { required?: string[]; optional?: string[] };
+  };
   tools: {
     required: string[];
     optional?: string[];
@@ -153,8 +167,8 @@ export function slugify(text: string): string {
 /** Minimal ProfileManifest for new profile drafts (validator defaults fill the rest). */
 export function emptyProfile(): ProfileManifest {
   return {
-    version: "1",
-    profile: { name: "", slug: "", version: "1.0.0" },
+    version: "1.0.0",
+    profile: { name: "", slug: "" },
     identity: { title: "" },
     expertise: [],
     tools: { required: ["filesystem", "shell", "git"], mcp: [], packages: [] },

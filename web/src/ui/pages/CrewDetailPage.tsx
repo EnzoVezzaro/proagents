@@ -6,7 +6,8 @@ import { catalogUrl } from "../../catalog.js";
 import { ProfileDetail } from "./ProfileDetailPage.js";
 
 function itemUrl(id: string): string {
-  return catalogUrl(`items/${id}.json`);
+  // Folder layout first (items/<id>/profile.json), flat legacy fallback.
+  return catalogUrl(`items/${id}/profile.json`);
 }
 
 export function CrewDetailPage(props: { id: string; ctx: AppCtx }): React.JSX.Element {
@@ -19,12 +20,19 @@ export function CrewDetailPage(props: { id: string; ctx: AppCtx }): React.JSX.El
     let cancelled = false;
     // Kind dispatch: the catalog index names the kind; the item file may be a
     // crew definition or a profile manifest. Sniff as a fallback for stale indexes.
+    // Profiles live at items/<id>/profile.json (folder standard); crews stay
+    // flat at items/<id>.json — try profile path first, then flat.
+    const loadItem = async (): Promise<CrewDefinition | ProfileManifest> => {
+      let res = await fetch(itemUrl(id));
+      if (!res.ok && res.status === 404) {
+        res = await fetch(catalogUrl(`items/${id}.json`));
+      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json() as Promise<CrewDefinition | ProfileManifest>;
+    };
     Promise.all([
       fetch(catalogUrl("catalog.json")).then((r) => (r.ok ? (r.json() as Promise<MarketplaceCatalog>) : null)),
-      fetch(itemUrl(id)).then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json() as Promise<CrewDefinition | ProfileManifest>;
-      }),
+      loadItem(),
     ])
       .then(([catalog, item]) => {
         if (cancelled) return;

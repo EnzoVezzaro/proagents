@@ -31,16 +31,25 @@ function makeRepo(files: Record<string, string>): string {
   return root;
 }
 
-/** Seed the marketplace items the way a consumer sees them. */
+/** Seed the marketplace items the way a consumer sees them (folder layout). */
 function marketplaceFiles(): Record<string, string> {
   const files: Record<string, string> = {};
   for (const slug of NEW_PROFILES) {
-    files[`.marketplace/items/${slug}.json`] = fs.readFileSync(
-      path.join(CHECKOUT, ".marketplace", "items", `${slug}.json`),
-      "utf8",
-    );
+    const dir = path.join(CHECKOUT, ".marketplace", "items", slug);
+    for (const rel of collectFiles(dir, "")) {
+      files[`.marketplace/items/${slug}/${rel}`] = fs.readFileSync(path.join(dir, rel), "utf8");
+    }
   }
   return files;
+}
+
+function collectFiles(dir: string, prefix: string): string[] {
+  const out: string[] = [];
+  for (const e of fs.readdirSync(path.join(dir, prefix), { withFileTypes: true })) {
+    if (e.isDirectory()) out.push(...collectFiles(dir, path.posix.join(prefix, e.name)));
+    else out.push(path.posix.join(prefix, e.name));
+  }
+  return out;
 }
 
 function run(root: string, args: string[], expectFailure = false): { stdout: string; status: number } {

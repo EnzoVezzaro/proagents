@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — profile depth & folder standard (profiles v2)
+
+- **Folder-per-profile standard**: every profile is now a self-contained folder —
+  `profile.json` (canonical manifest) plus a folder per section of the profile tree
+  (identity, expertise, knowledge, methods, skills, rules, policies, standards,
+  tools, verification), one ordered `NN-*.md` file per item. Any concept can be
+  added, removed, swapped or extended independently. `scripts/profile-folders.mjs`
+  materializes (manifest → folders) and syncs (folders → manifest); the round trip
+  is a pinned fixed point. The manifest carries a `files` index linking every entry
+  to its file.
+- **Full-depth content** for all 28 profiles, learned from real skill collections
+  (obra/superpowers, wesleyegberto/software-engineering-skills, anthropics/skills):
+  per-expertise reference files, per-method playbooks, and per-profile verification
+  checklists — profiles previously shipped ~3 items per section with no knowledge
+  files; exemplars now compile to 10+ files including 9–10 installed knowledge docs.
+- **Skills composition without duplication**: profiles reference real, installable
+  skills (`github:…` refs with `skillsDetail`: which skills, the `npx skills add`
+  install command, and why) instead of embedding copies.
+- **Policies section** (governing policies of the profession) rendered into the
+  compiled skill and instructions blocks.
+- **References with authoritative URLs** for standards/methods/certifications
+  (OWASP, WCAG 2.2, DORA, Diátaxis, …), validated (PA041: https URL required) and
+  rendered into the compiled skill.
+- **Method→playbook binding**: compiled skills link each method to its installed
+  playbook file, so equipped agents read procedures, not just names.
+
+### Changed — profiles
+
+- **Single version per profile**: the duplicated `profile.version` is removed;
+  the outer `version` is the profile's own semver (validator errors on the old
+  inner field). Marketplace catalog indexes and the web builder follow.
+- **Marketplace item layout**: profiles live at `items/<slug>/profile.json`
+  (folder standard); crews remain flat `items/<id>.json`. Discovery, remote
+  fetching, the site assembler and the SPA detail pages accept both layouts.
+
 ### Added — marketplace
 
 - **Install skills from any GitHub repo via the marketplace search**: paste a repo URL
