@@ -19,7 +19,13 @@ export interface ProfilePackage {
   reason?: string;
 }
 
-/** Mirror of src/profiles/types.ts ProfileManifest — profile catalog items. */
+/**
+ * Mirror of src/profiles/types.ts ProfileManifest — profile catalog items.
+ * Catalog manifests in the folder standard hold section paths (identity is a
+ * "identity/01-x.md" string, tools is "tools/requirements.md"); those are
+ * hydrated client-side before rendering — see hydrateProfile in
+ * profile-hydrate.ts.
+ */
 export interface ProfileManifest {
   version: string;
   profile: {
@@ -40,18 +46,6 @@ export interface ProfileManifest {
   policies?: string[];
   standards?: string[];
   references?: Record<string, { url: string; note?: string }>;
-  files?: {
-    identity?: string;
-    expertise?: string[];
-    knowledge?: string[];
-    methods?: string[];
-    skills?: string[];
-    rules?: string[];
-    policies?: string[];
-    standards?: string[];
-    tools?: string;
-    verification?: { required?: string[]; optional?: string[] };
-  };
   tools: {
     required: string[];
     optional?: string[];
@@ -60,6 +54,21 @@ export interface ProfileManifest {
     packages?: ProfilePackage[];
   };
   verification: { required: string[]; optional?: string[] };
+}
+
+/**
+ * On-disk/catalog manifest in the folder standard: sections hold .md paths;
+ * hydration turns this into a plain ProfileManifest. Inline drafts (builder)
+ * are a ProfileManifest with content instead of paths.
+ */
+export type ProfileManifestSource = Omit<ProfileManifest, "identity" | "tools"> & {
+  identity?: ProfileManifest["identity"] | string;
+  tools?: ProfileManifest["tools"] | string;
+};
+
+/** True when a section entry is a folder-standard .md path. */
+export function isPathEntry(entry: string): boolean {
+  return /^[\w./-]+\.md$/.test(entry) && !entry.includes("..") && !entry.startsWith("/") && !entry.startsWith("npm:") && !entry.startsWith("github:");
 }
 
 export interface CrewPermissions {

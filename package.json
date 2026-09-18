@@ -55,7 +55,8 @@
   },
   "files": [
     "dist",
-    "profiles",
+    ".marketplace/items",
+    ".marketplace/catalog.json",
     ".agents/skills/proagent",
     "README.md",
     "LICENSE",

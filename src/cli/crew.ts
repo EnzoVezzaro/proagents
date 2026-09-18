@@ -22,7 +22,7 @@ function crewProfileResolver(): (slug: string) => Promise<ProfileManifest | null
     const hit = local.find((e) => e.manifest.profile?.slug === slug);
     if (hit) return hit.manifest;
     try {
-      return await loadProfileFile(path.join("profiles", `${slug}.json`));
+      return await loadProfileFile(path.join(".marketplace", "items", slug, "profile.json"));
     } catch {
       /* fall through to the catalog */
     }

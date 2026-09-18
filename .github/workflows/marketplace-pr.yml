@@ -37,7 +37,7 @@ jobs:
       - name: List changed marketplace items
         id: changed
         run: |
-          git diff --name-only --diff-filter=ACM "origin/${{ github.base_ref }}...HEAD" -- '.marketplace/items/*.json' > /tmp/items.txt || true
+          git diff --name-only --diff-filter=ACM "origin/${{ github.base_ref }}...HEAD" -- '.marketplace/items/*.json' '.marketplace/items/*/profile.json' > /tmp/items.txt || true
           echo "count=$(wc -l < /tmp/items.txt | tr -d ' ')" >> "$GITHUB_OUTPUT"
           echo "files<<FILES_EOF" >> "$GITHUB_OUTPUT"
           cat /tmp/items.txt >> "$GITHUB_OUTPUT"
@@ -60,11 +60,15 @@ jobs:
             ")
             node --input-type=module -e "
               import fs from 'node:fs';
+              import path from 'node:path';
               import { crewProblems } from './dist/crew/validate.js';
               import { profileProblems } from './dist/profiles/marketplace.js';
               const item = JSON.parse(fs.readFileSync('$f', 'utf8'));
               const kind = '$kind';
-              const problems = kind === 'profile' ? profileProblems(item) : crewProblems(item);
+              // Folder items get their directory so section-path checks (PA042) run.
+              const problems = kind === 'profile'
+                ? profileProblems(item, path.dirname('$f'))
+                : crewProblems(item);
               if (problems.length > 0) {
                 for (const p of problems) console.error('$f: ' + p);
                 process.exit(1);
@@ -86,12 +90,14 @@ jobs:
             for (const f of changed) {
               const item = JSON.parse(fs.readFileSync(f, "utf8"));
               const id = item.profile?.slug ?? item.id;
-              const expectedName = f.replace(".marketplace/items/", "").replace(".json", "");
+              const rel = f.replace(".marketplace/items/", "");
+              const expectedName = rel.endsWith("/profile.json") ? rel.replace(/\/profile\.json$/, "") : rel.replace(/\.json$/, "");
               if (id !== expectedName) problems.push(`${f}: item id "${id}" does not match filename "${expectedName}.json"`);
               if (!indexIds.has(id)) problems.push(`${f}: catalog.json has no index entry for "${id}" — regenerate the index`);
               const entry = catalog.items.find((i) => i.id === id);
-              if (entry && item.profile && entry.version !== item.profile.version) {
-                problems.push(`${f}: catalog version ${entry.version} != manifest version ${item.profile.version}`);
+              const version = item.version ?? item.profile?.version;
+              if (entry && version && entry.version !== version) {
+                problems.push(`${f}: catalog version ${entry.version} != manifest version ${version}`);
               }
             }
             for (const p of problems) console.error(p);

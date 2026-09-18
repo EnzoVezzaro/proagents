@@ -98,8 +98,9 @@ describe("profile CLI (PROFILES-CLI)", () => {
   it("PROFILES-CLI-006: equip blocks with non-zero exit on a conflicting composition", async () => {
     const root = await makeRepo({});
     try {
-      // Two local profiles with contradictory rules → composition must block.
-      await fs.mkdir(path.join(root, "profiles"), { recursive: true });
+      // Two marketplace profiles with contradictory rules → composition must block.
+      await fs.mkdir(path.join(root, ".marketplace", "items", "conflict-a"), { recursive: true });
+      await fs.mkdir(path.join(root, ".marketplace", "items", "conflict-b"), { recursive: true });
       const base = {
         version: "1.0.0",
         profile: { name: "A", slug: "conflict-a" },
@@ -109,11 +110,11 @@ describe("profile CLI (PROFILES-CLI)", () => {
         verification: { required: ["tests"] },
       };
       await fs.writeFile(
-        path.join(root, "profiles", "conflict-a.json"),
+        path.join(root, ".marketplace", "items", "conflict-a", "profile.json"),
         JSON.stringify({ ...base, rules: ["never deploy on friday"] }),
       );
       await fs.writeFile(
-        path.join(root, "profiles", "conflict-b.json"),
+        path.join(root, ".marketplace", "items", "conflict-b", "profile.json"),
         JSON.stringify({ ...base, profile: { name: "B", slug: "conflict-b" }, rules: ["deploy on friday"] }),
       );
       let failed = false;

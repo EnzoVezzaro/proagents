@@ -55,39 +55,30 @@ describe("profile registry (PROFILES-REG)", () => {
     await expect(resolveProfiles(["no-such-profile"])).rejects.toThrow(/unknown profile/);
   });
 
-  it("PROFILES-REG-004: local profiles shadow built-ins and are flagged during validation", async () => {
+  it("PROFILES-REG-004: a marketplace checkout wins over the packaged snapshot", async () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), "profiles-reg-"));
     try {
-      const local = manifest("senior-engineer");
-      await fs.mkdir(path.join(root, "profiles"), { recursive: true });
-      await fs.writeFile(path.join(root, "profiles", "senior-engineer.json"), JSON.stringify(local));
-      const entries = await listProfiles(root);
-      const shadowed = entries.find((e) => e.manifest.profile.slug === "senior-engineer");
-      expect(shadowed?.origin).toBe("local");
-    } finally {
-      await fs.rm(root, { recursive: true, force: true });
-    }
-  });
-
-  it("PROFILES-REG-005: marketplace items fill gaps but never shadow built-ins", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "profiles-reg-"));
-    try {
-      await fs.mkdir(path.join(root, ".marketplace", "items"), { recursive: true });
-      // A marketplace copy of a built-in slug must NOT win…
+      // A checkout copy of a packaged slug wins (it is what the repo manages).
+      const checkoutCopy = manifest("senior-engineer");
+      await fs.mkdir(path.join(root, ".marketplace", "items", "senior-engineer"), { recursive: true });
       await fs.writeFile(
-        path.join(root, ".marketplace", "items", "senior-engineer.json"),
-        JSON.stringify(manifest("senior-engineer")),
+        path.join(root, ".marketplace", "items", "senior-engineer", "profile.json"),
+        JSON.stringify(checkoutCopy),
       );
-      // …and a marketplace-only profile must appear.
+      // A marketplace-only profile must appear from the checkout.
+      await fs.mkdir(path.join(root, ".marketplace", "items", "marketplace-only"), { recursive: true });
       await fs.writeFile(
-        path.join(root, ".marketplace", "items", "marketplace-only.json"),
+        path.join(root, ".marketplace", "items", "marketplace-only", "profile.json"),
         JSON.stringify(manifest("marketplace-only")),
       );
       const entries = await listProfiles(root);
       const senior = entries.find((e) => e.manifest.profile.slug === "senior-engineer");
-      expect(senior?.origin).toBe("builtin");
+      expect(senior?.origin).toBe("marketplace");
       const only = entries.find((e) => e.manifest.profile.slug === "marketplace-only");
       expect(only?.origin).toBe("marketplace");
+      // The packaged snapshot still fills gaps for slugs the checkout lacks.
+      const builtin = entries.find((e) => e.manifest.profile.slug === "security-engineer");
+      expect(builtin?.origin).toBe("builtin");
     } finally {
       await fs.rm(root, { recursive: true, force: true });
     }
@@ -209,10 +200,13 @@ describe("shipped marketplace catalog (PROFILES-CATALOG)", () => {
       // Folder layout (items/<id>/profile.json) with flat legacy fallback.
       const folderPath = path.resolve(".marketplace", "items", id, "profile.json");
       const flatPath = path.resolve(".marketplace", "items", `${id}.json`);
-      const raw = await fs
-        .readFile(folderPath, "utf8")
-        .catch(() => fs.readFile(flatPath, "utf8"));
-      const manifest = JSON.parse(await raw) as ProfileManifest;
+      const filePath = await fs
+        .access(folderPath)
+        .then(() => folderPath)
+        .catch(() => flatPath);
+      // Load through the registry so path-format sections hydrate first.
+      const { loadProfileFile } = await import("../../src/profiles/registry.js");
+      const manifest = await loadProfileFile(filePath);
       const problems = profileProblems(manifest);
       expect(problems, `catalog item ${id} has problems: ${JSON.stringify(problems)}`).toEqual([]);
     }

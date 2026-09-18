@@ -298,7 +298,7 @@ function WorkersTab(props: {
             style={field}
             value={w.profile ?? ""}
             onChange={(e) => updateWorker(w.id, { profile: slugify(e.target.value) || undefined })}
-            placeholder="or type a profile slug — built-in (security-engineer), marketplace, or local profiles/"
+            placeholder="or type a profile slug — marketplace (security-engineer)"
           />
           {w.profile && (
             <p style={{ color: "var(--warn)", fontSize: 12, margin: "8px 0 0" }}>

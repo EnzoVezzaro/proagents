@@ -3,6 +3,7 @@ import type { AppCtx } from "../AppShell.js";
 import { ErrorNote } from "../cards.js";
 import type { CrewDefinition, MarketplaceCatalog, ProfileManifest } from "../../types.js";
 import { catalogUrl } from "../../catalog.js";
+import { hydrateProfile } from "../../profile-hydrate.js";
 import { ProfileDetail } from "./ProfileDetailPage.js";
 
 function itemUrl(id: string): string {
@@ -34,11 +35,14 @@ export function CrewDetailPage(props: { id: string; ctx: AppCtx }): React.JSX.El
       fetch(catalogUrl("catalog.json")).then((r) => (r.ok ? (r.json() as Promise<MarketplaceCatalog>) : null)),
       loadItem(),
     ])
-      .then(([catalog, item]) => {
+      .then(async ([catalog, item]) => {
         if (cancelled) return;
         const meta = catalog?.items.find((i) => i.id === id);
         if (meta?.kind === "profile" || !(item as CrewDefinition).workers) {
-          setProfile(item as ProfileManifest);
+          // Folder-standard manifests hold section paths — hydrate to content
+          // (relative to items/<id>/) before rendering.
+          const manifest = await hydrateProfile(item as ProfileManifest, catalogUrl(`items/${id}/`));
+          if (!cancelled) setProfile(manifest);
         } else {
           setCrew(item as CrewDefinition);
         }

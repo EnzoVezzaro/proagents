@@ -1,7 +1,25 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-16T05:06:25.298Z",
+  "updatedAt": "1970-01-01T00:00:00.000Z",
   "items": [
+    {
+      "id": "accessibility-engineer",
+      "name": "Accessibility Engineer",
+      "version": "1.1.0",
+      "description": "Inclusive interfaces: WCAG conformance, assistive technology, and perceptible feedback.",
+      "author": "proagents",
+      "tags": [
+        "profile",
+        "accessibility",
+        "wcag",
+        "a11y",
+        "ui"
+      ],
+      "kind": "profile",
+      "downloads": 0,
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "updatedAt": "1970-01-01T00:00:00.000Z"
+    },
     {
       "id": "api-designer",
       "name": "API Designer",
@@ -17,6 +35,23 @@
       "downloads": 0,
       "createdAt": "2026-09-16T05:06:25.298Z",
       "updatedAt": "2026-09-17T23:30:46.428Z"
+    },
+    {
+      "id": "backend-engineer",
+      "name": "Backend Engineer",
+      "version": "1.1.0",
+      "description": "Server-side systems: APIs, data integrity, reliability, and operational safety.",
+      "author": "proagents",
+      "tags": [
+        "profile",
+        "backend",
+        "api",
+        "databases"
+      ],
+      "kind": "profile",
+      "downloads": 0,
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "updatedAt": "1970-01-01T00:00:00.000Z"
     },
     {
       "id": "code-reviewer",
@@ -51,6 +86,23 @@
       "updatedAt": "2026-09-17T23:30:46.429Z"
     },
     {
+      "id": "database-engineer",
+      "name": "Database Engineer",
+      "version": "1.1.0",
+      "description": "Data layer craft: schema design, migrations, integrity, and query performance.",
+      "author": "proagents",
+      "tags": [
+        "profile",
+        "database",
+        "migrations",
+        "sql"
+      ],
+      "kind": "profile",
+      "downloads": 0,
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "updatedAt": "1970-01-01T00:00:00.000Z"
+    },
+    {
       "id": "developer-experience-engineer",
       "name": "Developer Experience Engineer",
       "version": "2.1.0",
@@ -65,6 +117,40 @@
       "downloads": 0,
       "createdAt": "2026-09-16T05:06:25.298Z",
       "updatedAt": "2026-09-17T23:30:46.429Z"
+    },
+    {
+      "id": "devops-engineer",
+      "name": "DevOps Engineer",
+      "version": "1.1.0",
+      "description": "Delivery infrastructure: pipelines, environments, and deployment safety.",
+      "author": "proagents",
+      "tags": [
+        "profile",
+        "devops",
+        "ci-cd",
+        "infrastructure"
+      ],
+      "kind": "profile",
+      "downloads": 0,
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "updatedAt": "1970-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "frontend-engineer",
+      "name": "Frontend Engineer",
+      "version": "1.1.0",
+      "description": "User-facing interfaces: accessibility, responsive behavior, and interaction quality.",
+      "author": "proagents",
+      "tags": [
+        "profile",
+        "frontend",
+        "ui",
+        "accessibility"
+      ],
+      "kind": "profile",
+      "downloads": 0,
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "updatedAt": "1970-01-01T00:00:00.000Z"
     },
     {
       "id": "incidere-incident-response",
@@ -134,6 +220,23 @@
       "updatedAt": "2026-09-17T23:30:46.429Z"
     },
     {
+      "id": "performance-engineer",
+      "name": "Performance Engineer",
+      "version": "1.1.0",
+      "description": "Measurement-driven optimization: profiles before patches, regressions guarded by budgets.",
+      "author": "proagents",
+      "tags": [
+        "profile",
+        "performance",
+        "profiling",
+        "core-web-vitals"
+      ],
+      "kind": "profile",
+      "downloads": 0,
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "updatedAt": "1970-01-01T00:00:00.000Z"
+    },
+    {
       "id": "platform-engineer",
       "name": "Platform Engineer",
       "version": "2.1.0",
@@ -167,6 +270,23 @@
       "updatedAt": "2026-09-15T00:00:00.000Z"
     },
     {
+      "id": "principal-engineer",
+      "name": "Principal Engineer",
+      "version": "1.1.0",
+      "description": "Organization-scale engineering: long-horizon architecture, risk, and leverage.",
+      "author": "proagents",
+      "tags": [
+        "profile",
+        "engineering",
+        "architecture",
+        "strategy"
+      ],
+      "kind": "profile",
+      "downloads": 0,
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "updatedAt": "1970-01-01T00:00:00.000Z"
+    },
+    {
       "id": "privacy-engineer",
       "name": "Privacy Engineer",
       "version": "1.1.0",
@@ -182,6 +302,23 @@
       "downloads": 0,
       "createdAt": "2026-09-17T00:00:00.000Z",
       "updatedAt": "2026-09-17T23:30:46.430Z"
+    },
+    {
+      "id": "qa-engineer",
+      "name": "QA Engineer",
+      "version": "1.1.0",
+      "description": "Quality practice: test strategy, regression analysis, and honest verification.",
+      "author": "proagents",
+      "tags": [
+        "profile",
+        "qa",
+        "testing",
+        "quality"
+      ],
+      "kind": "profile",
+      "downloads": 0,
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "updatedAt": "1970-01-01T00:00:00.000Z"
     },
     {
       "id": "release-engineer",
@@ -218,6 +355,22 @@
       "updatedAt": "2026-09-17T23:30:46.430Z"
     },
     {
+      "id": "senior-engineer",
+      "name": "Senior Engineer",
+      "version": "1.1.0",
+      "description": "General professional engineering practice: evidence-driven changes, tests with source, honest reporting.",
+      "author": "proagents",
+      "tags": [
+        "profile",
+        "engineering",
+        "general"
+      ],
+      "kind": "profile",
+      "downloads": 0,
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "updatedAt": "1970-01-01T00:00:00.000Z"
+    },
+    {
       "id": "sre",
       "name": "Site Reliability Engineer",
       "version": "1.1.0",
@@ -250,6 +403,23 @@
       "downloads": 0,
       "createdAt": "2026-09-15T00:00:00.000Z",
       "updatedAt": "2026-09-17T23:30:46.431Z"
+    },
+    {
+      "id": "systems-architect",
+      "name": "Systems Architect",
+      "version": "1.1.0",
+      "description": "Whole-system design: boundaries, contracts, failure modes, and evolution paths.",
+      "author": "proagents",
+      "tags": [
+        "profile",
+        "architecture",
+        "systems",
+        "design"
+      ],
+      "kind": "profile",
+      "downloads": 0,
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "updatedAt": "1970-01-01T00:00:00.000Z"
     },
     {
       "id": "technical-writer",

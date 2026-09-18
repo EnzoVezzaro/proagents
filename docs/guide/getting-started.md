@@ -80,8 +80,8 @@ tools:    { required: [filesystem, shell, git] }
 verification: { required: [tests, security-scan] }
 ```
 
-Drop your own into `./profiles/*.json` in your repo — local profiles shadow built-ins and
-are flagged as local during validation.
+Drop your own under `.marketplace/items/<slug>/` in your repo — a checkout copy wins over
+the packaged snapshot for the same slug.
 
 ## The interview path: build a specialized agent
 

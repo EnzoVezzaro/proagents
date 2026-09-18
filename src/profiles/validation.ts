@@ -10,6 +10,18 @@ import type { ProfileManifest } from "./types.js";
 const SEMVER = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
+/** A section entry in path format: a relative .md path inside the profile folder. */
+const PATH_RE = /^[\w./-]+\.md$/;
+
+/**
+ * True when a section entry is a folder-standard path ("rules/01-x.md")
+ * rather than inline content. Registry-ref skill entries ("npm:…",
+ * "github:…") and inline drafts are not paths.
+ */
+export function isPathEntry(entry: string): boolean {
+  return PATH_RE.test(entry) && !entry.includes("..") && !entry.startsWith("/") && !entry.startsWith("npm:") && !entry.startsWith("github:");
+}
+
 export interface ValidateProfileOpts {
   /** Other distinct slugs in the registry (PA038 duplicate detection). */
   registrySlugs?: Set<string>;
@@ -43,8 +55,8 @@ export function validateProfile(
   if ("version" in p) {
     push("PA030", "error", "profile.version is removed — use the single top-level version", [slug], "Move the semver to the outermost \"version\" field.");
   }
-  if (!manifest.identity?.title) push("PA030", "error", "missing identity.title", [slug]);
-  if (!manifest.identity?.title) push("PA030", "error", "missing identity.title", [slug]);
+  const identityTitle = typeof manifest.identity === "string" ? undefined : manifest.identity?.title;
+  if (!identityTitle) push("PA030", "error", "missing identity.title", [slug]);
 
   // PA031 — slug shape.
   if (p.slug && !SLUG.test(p.slug)) {
@@ -61,8 +73,12 @@ export function validateProfile(
     push("PA033", "error", "expertise is empty — a profession needs at least one domain", [slug]);
   }
 
-  // PA034 — tools.
-  if (!manifest.tools?.required || manifest.tools.required.length === 0) {
+  // PA034 — tools (path format: hydrated before validation; a string here
+  // means the loader never hydrated it, so require the directory to check).
+  const toolsIsPath = typeof manifest.tools === "string";
+  if (!manifest.tools) {
+    push("PA034", "error", "tools is missing — declare what the profession needs", [slug]);
+  } else if (!toolsIsPath && (!manifest.tools.required || manifest.tools.required.length === 0)) {
     push("PA034", "error", "tools.required is empty — declare what the profession needs", [slug]);
   }
 
@@ -72,8 +88,8 @@ export function validateProfile(
   }
 
   // PA036 — forbidden tool also required.
-  const required = new Set((manifest.tools?.required ?? []).map((t) => t.trim().toLowerCase()));
-  for (const tool of manifest.tools?.forbidden ?? []) {
+  const required = new Set(toolsIsPath ? [] : (manifest.tools.required ?? []).map((t) => t.trim().toLowerCase()));
+  for (const tool of toolsIsPath ? [] : (manifest.tools.forbidden ?? [])) {
     if (required.has(tool.trim().toLowerCase())) {
       push("PA036", "error", `tool "${tool}" is both required and forbidden`, [slug, tool], "Remove it from one of the two lists.");
     }
@@ -95,6 +111,28 @@ export function validateProfile(
   // PA038 — the same slug defined by more than one source (one shadows the other).
   if (opts.duplicateSlugs?.has(slug)) {
     push("PA038", "warning", `slug "${slug}" is defined in more than one profile source — the last discovered wins`, [slug], "Rename one of the profiles or remove the shadowed file.");
+  }
+
+  // PA042 — folder-standard section paths must exist inside the profile
+  // directory (same deterministic-fs policy as PA037). The hydration step in
+  // the registry already left unhydratable paths in place; this reports them.
+  if (opts.profileDir) {
+    const checkPath = (section: string, entry: string): void => {
+      if (!isPathEntry(entry)) return;
+      try {
+        fsSync.accessSync(path.resolve(opts.profileDir!, entry));
+      } catch {
+        push("PA042", "warning", `${section} entry "${entry}" does not exist in the profile directory`, [slug, entry], "Create the file or fix the path — the entry is loaded verbatim until it resolves.");
+      }
+    };
+    if (typeof manifest.identity === "string") checkPath("identity", manifest.identity);
+    for (const section of ["expertise", "methods", "rules", "policies", "standards"] as const) {
+      for (const entry of manifest[section] ?? []) checkPath(section, entry);
+    }
+    for (const entry of manifest.skills ?? []) checkPath("skills", entry);
+    if (typeof manifest.tools === "string") checkPath("tools", manifest.tools);
+    for (const entry of manifest.verification?.required ?? []) checkPath("verification.required", entry);
+    for (const entry of manifest.verification?.optional ?? []) checkPath("verification.optional", entry);
   }
 
   // PA039 — MCP server entries must be well-formed and self-consistent.

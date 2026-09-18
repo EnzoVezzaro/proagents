@@ -70,22 +70,38 @@ be added, removed, swapped or extended without touching the others:
 └── verification/required|optional/NN-*.md
 ```
 
-`profile.json` carries a `files` map linking every section entry to its file —
-the manifest is the index, the folders are the source. Two commands keep both
+In the **folder standard**, every section entry in `profile.json` is a path to its
+file — the same format `knowledge` always used — and the loader hydrates paths to
+content at read time (missing files are reported by validation, never silently
+dropped):
+
+```json
+{
+  "identity": "identity/01-security-engineer.md",
+  "expertise": ["expertise/01-application-security.md", "expertise/02-threat-modeling.md"],
+  "knowledge": ["knowledge/threat-modeling-basics.md"],
+  "methods": ["methods/01-threat-modeling.md"],
+  "rules": ["rules/01-never-expose-secrets.md"],
+  "verification": { "required": ["verification/required/01-tests.md"] }
+}
+```
+
+`profile.json` is the index; the folders are the source. Two commands keep both
 representations in sync (round-trip is a pinned fixed point):
 
 ```bash
 node scripts/profile-folders.mjs materialize <profile-dir>   # manifest → folders
-node scripts/profile-folders.mjs sync <profile-dir>          # folders → manifest
+node scripts/profile-folders.mjs sync <profile-dir>          # folders → manifest (writes paths)
 ```
 
 Skills entries **reference** real skill collections (e.g. `github:obra/superpowers`,
 `github:anthropics/skills`) with per-repo install commands — skills are composed,
 never duplicated into the profile.
 
-Built-ins live in `profiles/<slug>/`; marketplace items in
-`.marketplace/items/<slug>/profile.json` (the legacy flat `items/<id>.json`
-layout is still discovered and fetched for backward compatibility).
+All profiles are marketplace items: `.marketplace/items/<slug>/profile.json` is the
+single source of truth (the npm package ships this folder, so offline equip works).
+The legacy flat `items/<id>.json` layout is still discovered and fetched for backward
+compatibility.
 
 ## Built-in profiles
 
@@ -259,17 +275,20 @@ report the offending profiles and a suggestion.
 
 ## Local and community profiles
 
-Drop a JSON file into `./profiles/` in your repository:
+There is no separate local folder — the marketplace is the only source. To work on a
+profile locally, check out or create it under `.marketplace/items/` in your repo:
 
 ```bash
-mkdir -p profiles
-$EDITOR profiles/my-profession.json
-proagent list          # appears with [local] marker
+mkdir -p .marketplace/items/my-profession
+$EDITOR .marketplace/items/my-profession/profile.json
+proagent list          # your checkout wins over the packaged snapshot
 proagent equip my-profession
 ```
 
-Local profiles shadow built-ins with the same slug (last discovery wins) and are flagged
-during `validate --profiles` so you always know what is shipped vs. local.
+A repo's `.marketplace/items` checkout **is** the marketplace: it wins over the packaged
+snapshot shipped with the npm package (same slug → checkout version), and packaged items
+fill gaps for slugs the checkout does not have. Publishing is then just a PR with your
+item folder — the same files you tested locally.
 
 Or install a profile from the Git-backed marketplace catalog — the same resolver the CLI
 uses for built-ins, with catalog items filling gaps only:

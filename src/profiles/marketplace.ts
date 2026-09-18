@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import type { ProfileManifest } from "./types.js";
 import { validateProfile } from "./validation.js";
+import { loadProfileFile } from "./registry.js";
 import { getRemoteFile, putRemoteFile } from "../crew/registry.js";
 import type { GitHubCommitTarget } from "../crew/registry.js";
 import { CrewError } from "../crew/types.js";
@@ -19,12 +20,16 @@ export const MARKETPLACE_ITEMS_DIR = ".marketplace/items";
 /** Path of the catalog index (relative to repo root). */
 export const CATALOG_PATH = ".marketplace/catalog.json";
 
-/** Deterministic validation problems for a profile manifest (for CI gating). */
-export function profileProblems(manifest: ProfileManifest): string[] {
+/**
+ * Deterministic validation problems for a profile manifest (for CI gating).
+ * `profileDir` enables the section-path checks (PA042) for folder-format
+ * items; omit it for inline drafts that have no directory yet.
+ */
+export function profileProblems(manifest: ProfileManifest, profileDir?: string): string[] {
   if (typeof manifest !== "object" || manifest === null || typeof manifest.profile !== "object") {
     return ["item is not a profile manifest (profile object expected)"];
   }
-  const report = validateProfile(manifest, { checkKnowledge: false });
+  const report = validateProfile(manifest, { checkKnowledge: false, profileDir });
   return report.findings
     .filter((f) => f.severity === "error")
     .map((f) => `[${f.code}] ${f.message}${f.suggestion ? ` — ${f.suggestion}` : ""}`);
@@ -98,12 +103,18 @@ export async function publishProfile(manifest: ProfileManifest, target: GitHubCo
   return { itemPath, catalogPath };
 }
 
-/** Read the local marketplace item (for tests/CLI dev). */
+/** Read the local marketplace item (for tests/CLI dev), hydrating paths. */
 export async function readProfileItemLocal(root: string, slug: string): Promise<ProfileManifest> {
+  const folder = path.join(root, MARKETPLACE_ITEMS_DIR, slug, "profile.json");
+  try {
+    return await loadProfileFile(folder);
+  } catch {
+    // fall through to the legacy flat layout
+  }
   const file = path.join(root, MARKETPLACE_ITEMS_DIR, `${slug}.json`);
   try {
-    return JSON.parse(await fs.readFile(file, "utf8")) as ProfileManifest;
+    return await loadProfileFile(file);
   } catch {
-    throw new CrewError("CREW_NOT_FOUND", `profile item not found locally: ${slug} (expected ${file})`);
+    throw new CrewError("CREW_NOT_FOUND", `profile item not found locally: ${slug} (expected ${folder})`);
   }
 }

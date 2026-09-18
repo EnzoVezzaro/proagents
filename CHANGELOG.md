@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed — marketplace is the single source of profiles
+
+- **`profiles/` is gone; `.marketplace/items/` is the only source of profiles.** The 10
+  built-ins that only existed in `profiles/` moved into the marketplace catalog, the 3
+  duplicates were dropped (byte-identical), and the npm package now ships `.marketplace/`
+  instead of `profiles/`. Resolution order for `equip`/`list`/`inspect`/`compile`: a
+  repo's `.marketplace/items` checkout wins (origin `"marketplace"`) → the packaged
+  snapshot fills gaps (origin `"builtin"`) → the remote catalog over HTTP. The old
+  `./profiles/` local dir and its `"local"` origin no longer exist; working on a profile
+  locally means editing it in your `.marketplace/items` checkout — the same files a
+  publishing PR would carry.
+
+### Changed — path-format manifest sections
+
+- **Every section entry in `profile.json` is now a path to its file** — the same
+  format `knowledge` always used: `identity`, `expertise`, `methods`, `rules`,
+  `policies`, `standards`, and both `verification` lists hold
+  `"section/NN-name.md"` paths; content lives only in the folder tree. The loader
+  hydrates path entries to content at read time (tolerant: missing files surface
+  as validation findings, not crashes), so composition, compilation, crews and the
+  web SPA behave exactly as before. `sync` in `scripts/profile-folders.mjs` now
+  writes paths; inline entries and legacy manifests remain valid via the same
+  hydration path.
+
 ### Added — profile depth & folder standard (profiles v2)
 
 - **Folder-per-profile standard**: every profile is now a self-contained folder —

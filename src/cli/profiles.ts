@@ -1,6 +1,7 @@
 import {
   fetchProfileManifest,
   listProfiles,
+  loadProfileFile,
   resolveProfiles,
   validateAllProfiles,
 } from "../profiles/registry.js";
@@ -132,7 +133,7 @@ export async function runListProfiles(json: boolean): Promise<void> {
   }
   console.log("\nProfessional profiles:\n");
   for (const e of entries) {
-    const origin = e.origin === "local" ? "  [local]" : "";
+    const origin = e.origin === "builtin" ? "  [packaged]" : "";
     console.log(`  ${e.manifest.profile.slug.padEnd(26)} ${e.manifest.profile.description ?? e.manifest.identity.title}${origin}`);
   }
   console.log(`\n${entries.length} profile(s). Equip with: proagent equip <slug>`);
@@ -369,18 +370,28 @@ Shortcuts: proagent equip (== profile install), proagent list (== profile list).
 `);
 }
 
-/** Load a profile manifest from a file or catalog id (local dir, then remote). */
+/**
+ * Load a profile manifest from a file or catalog id (local dir, then
+ * remote), hydrating path entries either way. Folder layout first
+ * (items/<id>/profile.json), then the legacy flat file.
+ */
 async function resolveProfileItem(idOrFile: string, flags: Record<string, string | boolean>): Promise<ProfileManifest> {
   if (idOrFile.endsWith(".json")) {
     try {
-      return JSON.parse(await fs.readFile(idOrFile, "utf8")) as ProfileManifest;
+      return await loadProfileFile(idOrFile);
     } catch (err) {
       fail(`cannot read profile file: ${(err as Error).message}`);
     }
   }
-  const local = path.join(process.cwd(), MARKETPLACE_ITEMS_DIR, `${idOrFile}.json`);
+  const folder = path.join(process.cwd(), MARKETPLACE_ITEMS_DIR, idOrFile, "profile.json");
   try {
-    return JSON.parse(await fs.readFile(local, "utf8")) as ProfileManifest;
+    return await loadProfileFile(folder);
+  } catch {
+    // fall through to flat / remote
+  }
+  const flat = path.join(process.cwd(), MARKETPLACE_ITEMS_DIR, `${idOrFile}.json`);
+  try {
+    return await loadProfileFile(flat);
   } catch {
     // fall through to remote
   }

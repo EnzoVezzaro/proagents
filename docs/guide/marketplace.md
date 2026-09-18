@@ -50,11 +50,12 @@ proagent compile security-engineer --target codex # explicit harness
 
 ### Remote vs local equip
 
-`npx proagent equip <slug>` resolves in order: package built-ins → local `./profiles/` →
-the marketplace catalog (fetched from the catalog repo). Consequence: a profile you just
-built **works locally immediately** (drop the JSON in `profiles/`), but the same one-liner
-only works remotely for other people **after the profile is merged into the catalog repo**
-— which is exactly what publishing does.
+`npx proagent equip <slug>` resolves in order: your repo's `.marketplace/items/` checkout →
+the packaged snapshot shipped with the npm package → the remote catalog (fetched from the
+catalog repo). Consequence: a profile you just built **works locally immediately** (drop
+the item folder in `.marketplace/items/`), but the same one-liner only works remotely for
+other people **after the profile is merged into the catalog repo** — which is exactly what
+publishing does.
 
 ### The `profile` command group
 

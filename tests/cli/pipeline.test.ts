@@ -191,7 +191,7 @@ describe("pipeline e2e — profile → equip → compiled agent → performance"
       tools: { required: ["filesystem"] },
       verification: { required: ["review"] },
     });
-    const root = withRepo({ "AGENTS.md": "# Example app\n", "profiles/bad-profile.json": broken });
+    const root = withRepo({ "AGENTS.md": "# Example app\n", ".marketplace/items/bad-profile/profile.json": broken });
     const { stdout, status } = run(root, ["equip", "bad-profile", "--target", "codex", "--json"], true);
     expect(status).toBe(1);
     const parsed = JSON.parse(stdout);

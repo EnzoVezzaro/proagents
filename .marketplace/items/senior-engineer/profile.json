@@ -1,0 +1,96 @@
+{
+  "version": "1.1.0",
+  "profile": {
+    "name": "Senior Engineer",
+    "slug": "senior-engineer",
+    "description": "General professional engineering practice: evidence-driven changes, tests with source, honest reporting.",
+    "author": "proagents",
+    "tags": [
+      "engineering",
+      "general"
+    ]
+  },
+  "identity": "identity/01-senior-engineer.md",
+  "expertise": [
+    "expertise/01-software-design.md",
+    "expertise/02-debugging-and-root-cause-analysis.md",
+    "expertise/03-testing-practice.md",
+    "expertise/04-code-review.md",
+    "expertise/05-refactoring.md"
+  ],
+  "methods": [
+    "methods/01-root-cause-analysis.md",
+    "methods/02-test-driven-development.md",
+    "methods/03-minimal-diff-review.md"
+  ],
+  "skills": [
+    "skills/01-obra-superpowers.md",
+    "skills/02-wesleyegberto-software-engineering-skills.md"
+  ],
+  "rules": [
+    "rules/01-require-tests-after-source-changes.md",
+    "rules/02-preserve-public-api-compatibility.md",
+    "rules/03-never-modify-production-without-approval.md",
+    "rules/04-report-unverified-work-as-unverified.md",
+    "rules/05-keep-changes-minimal-and-reviewable.md"
+  ],
+  "standards": [],
+  "tools": "tools/requirements.md",
+  "verification": {
+    "required": [
+      "verification/required/01-typecheck.md",
+      "verification/required/02-tests.md"
+    ],
+    "optional": [
+      "verification/optional/01-lint.md",
+      "verification/optional/02-build.md"
+    ]
+  },
+  "policies": [
+    "policies/01-changes-ship-with-tests-and-docs-in-the-same-pr.md",
+    "policies/02-debugging-is-evidence-driven-fixes-name-the-root-cause.md",
+    "policies/03-mentoring-is-part-of-delivery-reviews-teach-not-gatekeep.md"
+  ],
+  "files": {
+    "identity": "identity/01-senior-engineer.md",
+    "expertise": [
+      "expertise/01-software-design.md",
+      "expertise/02-debugging-and-root-cause-analysis.md",
+      "expertise/03-testing-practice.md",
+      "expertise/04-code-review.md",
+      "expertise/05-refactoring.md"
+    ],
+    "methods": [
+      "methods/01-root-cause-analysis.md",
+      "methods/02-test-driven-development.md",
+      "methods/03-minimal-diff-review.md"
+    ],
+    "skills": [
+      "skills/01-obra-superpowers.md",
+      "skills/02-wesleyegberto-software-engineering-skills.md"
+    ],
+    "rules": [
+      "rules/01-require-tests-after-source-changes.md",
+      "rules/02-preserve-public-api-compatibility.md",
+      "rules/03-never-modify-production-without-approval.md",
+      "rules/04-report-unverified-work-as-unverified.md",
+      "rules/05-keep-changes-minimal-and-reviewable.md"
+    ],
+    "policies": [
+      "policies/01-changes-ship-with-tests-and-docs-in-the-same-pr.md",
+      "policies/02-debugging-is-evidence-driven-fixes-name-the-root-cause.md",
+      "policies/03-mentoring-is-part-of-delivery-reviews-teach-not-gatekeep.md"
+    ],
+    "verification": {
+      "required": [
+        "required/01-typecheck.md",
+        "required/02-tests.md"
+      ],
+      "optional": [
+        "optional/01-lint.md",
+        "optional/02-build.md"
+      ]
+    },
+    "tools": "tools/requirements.md"
+  }
+}

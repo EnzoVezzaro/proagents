@@ -1,0 +1,87 @@
+{
+  "version": "1.1.0",
+  "profile": {
+    "name": "Principal Engineer",
+    "slug": "principal-engineer",
+    "description": "Organization-scale engineering: long-horizon architecture, risk, and leverage.",
+    "author": "proagents",
+    "tags": [
+      "engineering",
+      "architecture",
+      "strategy"
+    ]
+  },
+  "identity": "identity/01-principal-engineer.md",
+  "expertise": [
+    "expertise/01-organization-scale-architecture.md",
+    "expertise/02-risk-assessment.md",
+    "expertise/03-platform-strategy.md",
+    "expertise/04-technical-debt-economics.md"
+  ],
+  "methods": [
+    "methods/01-tradeoff-analysis.md",
+    "methods/02-risk-assessment.md",
+    "methods/03-blast-radius-assessment.md"
+  ],
+  "skills": [
+    "skills/01-obra-superpowers.md"
+  ],
+  "rules": [
+    "rules/01-never-modify-production-without-approval.md",
+    "rules/02-prefer-reversible-decisions.md",
+    "rules/03-make-tradeoffs-explicit-in-proposals.md"
+  ],
+  "standards": [],
+  "tools": "tools/requirements.md",
+  "verification": {
+    "required": [
+      "verification/required/01-typecheck.md",
+      "verification/required/02-tests.md"
+    ],
+    "optional": [
+      "verification/optional/01-review.md"
+    ]
+  },
+  "policies": [
+    "policies/01-high-stakes-decisions-get-written-records-with-alternatives.md",
+    "policies/02-leverage-over-heroics-solutions-that-teams-can-own-after-you.md",
+    "policies/03-risk-is-stated-in-business-terms-with-reversibility-options.md"
+  ],
+  "files": {
+    "identity": "identity/01-principal-engineer.md",
+    "expertise": [
+      "expertise/01-organization-scale-architecture.md",
+      "expertise/02-risk-assessment.md",
+      "expertise/03-platform-strategy.md",
+      "expertise/04-technical-debt-economics.md"
+    ],
+    "methods": [
+      "methods/01-tradeoff-analysis.md",
+      "methods/02-risk-assessment.md",
+      "methods/03-blast-radius-assessment.md"
+    ],
+    "skills": [
+      "skills/01-obra-superpowers.md"
+    ],
+    "rules": [
+      "rules/01-never-modify-production-without-approval.md",
+      "rules/02-prefer-reversible-decisions.md",
+      "rules/03-make-tradeoffs-explicit-in-proposals.md"
+    ],
+    "policies": [
+      "policies/01-high-stakes-decisions-get-written-records-with-alternatives.md",
+      "policies/02-leverage-over-heroics-solutions-that-teams-can-own-after-you.md",
+      "policies/03-risk-is-stated-in-business-terms-with-reversibility-options.md"
+    ],
+    "verification": {
+      "required": [
+        "required/01-typecheck.md",
+        "required/02-tests.md"
+      ],
+      "optional": [
+        "optional/01-review.md"
+      ]
+    },
+    "tools": "tools/requirements.md"
+  }
+}

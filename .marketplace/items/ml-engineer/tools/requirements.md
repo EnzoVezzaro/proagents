@@ -1,10 +1,18 @@
 ---
 title: Tool requirements
-note: Generated mirror — edit profile.json (tools) as the authoritative source.
+note: Source of truth for this profile's tool requirements — edit this file,
+  then run sync.
+required:
+  - filesystem
+  - shell
+  - git
+  - python
+optional:
+  - gpu-runtime
+  - experiment-tracking
+  - cloud-cli
 ---
 
 **Required:** filesystem, shell, git, python
 
 **Optional:** gpu-runtime, experiment-tracking, cloud-cli
-
-**Forbidden:** —

@@ -35,23 +35,6 @@ export interface ProfilePackage {
   reason?: string;
 }
 
-/**
- * Section→file index for the profile folder standard. Arrays are ordered the
- * same as the corresponding section arrays in the manifest.
- */
-export interface ProfileFilesIndex {
-  identity?: string;
-  expertise?: string[];
-  knowledge?: string[];
-  methods?: string[];
-  skills?: string[];
-  rules?: string[];
-  policies?: string[];
-  standards?: string[];
-  tools?: string;
-  verification?: { required?: string[]; optional?: string[] };
-}
-
 /** Depth for a named standard, method, certification, or specification. */
 export interface ProfileReference {
   /** Authoritative URL for the standard/method/certification. */
@@ -106,13 +89,6 @@ export interface ProfileManifest {
   standards?: string[];
   /** Depth for named standards, methods, certifications: authoritative URLs. */
   references?: Record<string, ProfileReference>;
-  /**
-   * Folder-standard index: every section entry linked to its file inside the
-   * profile folder (knowledge entries are paths already and are mirrored).
-   * Additive metadata — the engine reads the section arrays; tools and humans
-   * use `files` to find the editable source of each item.
-   */
-  files?: ProfileFilesIndex;
   tools: {
     required: string[];
     optional?: string[];
@@ -127,6 +103,20 @@ export interface ProfileManifest {
     optional?: string[];
   };
 }
+
+/**
+ * On-disk manifest in the folder standard: every section holds a path to its
+ * file inside the profile folder (`identity/01-x.md`, `rules/01-y.md`, …);
+ * `skills` entries are `skills/NN-*.md` paths and `tools` is the
+ * `tools/requirements.md` path. The loader hydrates every path to content at
+ * read time, producing a plain {@link ProfileManifest}. Inline manifests
+ * (web builder drafts, legacy files) are the same type with content instead
+ * of paths — both validate and load identically.
+ */
+export type ProfileManifestSource = Omit<ProfileManifest, "identity" | "tools"> & {
+  identity?: ProfileManifest["identity"] | string;
+  tools?: ProfileManifest["tools"] | string;
+};
 
 // ---------------------------------------------------------------------------
 // Composition
@@ -206,7 +196,8 @@ export type ProfileValidationCode =
   | "PA038" // duplicate slug in registry
   | "PA039" // invalid MCP server entry (name/transport/url/command)
   | "PA040" // invalid package registry ref (not npm:/github:)
-  | "PA041"; // reference entry without an https:// URL
+  | "PA041" // reference entry without an https:// URL
+  | "PA042"; // section path entry missing from the profile directory
 
 export interface ProfileValidationReport {
   ok: boolean;

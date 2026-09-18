@@ -267,55 +267,54 @@ systems-architect
 A profile can contain:
 
 ```yaml
-version: "1"
+version: "2.1.0"
 
 profile:
   name: Security Engineer
   slug: security-engineer
-  version: "1.0.0"
+  version: "1.1.0"
 
-identity:
-  title: Security Engineer
+# Every section entry is a path to a file in the profile's folder —
+# the manifest is the index, the folders are the source.
+identity: identity/01-security-engineer.md
 
 expertise:
-  - application security
-  - threat modeling
-  - secure architecture
+  - expertise/01-application-security.md
+  - expertise/02-threat-modeling.md
 
 knowledge:
-  - references/owasp/
-  - references/authentication/
+  - knowledge/security/owasp.md
+  - knowledge/security/authentication.md
 
 methods:
-  - threat-modeling
-  - root-cause-analysis
-  - attack-surface-analysis
+  - methods/01-threat-modeling.md
+  - methods/02-root-cause-analysis.md
 
 skills:
-  - security-audit
-  - secure-code-review
-  - vulnerability-analysis
+  - skills/01-security-audit.md
 
 rules:
-  - never-expose-secrets
-  - require-security-verification
+  - rules/01-never-expose-secrets.md
+  - rules/02-require-security-verification.md
 
 standards:
-  - OWASP
+  - standards/01-owasp.md
 
-tools:
-  required:
-    - filesystem
-    - shell
-    - git
+tools: tools/requirements.md
 
 verification:
   required:
-    - tests
-    - security-scan
+    - verification/required/01-tests-pass.md
+    - verification/required/02-security-scan-clean.md
 ```
 
 The schema is provider-agnostic and independent of any particular coding-agent harness.
+The loader hydrates path entries to content at read time, so equip, compile, crews and
+the marketplace SPA all see the same plain manifest.
+
+Profiles live in one place — the marketplace catalog (`.marketplace/items/<slug>/`),
+which ships with the npm package and is updated through PRs. A repo's own checkout of
+that folder wins over the packaged snapshot; there is no separate local profiles folder.
 
 ---
 
@@ -675,7 +674,7 @@ For example:
 
 ```text
 .agents/
-├── profiles/
+├── skills/
 │   └── security-engineer/
 │       ├── profile.json
 │       ├── rules/
@@ -877,6 +876,10 @@ Context
 
 The marketplace is therefore an ecosystem for distributing reusable professional capabilities and complete agent systems.
 
+It is also the single source of profiles: the catalog lives in `.marketplace/` (items in
+`items/<slug>/` plus a `catalog.json` index), the npm package ships it for offline use,
+and contributions land through PRs to the same files.
+
 ```bash
 proagent crew list
 proagent crew show <id>
@@ -1015,8 +1018,8 @@ npm run site:build
 │   └── output/          # terminal rendering
 │
 ├── .agents/              # ProAgents Agent Skill + generated skills
-├── profiles/             # built-in professional profiles
-├── .marketplace/         # Git-backed catalog: profiles & crews
+├── .marketplace/         # THE source of truth: Git-backed catalog of profiles & crews
+│                         #   (shipped with the npm package so offline equip works)
 ├── web/                  # marketplace app source (mounted as a client-only
 │   │                     #   island on the /marketplace page)
 ├── docs/                 # the site — one VitePress project: home at the

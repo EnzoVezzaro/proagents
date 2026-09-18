@@ -1,0 +1,95 @@
+{
+  "version": "1.1.0",
+  "profile": {
+    "name": "Systems Architect",
+    "slug": "systems-architect",
+    "description": "Whole-system design: boundaries, contracts, failure modes, and evolution paths.",
+    "author": "proagents",
+    "tags": [
+      "architecture",
+      "systems",
+      "design"
+    ]
+  },
+  "identity": "identity/01-systems-architect.md",
+  "expertise": [
+    "expertise/01-system-decomposition.md",
+    "expertise/02-interface-contracts.md",
+    "expertise/03-failure-mode-analysis.md",
+    "expertise/04-scalability.md",
+    "expertise/05-evolutionary-architecture.md"
+  ],
+  "methods": [
+    "methods/01-tradeoff-analysis.md",
+    "methods/02-blast-radius-assessment.md",
+    "methods/03-contract-first-design.md"
+  ],
+  "skills": [
+    "skills/01-wesleyegberto-software-engineering-skills.md",
+    "skills/02-obra-superpowers.md"
+  ],
+  "rules": [
+    "rules/01-never-modify-production-without-approval.md",
+    "rules/02-make-tradeoffs-explicit-in-proposals.md",
+    "rules/03-preserve-public-api-compatibility.md",
+    "rules/04-prefer-reversible-decisions.md"
+  ],
+  "standards": [],
+  "tools": "tools/requirements.md",
+  "verification": {
+    "required": [
+      "verification/required/01-typecheck.md",
+      "verification/required/02-tests.md"
+    ],
+    "optional": [
+      "verification/optional/01-build.md",
+      "verification/optional/02-review.md"
+    ]
+  },
+  "policies": [
+    "policies/01-every-consequential-decision-is-an-adr-with-alternatives-and.md",
+    "policies/02-designs-state-failure-modes-and-degradation-behavior-not-jus.md",
+    "policies/03-diagrams-are-c4-level-explicit-and-kept-current-with-reality.md"
+  ],
+  "files": {
+    "identity": "identity/01-systems-architect.md",
+    "expertise": [
+      "expertise/01-system-decomposition.md",
+      "expertise/02-interface-contracts.md",
+      "expertise/03-failure-mode-analysis.md",
+      "expertise/04-scalability.md",
+      "expertise/05-evolutionary-architecture.md"
+    ],
+    "methods": [
+      "methods/01-tradeoff-analysis.md",
+      "methods/02-blast-radius-assessment.md",
+      "methods/03-contract-first-design.md"
+    ],
+    "skills": [
+      "skills/01-wesleyegberto-software-engineering-skills.md",
+      "skills/02-obra-superpowers.md"
+    ],
+    "rules": [
+      "rules/01-never-modify-production-without-approval.md",
+      "rules/02-make-tradeoffs-explicit-in-proposals.md",
+      "rules/03-preserve-public-api-compatibility.md",
+      "rules/04-prefer-reversible-decisions.md"
+    ],
+    "policies": [
+      "policies/01-every-consequential-decision-is-an-adr-with-alternatives-and.md",
+      "policies/02-designs-state-failure-modes-and-degradation-behavior-not-jus.md",
+      "policies/03-diagrams-are-c4-level-explicit-and-kept-current-with-reality.md"
+    ],
+    "verification": {
+      "required": [
+        "required/01-typecheck.md",
+        "required/02-tests.md"
+      ],
+      "optional": [
+        "optional/01-build.md",
+        "optional/02-review.md"
+      ]
+    },
+    "tools": "tools/requirements.md"
+  }
+}
