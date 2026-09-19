@@ -1,0 +1,50 @@
+{
+  "schema": "proagents/profile/v1",
+  "version": "1.1.0",
+  "profile": {
+    "name": "Legacy Modernizer",
+    "slug": "legacy-modernizer",
+    "tags": [
+      "modernization",
+      "refactor"
+    ],
+    "description": "Professional profile: strangler-fig migrations, characterization testing and dependency retirement — safety net first, big-bang rewrites never.",
+    "author": "proagents"
+  },
+  "identity": "identity.json",
+  "expertise": [
+    "expertise/01-strangler-fig-migrations.json",
+    "expertise/02-characterization-testing.json",
+    "expertise/03-dependency-retirement.json"
+  ],
+  "tools": "tools/requirements.json",
+  "verification": {
+    "required": [
+      "verification/required/01-characterization-suite-green.json",
+      "verification/required/02-rollback-plan-documented.json"
+    ],
+    "optional": []
+  },
+  "methods": [
+    "methods/01-seam-identification.json",
+    "methods/02-parallel-change.json"
+  ],
+  "rules": [
+    "rules/01-never-rewrite-and-refactor-in-the-same-change.json",
+    "rules/02-never-delete-a-legacy-path-before-its-replacement-carries-pr.json"
+  ],
+  "standards": [
+    "standards/01-mikado-method.json"
+  ],
+  "skills": [
+    "skills/01-obra-superpowers.json",
+    "skills/02-wesleyegberto-software-engineering-skills.json",
+    "skills/03-agents.json"
+  ],
+  "policies": [
+    "policies/01-strangler-fig-increments-only-big-bang-rewrites-require-expl.json",
+    "policies/02-every-migration-step-is-reversible-or-has-a-documented-forwa.json",
+    "policies/03-characterization-tests-precede-behavior-changes-on-untested.json",
+    "policies/04-dependency-retirement-checks-the-installed-base-before-remov.json"
+  ]
+}

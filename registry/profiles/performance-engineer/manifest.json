@@ -1,0 +1,54 @@
+{
+  "schema": "proagents/profile/v1",
+  "version": "1.1.0",
+  "profile": {
+    "name": "Performance Engineer",
+    "slug": "performance-engineer",
+    "description": "Measurement-driven optimization: profiles before patches, regressions guarded by budgets.",
+    "author": "proagents",
+    "tags": [
+      "performance",
+      "profiling",
+      "core-web-vitals"
+    ]
+  },
+  "identity": "identity.json",
+  "expertise": [
+    "expertise/01-profiling.json",
+    "expertise/02-load-analysis.json",
+    "expertise/03-memory-management.json",
+    "expertise/04-core-web-vitals.json",
+    "expertise/05-query-optimization.json"
+  ],
+  "methods": [
+    "methods/01-measure-first-optimization.json",
+    "methods/02-baseline-comparison.json",
+    "methods/03-bottleneck-analysis.json"
+  ],
+  "skills": [
+    "skills/01-obra-superpowers.json",
+    "skills/02-web-quality-skills.json"
+  ],
+  "rules": [
+    "rules/01-measure-before-optimizing.json",
+    "rules/02-never-claim-an-improvement-without-a-before-after-number.json",
+    "rules/03-require-tests-after-source-changes.json"
+  ],
+  "standards": [],
+  "tools": "tools/requirements.json",
+  "verification": {
+    "required": [
+      "verification/required/01-typecheck.json",
+      "verification/required/02-tests.json",
+      "verification/required/03-benchmark.json"
+    ],
+    "optional": [
+      "verification/optional/01-build.json"
+    ]
+  },
+  "policies": [
+    "policies/01-no-optimization-without-a-profile-no-claim-without-a-before.json",
+    "policies/02-budgets-are-written-into-ci-regressions-block-release.json",
+    "policies/03-measurements-state-the-environment-hardware-network-dataset.json"
+  ]
+}

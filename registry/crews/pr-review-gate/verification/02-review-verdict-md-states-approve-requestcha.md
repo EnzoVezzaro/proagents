@@ -1,1 +1,0 @@
-review-verdict.md states APPROVE / REQUEST_CHANGES / BLOCK with reasons.

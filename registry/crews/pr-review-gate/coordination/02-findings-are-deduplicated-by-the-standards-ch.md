@@ -1,1 +1,0 @@
-Findings are deduplicated by the standards checker before the verdict is drafted.

@@ -1,0 +1,4 @@
+{
+  "title": "Never approve a change where a required-severity finding is unresol…",
+  "body": "Never approve a change where a required-severity finding is unresolved."
+}

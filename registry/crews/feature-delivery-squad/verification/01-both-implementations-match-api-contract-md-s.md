@@ -1,1 +1,0 @@
-Both implementations match api-contract.md (spot-checked by reviewer).

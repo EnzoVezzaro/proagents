@@ -1,0 +1,73 @@
+{
+  "schema": "proagents/profile/v1",
+  "version": "2.1.0",
+  "profile": {
+    "name": "Code Reviewer",
+    "slug": "code-reviewer",
+    "description": "Professional profile: staff-level review across five dimensions — correctness, readability, architecture, security, performance — with severity-categorized, actionable output.",
+    "author": "proagents",
+    "tags": [
+      "code-review",
+      "quality",
+      "correctness",
+      "architecture"
+    ]
+  },
+  "identity": "identity.json",
+  "expertise": [
+    "expertise/01-correctness-analysis.json",
+    "expertise/02-readability-judgment.json",
+    "expertise/03-architecture-review.json",
+    "expertise/04-security-scanning-of-diffs.json",
+    "expertise/05-performance-sensing.json",
+    "expertise/06-review-communication.json"
+  ],
+  "knowledge": [
+    "knowledge/review/correctness-analysis.json",
+    "knowledge/review/readability-judgment.json",
+    "knowledge/review/architecture-review.json",
+    "knowledge/review/security-scanning-of-diffs.json",
+    "knowledge/review/performance-sensing.json",
+    "knowledge/review/review-communication.json",
+    "knowledge/review/five-dimension-review.json",
+    "knowledge/review/severity-categorized-output.json",
+    "knowledge/review/verification-checklist.json"
+  ],
+  "methods": [
+    "methods/01-five-dimension-review.json",
+    "methods/02-severity-categorized-output.json"
+  ],
+  "rules": [
+    "rules/01-never-approve-a-change-where-a-required-severity-finding-is.json",
+    "rules/02-never-report-a-finding-without-pointing-to-the-specific-line.json",
+    "rules/03-never-block-a-merge-on-style-preferences-that-the-project-s.json",
+    "rules/04-never-review-only-the-diff-when-behavior-changed-read-the-su.json",
+    "rules/05-state-explicitly-when-a-review-was-not-possible-missing-cont.json"
+  ],
+  "standards": [
+    "standards/01-conventional-comments-labels-blocking-non-blocking-nitpick.json",
+    "standards/02-project-lint-format-configuration-is-the-single-source-of-st.json"
+  ],
+  "tools": "tools/requirements.json",
+  "verification": {
+    "required": [
+      "verification/required/01-every-blocking-finding-cites-file-line-evidence-and-names-th.json",
+      "verification/required/02-the-reviewed-change-s-tests-were-read-not-just-counted-asser.json",
+      "verification/required/03-verdict-states-which-of-the-five-dimensions-were-fully-evalu.json",
+      "verification/required/04-walk-the-verification-checklist-in-knowledge-review-verifica.json"
+    ],
+    "optional": [
+      "verification/optional/01-suggested-follow-up-tasks-filed-for-findings-fixed-outside-t.json"
+    ]
+  },
+  "skills": [
+    "skills/01-obra-superpowers.json",
+    "skills/02-wesleyegberto-software-engineering-skills.json"
+  ],
+  "policies": [
+    "policies/01-findings-are-about-code-never-about-people-reviews-stay-prof.json",
+    "policies/02-pre-release-code-seen-in-review-is-confidential.json",
+    "policies/03-security-findings-follow-responsible-disclosure-details-to-t.json",
+    "policies/04-blocking-findings-require-evidence-no-blocking-on-taste.json"
+  ]
+}

@@ -307,11 +307,11 @@ environment:
         verification: { required: ["tests"] },
       };
       await fs.writeFile(
-        path.join(root, ".proagent", "profiles", "conflict-a", "profile.json"),
+        path.join(root, ".proagent", "profiles", "conflict-a", "manifest.json"),
         JSON.stringify({ ...base, rules: ["never deploy on friday"] }),
       );
       await fs.writeFile(
-        path.join(root, ".proagent", "profiles", "conflict-b", "profile.json"),
+        path.join(root, ".proagent", "profiles", "conflict-b", "manifest.json"),
         JSON.stringify({ ...base, profile: { name: "B", slug: "conflict-b" }, rules: ["deploy on friday"] }),
       );
       const res = runFailing(root, ["compose", "profile:conflict-a", "profile:conflict-b", "--json"]);

@@ -122,7 +122,7 @@ describe("crew install (CREW-INSTALL)", () => {
   it("CREW-INSTALL-001: plan covers crew skill, worker skills and agent contracts", () => {
     const plan = planInstall(baseCrew());
     const paths = plan.entries.map((e) => e.path);
-    expect(paths).toContain(path.join(".agents", "crews", "test-crew", "crew.json"));
+    expect(paths).toContain(path.join(".agents", "crews", "test-crew", "manifest.json"));
     expect(paths).toContain(path.join(".agents", "crews", "test-crew", "SKILL.md"));
     expect(paths.filter((p) => p.endsWith("SKILL.md"))).toHaveLength(3);
     expect(paths.filter((p) => p.endsWith("agent.json"))).toHaveLength(2);
@@ -133,7 +133,7 @@ describe("crew install (CREW-INSTALL)", () => {
     try {
       fs.writeFileSync(path.join(root, ".mcp.json"), JSON.stringify({ mcpServers: { existing: { command: "echo" } } }, null, 2));
       const result = await installCrew(baseCrew(), root);
-      // crew.json + crew SKILL.md + 2 worker SKILL.md + 2 agent.json = 6
+      // manifest.json + crew SKILL.md + 2 worker SKILL.md + 2 agent.json = 6
       expect(result.filesWritten).toHaveLength(6);
       for (const f of result.filesWritten) {
         expect(fs.existsSync(path.join(root, f))).toBe(true);
@@ -141,7 +141,7 @@ describe("crew install (CREW-INSTALL)", () => {
       const mcp = JSON.parse(fs.readFileSync(path.join(root, ".mcp.json"), "utf8")) as { mcpServers: Record<string, unknown> };
       expect(Object.keys(mcp.mcpServers).sort()).toEqual(["existing", "github"]);
       // crew.json content matches the definition
-      const written = JSON.parse(fs.readFileSync(path.join(root, ".agents", "crews", "test-crew", "crew.json"), "utf8")) as CrewDefinition;
+      const written = JSON.parse(fs.readFileSync(path.join(root, ".agents", "crews", "test-crew", "manifest.json"), "utf8")) as CrewDefinition;
       expect(written.id).toBe("test-crew");
       // worker skill contains the normative permission table
       const betaSkill = fs.readFileSync(path.join(root, ".agents", "crews", "test-crew", "workers", "beta", "SKILL.md"), "utf8");
@@ -286,16 +286,16 @@ describe("crew CLI (CREW-CLI)", () => {
 
   it("CREW-CLI-005b: crew build installs from a local builder JSON", async () => {
     const root = cliProject();
-    const crewFile = path.join(root, "crew.json");
+    const crewFile = path.join(root, "manifest.json");
     // Builder output is inline: hydrate the shipped folder item and write it
     // as a flat definition, exactly what the SPA builder exports.
     const { loadCrewFile } = await import("../../src/crew/hydrate.js");
-    const crew = await loadCrewFile(path.resolve("registry", "crews", "test-healer", "crew.json"));
+    const crew = await loadCrewFile(path.resolve("registry", "crews", "test-healer", "manifest.json"));
     fs.writeFileSync(crewFile, JSON.stringify(crew));
     const { stdout } = cli(["crew", "build", crewFile, "--json"]);
     const parsed = JSON.parse(stdout);
     expect(parsed.status).toBe("ok");
-    expect(fs.existsSync(path.join(root, ".agents", "crews", "test-healer", "crew.json"))).toBe(true);
+    expect(fs.existsSync(path.join(root, ".agents", "crews", "test-healer", "manifest.json"))).toBe(true);
     expect(fs.existsSync(path.join(root, ".agents", "crews", "test-healer", "workers", "healer", "SKILL.md"))).toBe(true);
   });
 
@@ -402,7 +402,7 @@ describe("crew subagent standards (CREW-STANDARD)", () => {
       items: Array<{ id: string; kind: string }>;
     };
     for (const item of catalog.items.filter((i) => i.kind !== "profile")) {
-      const raw = fs.readFileSync(path.join(crewsDir, item.id, "crew.json"), "utf8");
+      const raw = fs.readFileSync(path.join(crewsDir, item.id, "manifest.json"), "utf8");
       expect(JSON.parse(raw).crew.id).toBe(item.id);
     }
   });
@@ -434,7 +434,7 @@ describe("CREW-CATALOG — shipped crews as a dataset", () => {
     const { loadCrewFile } = await import("../../src/crew/hydrate.js");
     const { crewProblems, crewWarnings } = await import("../../src/crew/validate.js");
     for (const item of crewItems) {
-      const crew = await loadCrewFile(path.resolve("registry", "crews", item.id, "crew.json"));
+      const crew = await loadCrewFile(path.resolve("registry", "crews", item.id, "manifest.json"));
       expect(crew.id).toBe(item.id);
       expect(crew.version).toBe(item.version);
       expect(crewProblems(crew)).toEqual([]);
@@ -445,7 +445,7 @@ describe("CREW-CATALOG — shipped crews as a dataset", () => {
   it("CREW-CATALOG-002: every worker's profile binding resolves to a real catalog profile", async () => {
     const { loadCrewFile } = await import("../../src/crew/hydrate.js");
     for (const item of crewItems) {
-      const crew = await loadCrewFile(path.resolve("registry", "crews", item.id, "crew.json"));
+      const crew = await loadCrewFile(path.resolve("registry", "crews", item.id, "manifest.json"));
       for (const w of crew.workers) {
         if (!w.profile) continue;
         // Crews may only bind profiles that exist in the registry — a
@@ -458,7 +458,7 @@ describe("CREW-CATALOG — shipped crews as a dataset", () => {
   it("CREW-CATALOG-003: catalog index metadata stays consistent with the crew manifests", async () => {
     const { loadCrewFile } = await import("../../src/crew/hydrate.js");
     for (const item of crewItems) {
-      const crew = await loadCrewFile(path.resolve("registry", "crews", item.id, "crew.json"));
+      const crew = await loadCrewFile(path.resolve("registry", "crews", item.id, "manifest.json"));
       expect(item.name).toBe(crew.name);
       expect(item.author).toBe(crew.author);
       expect(item.description).toBe(crew.description);
@@ -626,7 +626,7 @@ describe("CREW-WARN — crewWarnings (non-blocking findings)", () => {
   it("CREW-WARN-003: crew validate --json surfaces warnings in the machine contract (additive pin)", () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), "crew-warn-"));
     const crew = crewWithContext("draft-docs");
-    const file = path.join(root, "crew.json");
+    const file = path.join(root, "manifest.json");
     fs.writeFileSync(file, JSON.stringify(crew));
     const { stdout } = cli(["crew", "validate", file, "--json"]);
     const parsed = JSON.parse(stdout);

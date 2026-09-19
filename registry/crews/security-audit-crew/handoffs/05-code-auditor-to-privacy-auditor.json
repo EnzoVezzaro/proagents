@@ -1,0 +1,6 @@
+{
+  "from": "code-auditor",
+  "to": "privacy-auditor",
+  "artifact": "code-findings.md",
+  "body": "`code-auditor` hands **code-findings.md** to `privacy-auditor`."
+}

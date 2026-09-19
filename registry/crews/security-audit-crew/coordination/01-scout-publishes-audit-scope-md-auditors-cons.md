@@ -1,1 +1,0 @@
-scout publishes audit-scope.md; auditors consume only that scope.

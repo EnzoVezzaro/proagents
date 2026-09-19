@@ -1,1 +1,0 @@
-backend and frontend work in parallel against the same contract — no side-channel schema decisions.

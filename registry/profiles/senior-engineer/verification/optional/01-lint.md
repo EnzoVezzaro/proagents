@@ -1,5 +1,0 @@
----
-title: lint
----
-
-lint

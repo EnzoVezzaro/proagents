@@ -95,8 +95,8 @@ export async function fetchCrewDefinition(id: string, repo: string = REPO, ref =
   const base = `https://raw.githubusercontent.com/${repo}/${ref}/${REGISTRY_DIR}/${CREWS_DIR}/${id}`;
   const headers = token ? { authorization: `Bearer ${token}` } : {};
 
-  let manifestRes = await fetch(`${base}/crew.json`, { headers });
-  if (manifestRes.status === 404 && token) manifestRes = await fetch(`${base}/crew.json`);
+  let manifestRes = await fetch(`${base}/manifest.json`, { headers });
+  if (manifestRes.status === 404 && token) manifestRes = await fetch(`${base}/manifest.json`);
   if (manifestRes.status === 404) throw new CrewError("CREW_NOT_FOUND", `crew not found in registry: ${id}`);
   if (!manifestRes.ok) throw new CrewError("CREW_REGISTRATION_ERROR", `crew fetch failed: HTTP ${manifestRes.status}`);
   const json: unknown = JSON.parse(await manifestRes.text());
@@ -117,13 +117,12 @@ export async function fetchCrewDefinition(id: string, repo: string = REPO, ref =
 
 /** Load a crew definition from the local registry dir (tests/CLI dev). */
 export async function readCrewDefinitionLocal(root: string, id: string): Promise<CrewDefinition> {
-  const file = path.join(root, REGISTRY_DIR, CREWS_DIR, id, "crew.json");
-  return loadCrewFile(file);
+  return loadCrewFile(path.join(root, REGISTRY_DIR, CREWS_DIR, id, "manifest.json"));
 }
 
 /** Load a crew definition from the consumer repo's local dir (.proagent/crews). */
 export async function readCrewDefinitionLocalDir(root: string, id: string): Promise<CrewDefinition> {
-  return loadCrewFile(path.join(root, LOCAL_CREWS_DIR, id, "crew.json"));
+  return loadCrewFile(path.join(root, LOCAL_CREWS_DIR, id, "manifest.json"));
 }
 
 // ---------------------------------------------------------------------------
@@ -228,7 +227,7 @@ export async function publishCrew(crew: CrewDefinition, target: GitHubCommitTarg
   const updated: MarketplaceCatalog = { schemaVersion: 1, updatedAt: new Date().toISOString(), items };
   await putRemoteFile(target, CATALOG_PATH, JSON.stringify(updated, null, 2) + "\n", catalogFile.sha, `crew: update catalog index for ${crew.id}`);
 
-  return { itemPath: `${itemDir}/crew.json`, catalogPath: CATALOG_PATH, files: Object.keys(folderFiles) };
+  return { itemPath: `${itemDir}/manifest.json`, catalogPath: CATALOG_PATH, files: Object.keys(folderFiles) };
 }
 
 /** Increment the download counter for a crew (one commit). */

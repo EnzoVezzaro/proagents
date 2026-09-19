@@ -9,7 +9,7 @@ import { CrewError } from "../crew/types.js";
 
 /**
  * Profile registry publishing — mirrors the crew pipeline (Git-as-database:
- * profiles/<id>/profile.json + catalog.json, committed through the GitHub Contents API).
+ * profiles/<id>/manifest.json + catalog.json, committed through the GitHub Contents API).
  *
  * A profile "item file" is the ProfileManifest itself (same shape as
  * profiles/*.json); the catalog index entry carries kind: "profile".
@@ -56,7 +56,7 @@ function indexFields(manifest: ProfileManifest): {
 
 /**
  * Publish a profile to the Git-backed registry catalog: writes the full
- * manifest to profiles/<slug>/profile.json and upserts the lightweight index
+ * manifest to profiles/<slug>/manifest.json and upserts the lightweight index
  * entry with kind: "profile". Two commits, both reviewable in Git history.
  */
 export async function publishProfile(manifest: ProfileManifest, target: GitHubCommitTarget): Promise<{ itemPath: string; catalogPath: string }> {
@@ -68,7 +68,7 @@ export async function publishProfile(manifest: ProfileManifest, target: GitHubCo
   const { slug, title, version, description, author, tags } = indexFields(manifest);
 
   // 1. Upsert the full manifest (standardized folder layout).
-  const itemPath = `registry/profiles/${slug}/profile.json`;
+  const itemPath = `registry/profiles/${slug}/manifest.json`;
   const itemFile = await getRemoteFile(target, itemPath);
   await putRemoteFile(target, itemPath, JSON.stringify(manifest, null, 2) + "\n", itemFile.sha, `profile: publish ${slug}@${version}`);
 
@@ -109,7 +109,7 @@ export async function publishProfile(manifest: ProfileManifest, target: GitHubCo
 
 /** Read the local registry item (for tests/CLI dev), hydrating paths. */
 export async function readProfileItemLocal(root: string, slug: string): Promise<ProfileManifest> {
-  const folder = path.join(root, REGISTRY_PROFILES_DIR, slug, "profile.json");
+  const folder = path.join(root, REGISTRY_PROFILES_DIR, slug, "manifest.json");
   try {
     return await loadProfileFile(folder);
   } catch {

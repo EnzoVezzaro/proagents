@@ -8,13 +8,13 @@ import { hydrateCrew } from "../../crew-hydrate.js";
 import { ProfileDetail } from "./ProfileDetailPage.js";
 
 function itemUrl(id: string): string {
-  // Profile folder standard (profiles/<id>/profile.json).
-  return catalogUrl(`profiles/${id}/profile.json`);
+  // Unified registry format (profiles/<id>/manifest.json).
+  return catalogUrl(`profiles/${id}/manifest.json`);
 }
 
 function crewUrl(id: string): string {
-  // Crew folder standard (crews/<id>/crew.json).
-  return catalogUrl(`crews/${id}/crew.json`);
+  // Unified registry format (crews/<id>/manifest.json).
+  return catalogUrl(`crews/${id}/manifest.json`);
 }
 
 export function CrewDetailPage(props: { id: string; ctx: AppCtx }): React.JSX.Element {
@@ -26,8 +26,8 @@ export function CrewDetailPage(props: { id: string; ctx: AppCtx }): React.JSX.El
   useEffect(() => {
     let cancelled = false;
     // Kind dispatch: the catalog index names the kind; the item file is a
-    // profile manifest (profiles/<id>/profile.json) or a crew definition
-    // (crews/<id>/crew.json).
+    // profile manifest (profiles/<id>/manifest.json) or a crew definition
+    // (crews/<id>/manifest.json).
     const loadItem = async (): Promise<{ item: unknown; base: string }> => {
       for (const url of [itemUrl(id), crewUrl(id)]) {
         const res = await fetch(url);

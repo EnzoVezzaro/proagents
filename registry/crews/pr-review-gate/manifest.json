@@ -1,0 +1,48 @@
+{
+  "schema": "proagents/crew/v1",
+  "version": "1.0.0",
+  "crew": {
+    "id": "pr-review-gate",
+    "name": "PR Review Gate",
+    "description": "Two-worker pull-request review crew: a read-only security/architecture reviewer and a standards checker that drafts the review verdict for humans to approve. Strictly read-only on the repo.",
+    "author": "proagents",
+    "tags": [
+      "code-review",
+      "security",
+      "quality",
+      "multi-agent"
+    ]
+  },
+  "mission": "mission.json",
+  "members": [
+    "members/01-reviewer.json",
+    "members/02-standards.json"
+  ],
+  "coordination": [
+    "coordination/01-the-reviewer-works-first-the-standards-check.json",
+    "coordination/02-findings-are-deduplicated-by-the-standards-ch.json"
+  ],
+  "tasks": [
+    "tasks/01-reviewer-owns-deep-diff-review-security-boun.json",
+    "tasks/02-standards-owns-severity-filtering-and-draftin.json"
+  ],
+  "workflows": [
+    "workflows/01-standard-run-reviewer-reads-the-full-diff.json"
+  ],
+  "handoffs": [
+    "handoffs/01-reviewer-to-standards.json"
+  ],
+  "rules": [
+    "rules/01-both-members-are-read-only-no-file-writes-n.json",
+    "rules/02-every-finding-cites-file-line-and-a-concrete.json",
+    "rules/03-the-verdict-is-a-proposal-final-decisions-b.json"
+  ],
+  "verification": [
+    "verification/01-review-findings-md-exists-and-every-finding-c.json",
+    "verification/02-review-verdict-md-states-approve-requestcha.json",
+    "verification/03-no-member-exceeded-the-read-only-permission-m.json"
+  ],
+  "mcp": "mcp/servers.json",
+  "createdAt": "2026-09-15T00:00:00.000Z",
+  "updatedAt": "2026-09-15T00:00:00.000Z"
+}

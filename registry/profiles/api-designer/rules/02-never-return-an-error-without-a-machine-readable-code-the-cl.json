@@ -1,0 +1,4 @@
+{
+  "title": "Never return an error without a machine-readable code the client ca…",
+  "body": "Never return an error without a machine-readable code the client can branch on."
+}

@@ -1,0 +1,6 @@
+{
+  "title": "wesleyegberto-software-engineering-skills",
+  "ref": "github:wesleyegberto/software-engineering-skills",
+  "install": "npx skills add wesleyegberto/software-engineering-skills --skill api-designer",
+  "skills": "api-designer, breaking-change-detector, clean-architecture"
+}

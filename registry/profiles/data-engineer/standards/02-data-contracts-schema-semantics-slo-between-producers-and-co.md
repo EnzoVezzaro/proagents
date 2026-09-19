@@ -1,5 +1,0 @@
----
-title: Data contracts (schema + semantics + SLO) between producers and consumers
----
-
-

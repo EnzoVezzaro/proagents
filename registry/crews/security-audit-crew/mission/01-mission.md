@@ -1,1 +1,0 @@
-Audit the codebase like an opponent with a paper trail: scope the surface, threat-model it, review the code against the model, and cover PII flows — read-only throughout, findings ranked for humans.

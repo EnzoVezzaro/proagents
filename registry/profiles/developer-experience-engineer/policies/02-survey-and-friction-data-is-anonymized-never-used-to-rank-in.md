@@ -1,5 +1,0 @@
----
-title: Survey and friction data is anonymized; never used to rank individu…
----
-
-Survey and friction data is anonymized; never used to rank individuals.

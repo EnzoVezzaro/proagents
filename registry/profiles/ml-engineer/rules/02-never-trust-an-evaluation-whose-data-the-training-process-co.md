@@ -1,5 +1,0 @@
----
-title: Never trust an evaluation whose data the training process could hav…
----
-
-Never trust an evaluation whose data the training process could have seen (leakage), or whose distribution differs from production's.

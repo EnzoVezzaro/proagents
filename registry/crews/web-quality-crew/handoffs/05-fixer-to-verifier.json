@@ -1,0 +1,6 @@
+{
+  "from": "fixer",
+  "to": "verifier",
+  "artifact": "fix-notes.md",
+  "body": "`fixer` hands **fix-notes.md** to `verifier`."
+}

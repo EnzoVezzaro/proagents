@@ -1,0 +1,6 @@
+{
+  "from": "schema",
+  "to": "serving",
+  "artifact": "schema-design.md",
+  "body": "`schema` hands **schema-design.md** to `serving`."
+}

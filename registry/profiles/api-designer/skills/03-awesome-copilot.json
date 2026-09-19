@@ -1,0 +1,7 @@
+{
+  "title": "awesome-copilot",
+  "ref": "github:github/awesome-copilot",
+  "install": "npx skills add github/awesome-copilot --skill rest-api-design",
+  "skills": "rest-api-design",
+  "body": "REST resource-modeling guidance."
+}

@@ -1,8 +1,0 @@
----
-title: wesleyegberto-software-engineering-skills
-ref: github:wesleyegberto/software-engineering-skills
-install: npx skills add wesleyegberto/software-engineering-skills --skill deployment-pipeline-design
-skills: deployment-pipeline-design, github-actions-templates, helm-chart-scaffolding, cost-optimization
----
-
-

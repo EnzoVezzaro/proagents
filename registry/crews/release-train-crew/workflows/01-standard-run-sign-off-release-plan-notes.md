@@ -1,1 +1,0 @@
-Standard run: sign-off → release plan + notes → gated rollout → post-deploy watch.

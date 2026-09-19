@@ -1,1 +1,0 @@
-If the release plan has no rollback, stop and report instead of deploying.

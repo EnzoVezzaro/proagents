@@ -110,11 +110,11 @@ describe("profile CLI (PROFILES-CLI)", () => {
         verification: { required: ["tests"] },
       };
       await fs.writeFile(
-        path.join(root, "registry", "profiles", "conflict-a", "profile.json"),
+        path.join(root, "registry", "profiles", "conflict-a", "manifest.json"),
         JSON.stringify({ ...base, rules: ["never deploy on friday"] }),
       );
       await fs.writeFile(
-        path.join(root, "registry", "profiles", "conflict-b", "profile.json"),
+        path.join(root, "registry", "profiles", "conflict-b", "manifest.json"),
         JSON.stringify({ ...base, profile: { name: "B", slug: "conflict-b" }, rules: ["deploy on friday"] }),
       );
       let failed = false;
@@ -225,10 +225,10 @@ describe("profile CLI (PROFILES-CLI)", () => {
       expect(parsed.slug).toBe("prompt-engineer");
       const dir = path.join(root, ".proagent", "profiles", "prompt-engineer");
       // Folder standard: identity/expertise/tools/verification all present.
-      expect(await fs.readFile(path.join(dir, "profile.json"), "utf8")).toContain("\"identity\": \"identity/01-identity.md\"");
-      expect(await fs.readFile(path.join(dir, "tools", "requirements.md"), "utf8")).toContain("required:");
+      expect(await fs.readFile(path.join(dir, "manifest.json"), "utf8")).toContain("\"identity\": \"identity.json\"");
+      expect(await fs.readFile(path.join(dir, "tools", "requirements.json"), "utf8")).toContain("\"required\"");
       // The scaffold passes the PA03x gate out of the box.
-      const gate = JSON.parse(run(root, ["profile", "validate", path.join(dir, "profile.json"), "--json"]));
+      const gate = JSON.parse(run(root, ["profile", "validate", path.join(dir, "manifest.json"), "--json"]));
       expect(gate.status).toBe("ok");
       // And it equips immediately — a checkout profile wins over packaged.
       const equip = JSON.parse(run(root, ["equip", "prompt-engineer", "--json"]));

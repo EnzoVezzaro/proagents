@@ -1,1 +1,0 @@
-Diagnose failing tests and separate real regressions from brittle assertions, proposing minimal patches for humans to review. A healing plan is advice, never an applied change.

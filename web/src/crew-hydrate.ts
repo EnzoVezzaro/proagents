@@ -1,7 +1,7 @@
 /**
- * Client-side hydration of folder-standard crew manifests (crew.json is a
- * composition index: mission/, members/, coordination/, tasks/, workflows/,
- * handoffs/, rules/, verification/, tools/, mcp/). Mirrors
+ * Client-side hydration of unified-registry crew manifests (manifest.json is
+ * a composition index: members/, coordination/, tasks/, workflows/,
+ * handoffs/, rules/, verification/, mcp/). Mirrors
  * src/crew/hydrate.ts hydrateCrewRemote, but fetches relative to the catalog
  * item URL like profile-hydrate.ts. Tolerant: a file that fails to fetch is
  * skipped so the page still renders.
@@ -15,7 +15,7 @@ import type {
   CrewWorker,
 } from "./types.js";
 
-const CREW_PATH_RE = /^[A-Za-z0-9][\w./-]*\.(?:json|md)$/;
+const CREW_PATH_RE = /^[A-Za-z0-9][\w./-]*\.json$/;
 
 function isCrewPathEntry(entry: string): boolean {
   return typeof entry === "string" && CREW_PATH_RE.test(entry) && !entry.includes("..") && !entry.startsWith("/");
@@ -39,21 +39,6 @@ async function getText(itemBase: string, rel: string): Promise<string | undefine
   } catch {
     return undefined;
   }
-}
-
-/** Minimal YAML frontmatter parse (no dependency): `key: value` lines. */
-function parseFrontmatter(text: string): { meta: Record<string, string>; body: string } {
-  const m = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/.exec(text);
-  if (!m) return { meta: {}, body: text.trim() };
-  const meta: Record<string, string> = {};
-  for (const line of (m[1] ?? "").split(/\r?\n/)) {
-    const idx = line.indexOf(":");
-    if (idx === -1) continue;
-    const key = line.slice(0, idx).trim();
-    const value = line.slice(idx + 1).trim();
-    if (key) meta[key] = value;
-  }
-  return { meta, body: (m[2] ?? "").trim() };
 }
 
 /** Deterministic member ids from profile slugs (-2/-3… on collision). */
@@ -111,8 +96,10 @@ export async function hydrateCrew(json: CrewDefinitionSource, itemBase: string):
 
   const readMd = async (rel: unknown): Promise<string | undefined> => {
     if (typeof rel !== "string" || !isCrewPathEntry(rel)) return undefined;
-    const raw = await getText(itemBase, rel);
-    return raw === undefined ? undefined : raw.trim();
+    const parsed = (await getJson(itemBase, rel)) as Record<string, unknown> | undefined;
+    if (parsed === undefined) return undefined;
+    const { body } = parsed as { body?: unknown };
+    return typeof body === "string" ? body.trim() : undefined;
   };
   const readList = async (rels: unknown): Promise<string[]> => {
     if (!Array.isArray(rels)) return [];
@@ -184,11 +171,9 @@ export async function hydrateCrew(json: CrewDefinitionSource, itemBase: string):
         continue;
       }
       if (!isCrewPathEntry(h)) continue;
-      const raw = await getText(itemBase, h);
-      if (raw === undefined) continue;
-      const { meta } = parseFrontmatter(raw);
-      if (meta.from && meta.to && meta.artifact) {
-        handoffList.push({ from: meta.from, to: meta.to, artifact: meta.artifact });
+      const parsed = (await getJson(itemBase, h)) as Partial<CrewHandoff> | undefined;
+      if (parsed?.from && parsed.to && parsed.artifact) {
+        handoffList.push({ from: parsed.from, to: parsed.to, artifact: parsed.artifact });
       }
     }
   } else if (typeof json.graph === "string" && isCrewPathEntry(json.graph)) {

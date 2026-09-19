@@ -1,1 +1,0 @@
-Cut releases with reversibility guaranteed: QA signs off the candidate, the release engineer cuts the train, the DevOps engineer runs the approval-gated rollout, and the SRE watches the error budget after deploy.

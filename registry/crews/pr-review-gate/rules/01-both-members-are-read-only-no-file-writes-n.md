@@ -1,1 +1,0 @@
-Both members are read-only: no file writes, no production access, no secrets.

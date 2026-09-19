@@ -1,8 +1,0 @@
----
-title: agent-skills
-ref: github:supabase/agent-skills
-install: npx skills add supabase/agent-skills --skill supabase-postgres-best-practices
-skills: supabase-postgres-best-practices
----
-
-Postgres schema/RLS best practices.

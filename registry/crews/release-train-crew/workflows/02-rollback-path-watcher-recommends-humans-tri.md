@@ -1,1 +1,0 @@
-Rollback path: watcher recommends, humans trigger, deployer executes the reverse rollout.

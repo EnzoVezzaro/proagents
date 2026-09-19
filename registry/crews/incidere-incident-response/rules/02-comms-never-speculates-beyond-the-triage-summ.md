@@ -1,1 +1,0 @@
-Comms never speculates beyond the triage summary.

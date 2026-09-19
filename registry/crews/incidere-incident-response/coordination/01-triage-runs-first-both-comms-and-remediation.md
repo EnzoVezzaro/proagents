@@ -1,1 +1,0 @@
-Triage runs first; both comms and remediation consume only triage-summary.md.

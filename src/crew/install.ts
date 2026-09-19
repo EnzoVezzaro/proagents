@@ -55,7 +55,7 @@ export function profileSections(manifest: ProfileManifest): string[] {
 /**
  * Crew installer — writes a crew into a repo root, deterministically:
  *
- *   .agents/crews/<id>/crew.json                 the full definition (source of truth)
+ *   .agents/crews/<id>/manifest.json             the full definition (source of truth)
  *   .agents/crews/<id>/SKILL.md                  crew-level operating skill
  *   .agents/crews/<id>/workers/<worker>/SKILL.md per-worker skill
  *   .agents/crews/<id>/workers/<worker>/agent.json  machine-readable contract
@@ -224,7 +224,7 @@ export function planInstall(crew: CrewDefinition): InstallPlan {
   };
 
   const base = path.join(".agents", "crews", crew.id);
-  push(path.join(base, "crew.json"), JSON.stringify(crew, null, 2) + "\n");
+  push(path.join(base, "manifest.json"), JSON.stringify(crew, null, 2) + "\n");
   push(path.join(base, "SKILL.md"), crewSkillMarkdown(crew));
   for (const w of crew.workers) {
     const wdir = path.join(base, "workers", w.id);
@@ -310,7 +310,7 @@ export async function installCrew(
     const abs = path.join(root, entry.path);
     await fs.mkdir(path.dirname(abs), { recursive: true });
     let content: string;
-    if (entry.path.endsWith("crew.json")) {
+    if (entry.path.endsWith("manifest.json")) {
       content = JSON.stringify(crew, null, 2) + "\n";
     } else if (entry.path.endsWith("SKILL.md") && entry.path.endsWith(path.join(".agents", "crews", crew.id, "SKILL.md"))) {
       content = crewSkillMarkdown(crew);

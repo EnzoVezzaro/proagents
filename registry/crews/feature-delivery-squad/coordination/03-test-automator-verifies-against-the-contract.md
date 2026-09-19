@@ -1,1 +1,0 @@
-test-automator verifies against the contract, not against the implementations' claims.

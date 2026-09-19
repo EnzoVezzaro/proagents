@@ -1,1 +1,0 @@
-No member exceeded the read-only permission model.

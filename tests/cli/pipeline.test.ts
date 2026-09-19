@@ -113,7 +113,7 @@ describe("pipeline e2e — profile → equip → compiled agent → performance"
     expect(parsed.status).toBe("ok");
     const byMechanism = Object.fromEntries(parsed.files.map((f: { mechanism: string; path: string }) => [f.mechanism, f.path]));
     expect(byMechanism["agent-skill"]).toBe(".agents/skills/release-engineer/SKILL.md");
-    expect(byMechanism["canonical-manifest"]).toBe(".agents/skills/release-engineer/profile.json");
+    expect(byMechanism["canonical-manifest"]).toBe(".agents/skills/release-engineer/manifest.json");
     expect(byMechanism["project-instructions"]).toBe("AGENTS.md");
 
     // The compiled skill is a well-formed agent skill carrying the profile.
@@ -124,10 +124,10 @@ describe("pipeline e2e — profile → equip → compiled agent → performance"
     expect(skill).toContain("## Expertise");
     // Knowledge references ship with the registry item and render in the skill.
     expect(skill).toContain("## Knowledge");
-    expect(skill).toContain("knowledge/release-checklist.md");
+    expect(skill).toContain("knowledge/release-checklist.json");
 
     // The canonical manifest round-trips from the target repo.
-    const manifest = JSON.parse(fs.readFileSync(path.join(root, ".agents/skills/release-engineer/profile.json"), "utf8"));
+    const manifest = JSON.parse(fs.readFileSync(path.join(root, ".agents/skills/release-engineer/manifest.json"), "utf8"));
     expect(manifest.profile.slug).toBe("release-engineer");
 
     // Project instructions got the proagent block with a matched marker pair.
@@ -187,7 +187,7 @@ describe("pipeline e2e — profile → equip → compiled agent → performance"
       tools: { required: ["filesystem"] },
       verification: { required: ["review"] },
     });
-    const root = withRepo({ "AGENTS.md": "# Example app\n", "registry/profiles/bad-profile/profile.json": broken });
+    const root = withRepo({ "AGENTS.md": "# Example app\n", "registry/profiles/bad-profile/manifest.json": broken });
     const { stdout, status } = run(root, ["equip", "bad-profile", "--target", "codex", "--json"], true);
     expect(status).toBe(1);
     const parsed = JSON.parse(stdout);

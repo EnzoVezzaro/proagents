@@ -1,1 +1,0 @@
-Respond to incidents with separated concerns: ground the signal in evidence, keep stakeholders informed, and execute approval-gated mitigation. Reads your repo's runbooks and incident history for context.

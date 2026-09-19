@@ -1,1 +1,0 @@
-scout owns the evidence-based surface map: entry points, trust boundaries, data flows.

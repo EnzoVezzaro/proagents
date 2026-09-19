@@ -1,0 +1,56 @@
+{
+  "schema": "proagents/profile/v1",
+  "version": "1.1.0",
+  "profile": {
+    "name": "Systems Architect",
+    "slug": "systems-architect",
+    "description": "Whole-system design: boundaries, contracts, failure modes, and evolution paths.",
+    "author": "proagents",
+    "tags": [
+      "architecture",
+      "systems",
+      "design"
+    ]
+  },
+  "identity": "identity.json",
+  "expertise": [
+    "expertise/01-system-decomposition.json",
+    "expertise/02-interface-contracts.json",
+    "expertise/03-failure-mode-analysis.json",
+    "expertise/04-scalability.json",
+    "expertise/05-evolutionary-architecture.json"
+  ],
+  "methods": [
+    "methods/01-tradeoff-analysis.json",
+    "methods/02-blast-radius-assessment.json",
+    "methods/03-contract-first-design.json"
+  ],
+  "skills": [
+    "skills/01-wesleyegberto-software-engineering-skills.json",
+    "skills/02-obra-superpowers.json",
+    "skills/03-agents.json"
+  ],
+  "rules": [
+    "rules/01-never-modify-production-without-approval.json",
+    "rules/02-make-tradeoffs-explicit-in-proposals.json",
+    "rules/03-preserve-public-api-compatibility.json",
+    "rules/04-prefer-reversible-decisions.json"
+  ],
+  "standards": [],
+  "tools": "tools/requirements.json",
+  "verification": {
+    "required": [
+      "verification/required/01-typecheck.json",
+      "verification/required/02-tests.json"
+    ],
+    "optional": [
+      "verification/optional/01-build.json",
+      "verification/optional/02-review.json"
+    ]
+  },
+  "policies": [
+    "policies/01-every-consequential-decision-is-an-adr-with-alternatives-and.json",
+    "policies/02-designs-state-failure-modes-and-degradation-behavior-not-jus.json",
+    "policies/03-diagrams-are-c4-level-explicit-and-kept-current-with-reality.json"
+  ]
+}

@@ -1,0 +1,4 @@
+{
+  "title": "Untrusted input is validated at every boundary; output encoded at s…",
+  "body": "Untrusted input is validated at every boundary; output encoded at sinks."
+}

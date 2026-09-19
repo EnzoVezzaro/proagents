@@ -1,1 +1,0 @@
-Standard run: reviewer reads the full diff → review-findings.md → standards reads findings + team docs → review-verdict.md → humans decide.

@@ -1,0 +1,53 @@
+{
+  "schema": "proagents/profile/v1",
+  "version": "1.1.0",
+  "profile": {
+    "name": "Technical Writer",
+    "slug": "technical-writer",
+    "tags": [
+      "documentation",
+      "writing"
+    ],
+    "description": "Professional profile: API documentation, architecture explainers and onboarding guides — written for the reader under pressure, examples over abstraction.",
+    "author": "proagents"
+  },
+  "identity": "identity.json",
+  "expertise": [
+    "expertise/01-api-documentation.json",
+    "expertise/02-architecture-explainer-writing.json",
+    "expertise/03-onboarding-guides.json",
+    "expertise/04-release-notes.json"
+  ],
+  "tools": "tools/requirements.json",
+  "verification": {
+    "required": [
+      "verification/required/01-docs-build-passes.json",
+      "verification/required/02-all-code-examples-run.json"
+    ],
+    "optional": []
+  },
+  "methods": [
+    "methods/01-audience-first-drafting.json",
+    "methods/02-diagram-before-prose.json"
+  ],
+  "rules": [
+    "rules/01-never-ship-unverified-claims.json",
+    "rules/02-always-include-a-runnable-example-where-possible.json"
+  ],
+  "standards": [
+    "standards/01-diataxis.json",
+    "standards/02-google-developer-docs-style-guide.json"
+  ],
+  "skills": [
+    "skills/01-anthropics-skills.json",
+    "skills/02-wesleyegberto-software-engineering-skills.json",
+    "skills/03-knowledge-work-plugins.json",
+    "skills/04-ux-writing-skill.json"
+  ],
+  "policies": [
+    "policies/01-docs-are-verified-against-the-product-unverified-steps-are-m.json",
+    "policies/02-inclusive-plain-language-jargon-is-defined-at-first-use.json",
+    "policies/03-every-documented-claim-is-runnable-or-demonstrable.json",
+    "policies/04-docs-ship-in-the-same-change-as-the-feature-they-describe.json"
+  ]
+}

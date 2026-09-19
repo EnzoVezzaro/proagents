@@ -1,5 +1,0 @@
----
-title: Google developer docs style guide
----
-
-

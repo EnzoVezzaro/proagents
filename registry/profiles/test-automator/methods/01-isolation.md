@@ -1,5 +1,0 @@
----
-title: Isolation
----
-
-Isolation

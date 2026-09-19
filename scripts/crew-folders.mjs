@@ -42,8 +42,13 @@ function folderCrewDirs() {
   if (!fs.existsSync(CREWS)) return [];
   return fs
     .readdirSync(CREWS, { withFileTypes: true })
-    .filter((e) => e.isDirectory() && fs.existsSync(path.join(CREWS, e.name, "crew.json")))
+    .filter((e) => e.isDirectory() && (fs.existsSync(path.join(CREWS, e.name, "manifest.json")) || fs.existsSync(path.join(CREWS, e.name, "crew.json"))))
     .map((e) => path.join(CREWS, e.name));
+}
+
+function manifestFileFor(dir) {
+  const unified = path.join(dir, "manifest.json");
+  return fs.existsSync(unified) ? unified : path.join(dir, "crew.json");
 }
 
 async function convert(file, core) {
@@ -73,7 +78,7 @@ async function checkAll(core) {
   let checked = 0;
   let bad = 0;
   for (const dir of folderCrewDirs()) {
-    const mf = path.join(dir, "crew.json");
+    const mf = manifestFileFor(dir);
     let crew;
     try {
       crew = await core.hydrate.loadCrewFile(mf);
@@ -97,7 +102,7 @@ async function checkAll(core) {
         fs.mkdirSync(path.dirname(abs), { recursive: true });
         fs.writeFileSync(abs, content);
       }
-      const roundTrip = await core.hydrate.loadCrewFile(path.join(tmp, "crew.json"));
+      const roundTrip = await core.hydrate.loadCrewFile(path.join(tmp, "manifest.json"));
       if (!deepEqual(crew, roundTrip)) {
         bad++;
         console.error(`  NOT a fixed point: ${mf}`);

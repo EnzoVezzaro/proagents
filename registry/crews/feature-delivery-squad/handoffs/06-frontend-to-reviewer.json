@@ -1,0 +1,6 @@
+{
+  "from": "frontend",
+  "to": "reviewer",
+  "artifact": "frontend-implementation.md",
+  "body": "`frontend` hands **frontend-implementation.md** to `reviewer`."
+}

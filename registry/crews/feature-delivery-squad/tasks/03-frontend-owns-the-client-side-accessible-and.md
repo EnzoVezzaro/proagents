@@ -1,1 +1,0 @@
-frontend owns the client side, accessible and responsive.

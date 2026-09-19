@@ -1,0 +1,6 @@
+{
+  "from": "reviewer",
+  "to": "standards",
+  "artifact": "review-findings.md",
+  "body": "`reviewer` hands **review-findings.md** to `standards`."
+}

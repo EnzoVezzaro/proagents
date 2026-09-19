@@ -80,9 +80,9 @@ describe("profile compilation (ADAPT-COMPILE)", () => {
     expect(skill).toContain("threat-modeling");
 
     // The canonical manifest is preserved beside the compiled skill
-    // (README "What Gets Generated": profile.json stays inspectable).
+    // (README "What Gets Generated": manifest.json stays inspectable).
     const manifestOut = JSON.parse(
-      await fs.readFile(path.join(root, ".agents", "skills", "security-engineer", "profile.json"), "utf8"),
+      await fs.readFile(path.join(root, ".agents", "skills", "security-engineer", "manifest.json"), "utf8"),
     ) as ProfileManifest;
     expect(manifestOut.profile.slug).toBe("security-engineer");
 

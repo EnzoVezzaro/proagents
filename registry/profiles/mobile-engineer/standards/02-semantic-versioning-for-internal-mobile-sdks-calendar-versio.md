@@ -1,5 +1,0 @@
----
-title: Semantic versioning for internal mobile SDKs; calendar versioning for app releases
----
-
-

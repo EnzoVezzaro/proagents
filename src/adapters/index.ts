@@ -404,7 +404,7 @@ export async function compileForHarness(
     const skillPath = path.join(dir, "SKILL.md");
     await fs.writeFile(path.join(root, skillPath), profileSkillMarkdown(profile, manifest), "utf8");
     files.push({ path: skillPath, mechanism: "agent-skill" });
-    const manifestPath = path.join(dir, "profile.json");
+    const manifestPath = path.join(dir, "manifest.json");
     await fs.writeFile(path.join(root, manifestPath), JSON.stringify(manifest, null, 2) + "\n", "utf8");
     files.push({ path: manifestPath, mechanism: "canonical-manifest" });
 

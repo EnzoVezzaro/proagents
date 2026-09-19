@@ -1,1 +1,0 @@
-Never weaken an assertion to make a test pass.

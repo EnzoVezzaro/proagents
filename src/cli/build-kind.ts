@@ -89,67 +89,53 @@ export async function buildKindProfile(
       description: agent.purpose,
       tags: ["custom", "from-interview"],
     },
-    identity: "identity/01-identity.md",
-    expertise: ["expertise/01-core.md"],
-    methods: ["methods/01-method.md"],
-    rules: ["rules/01-scope.md", "rules/02-escalation.md"],
+    identity: "identity.json",
+    expertise: ["expertise/01-core.json"],
+    methods: ["methods/01-method.json"],
+    rules: ["rules/01-scope.json", "rules/02-escalation.json"],
     standards: [],
-    skills: tooling.skills.map((_, i) => `skills/${String(i + 1).padStart(2, "0")}-skill.md`),
-    tools: "tools/requirements.md",
+    skills: tooling.skills.map((_, i) => `skills/${String(i + 1).padStart(2, "0")}-skill.json`),
+    tools: "tools/requirements.json",
     verification: {
-      required: ["verification/required/01-validation.md"],
+      required: ["verification/required/01-validation.json"],
       optional: [],
     },
   };
   const permTools = permissionSummary(agent.permissions).tools;
-  const toolsYaml = [
-    "---",
-    "title: Tool requirements",
-    "note: Source of truth for this profile's tool requirements — edit this file, then re-validate.",
-    "required:",
-    ...((permTools.length > 0 ? permTools : ["filesystem", "shell", "git"]).map((t) => `  - ${t}`)),
+  const toolsJson = {
+    required: permTools.length > 0 ? permTools : ["filesystem", "shell", "git"],
     ...(tooling.mcp.length > 0
-      ? [
-          "mcp:",
-          ...tooling.mcp.map(
-            (s) =>
-              `  - name: ${s.name}\n    transport: stdio\n    command: ${s.command}\n    args: [${s.args.map((a) => JSON.stringify(a)).join(", ")}]\n    healthCheck: ${s.healthCheck}`,
-          ),
-        ]
-      : []),
-    ...(tooling.packages.length > 0
-      ? ["packages:", ...tooling.packages.map((p) => `  - registry: ${p.registry}${p.reason ? `\n    reason: ${JSON.stringify(p.reason)}` : ""}`)]
-      : []),
-    "optional: []",
-    "---",
-    "",
-    ...(tooling.mcp.length > 0 || tooling.packages.length > 0
-      ? [
-          "## Discovered tooling",
-          "",
-          "Provenance-tagged registry findings staged during the interview. Wire the MCP transports (command/url) to this repo's setup before relying on them.",
-          "",
-          ...tooling.mcp.map((s) => `- **MCP ${s.name}** — placeholder transport \`${s.command} ${s.args.join(" ")}\`; verify: ${s.healthCheck}`),
-          ...tooling.packages.map((p) => `- **${p.registry}** — ${p.reason ?? ""}`),
-        ]
-      : []),
-    "",
-  ].join("\n");
+      ? {
+          mcp: tooling.mcp.map((s) => ({
+            name: s.name,
+            transport: "stdio" as const,
+            command: s.command,
+            args: s.args,
+            healthCheck: s.healthCheck,
+          })),
+        }
+      : {}),
+    ...(tooling.packages.length > 0 ? { packages: tooling.packages } : {}),
+  };
 
   const files: Record<string, string> = {
-    "profile.json": JSON.stringify(manifest satisfies ProfileManifestSource, null, 2) + "\n",
-    "identity/01-identity.md": `---\ntitle: ${name}\n---\n\nYou operate as a ${name.toLowerCase()}. ${agent.purpose}\n`,
-    "expertise/01-core.md": `---\ntitle: ${agent.scope.slice(0, 60) || "core practice"}\n---\n\n${agent.scope || `${slug} core practice`}\n`,
-    "methods/01-method.md": `---\ntitle: working method\n---\n\n${(agent.responsibilities[0] ?? "Work from evidence over assumptions.").trim()}\n`,
-    "rules/01-scope.md": `---\ntitle: stay in scope\n---\n\nWork only inside the declared scope: ${agent.scope || "the session intent"}.\n`,
-    "rules/02-escalation.md": `---\ntitle: escalate instead of guessing\n---\n\n${agent.escalation[0] ?? "Escalate instead of guessing when outside the declared scope."}\n`,
-    "tools/requirements.md": toolsYaml,
-    "verification/required/01-validation.md": `---\ntitle: ${agent.validation[0]?.slice(0, 60) || "session validation passes"}\n---\n\n${agent.validation[0] ?? "The session's validation criteria pass before any output is final."}\n`,
+    "manifest.json": JSON.stringify(manifest satisfies ProfileManifestSource, null, 2) + "\n",
+    "identity.json": JSON.stringify({ title: name, body: `You operate as a ${name.toLowerCase()}. ${agent.purpose}` }, null, 2) + "\n",
+    "expertise/01-core.json": JSON.stringify({ title: agent.scope.slice(0, 60) || "core practice", body: agent.scope || `${slug} core practice` }, null, 2) + "\n",
+    "methods/01-method.json": JSON.stringify({ title: "working method", body: (agent.responsibilities[0] ?? "Work from evidence over assumptions.").trim() }, null, 2) + "\n",
+    "rules/01-scope.json": JSON.stringify({ title: "stay in scope", body: `Work only inside the declared scope: ${agent.scope || "the session intent"}.` }, null, 2) + "\n",
+    "rules/02-escalation.json": JSON.stringify({ title: "escalate instead of guessing", body: agent.escalation[0] ?? "Escalate instead of guessing when outside the declared scope." }, null, 2) + "\n",
+    "tools/requirements.json": JSON.stringify(toolsJson, null, 2) + "\n",
+    "verification/required/01-validation.json": JSON.stringify(
+      { title: agent.validation[0]?.slice(0, 60) || "session validation passes", body: agent.validation[0] ?? "The session's validation criteria pass before any output is final." },
+      null,
+      2,
+    ) + "\n",
   };
   // Discovered skills become registry-ref entries (referenced, never copied).
   for (const [i, s] of tooling.skills.entries()) {
-    files[`skills/${String(i + 1).padStart(2, "0")}-skill.md`] =
-      `---\ntitle: discovered skill\nref: ${s.ref}\n${s.note ? `note: ${JSON.stringify(s.note)}\n` : ""}---\n`;    
+    files[`skills/${String(i + 1).padStart(2, "0")}-skill.json`] =
+      JSON.stringify({ title: "discovered skill", ref: s.ref, ...(s.note ? { note: s.note } : {}) }, null, 2) + "\n";
   }
   for (const [rel, content] of Object.entries(files)) {
     const abs = path.join(dir, rel);
@@ -158,7 +144,7 @@ export async function buildKindProfile(
   }
 
   // Gate on the same validator publish uses.
-  const hydrated = await loadProfileFile(path.join(dir, "profile.json"));
+  const hydrated = await loadProfileFile(path.join(dir, "manifest.json"));
   const problems = profileProblems(hydrated);
   if (problems.length > 0) {
     fail(`generated profile does not pass validation (this is a bug): ${problems.join("; ")}`);
@@ -175,7 +161,7 @@ export async function buildKindProfile(
   console.log(`  proagent equip ${slug}                       # equip it now (local .proagent wins)`);
   console.log(`  proagent equip ${slug} --all-targets         # write artifacts for every harness`);
   console.log(`  $EDITOR ${dir}                               # deepen it`);
-  console.log(`  proagent profile submit ${dir}/profile.json  # propose it to the registry`);
+  console.log(`  proagent profile submit ${dir}/manifest.json  # propose it to the registry`);
 }
 
 /** Load the session's staged tooling (empty on any failure — builders still work). */

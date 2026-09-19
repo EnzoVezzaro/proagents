@@ -1,8 +1,0 @@
----
-title: obra-superpowers
-ref: github:obra/superpowers
-install: npx skills add obra/superpowers --skill brainstorming
-skills: writing-plans, brainstorming, subagent-driven-development
----
-
-org-scale work is structured and delegated

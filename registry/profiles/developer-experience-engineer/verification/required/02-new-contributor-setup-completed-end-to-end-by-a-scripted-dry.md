@@ -1,5 +1,0 @@
----
-title: New contributor setup completed end-to-end by a scripted dry-run wi…
----
-
-New contributor setup completed end-to-end by a scripted dry-run with the elapsed time reported

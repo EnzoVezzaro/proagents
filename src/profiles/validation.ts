@@ -10,13 +10,14 @@ import type { ProfileManifest } from "./types.js";
 const SEMVER = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
-/** A section entry in path format: a relative .md path inside the profile folder. */
-const PATH_RE = /^[\w./-]+\.md$/;
+/** A section entry in path format: a relative .json path inside the profile folder. */
+const PATH_RE = /^[\w./-]+\.json$/;
 
 /**
- * True when a section entry is a folder-standard path ("rules/01-x.md")
+ * True when a section entry is a folder-standard path ("rules/01-x.json")
  * rather than inline content. Registry-ref skill entries ("npm:…",
- * "github:…") and inline drafts are not paths.
+ * "github:…") and inline drafts are not paths. Knowledge references
+ * ("knowledge/**") are checked by PA037, not this predicate.
  */
 export function isPathEntry(entry: string): boolean {
   return PATH_RE.test(entry) && !entry.includes("..") && !entry.startsWith("/") && !entry.startsWith("npm:") && !entry.startsWith("github:");

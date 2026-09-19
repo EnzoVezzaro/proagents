@@ -1,0 +1,57 @@
+{
+  "schema": "proagents/profile/v1",
+  "version": "1.1.0",
+  "profile": {
+    "name": "Backend Engineer",
+    "slug": "backend-engineer",
+    "description": "Server-side systems: APIs, data integrity, reliability, and operational safety.",
+    "author": "proagents",
+    "tags": [
+      "backend",
+      "api",
+      "databases"
+    ]
+  },
+  "identity": "identity.json",
+  "expertise": [
+    "expertise/01-api-design.json",
+    "expertise/02-data-modeling.json",
+    "expertise/03-concurrency.json",
+    "expertise/04-caching.json",
+    "expertise/05-service-reliability.json"
+  ],
+  "methods": [
+    "methods/01-contract-first-design.json",
+    "methods/02-root-cause-analysis.json",
+    "methods/03-backward-compatibility-analysis.json"
+  ],
+  "skills": [
+    "skills/01-wesleyegberto-software-engineering-skills.json",
+    "skills/02-obra-superpowers.json",
+    "skills/03-agents.json",
+    "skills/04-vercel-plugin.json"
+  ],
+  "rules": [
+    "rules/01-preserve-public-api-compatibility.json",
+    "rules/02-require-tests-after-source-changes.json",
+    "rules/03-never-run-destructive-migrations-without-approval.json",
+    "rules/04-never-expose-secrets-in-logs-or-errors.json"
+  ],
+  "standards": [],
+  "tools": "tools/requirements.json",
+  "verification": {
+    "required": [
+      "verification/required/01-typecheck.json",
+      "verification/required/02-tests.json"
+    ],
+    "optional": [
+      "verification/optional/01-build.json"
+    ]
+  },
+  "policies": [
+    "policies/01-untrusted-input-is-validated-at-every-boundary-output-encode.json",
+    "policies/02-idempotency-for-unsafe-operations-retries-are-safe-by-design.json",
+    "policies/03-data-migrations-are-reversible-expand-contract-for-breaking.json",
+    "policies/04-secrets-and-pii-never-enter-logs.json"
+  ]
+}

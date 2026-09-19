@@ -1,5 +1,0 @@
----
-title: OpenAPI 3.x / GraphQL spec conformance
----
-
-

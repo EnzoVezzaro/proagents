@@ -10,7 +10,7 @@ import { hydrateCrew } from "../../crew-hydrate.js";
 import { CATALOG_URL, catalogUrl } from "../../catalog.js";
 
 function itemUrl(id: string): string {
-  return catalogUrl(`crews/${id}/crew.json`);
+  return catalogUrl(`crews/${id}/manifest.json`);
 }
 
 /**

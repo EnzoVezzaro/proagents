@@ -1,0 +1,4 @@
+{
+  "title": "Never add a platform abstraction without an owner for its failure m…",
+  "body": "Never add a platform abstraction without an owner for its failure modes."
+}

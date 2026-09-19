@@ -1,8 +1,0 @@
----
-title: ai-plugins
-ref: github:bitwarden/ai-plugins
-install: npx skills add bitwarden/ai-plugins --skill threat-modeling
-skills: threat-modeling
----
-
-privacy threat modeling (vendor-official).

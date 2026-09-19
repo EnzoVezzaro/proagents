@@ -1,5 +1,0 @@
----
-title: Changed flows tested on the device matrix (low-end + current OS + o…
----
-
-Changed flows tested on the device matrix (low-end + current OS + oldest supported OS) — see the matrix-testing method

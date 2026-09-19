@@ -1,1 +1,0 @@
-remediation's restart_service and runbook_exec calls each require a recorded human approval.

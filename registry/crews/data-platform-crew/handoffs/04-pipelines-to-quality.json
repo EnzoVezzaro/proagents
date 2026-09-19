@@ -1,0 +1,6 @@
+{
+  "from": "pipelines",
+  "to": "quality",
+  "artifact": "pipeline-notes.md",
+  "body": "`pipelines` hands **pipeline-notes.md** to `quality`."
+}

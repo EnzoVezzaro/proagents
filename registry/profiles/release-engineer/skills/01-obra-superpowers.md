@@ -1,8 +1,0 @@
----
-title: obra-superpowers
-ref: github:obra/superpowers
-install: npx skills add obra/superpowers --skill finishing-a-development-branch
-skills: finishing-a-development-branch, verification-before-completion, executing-plans
----
-
-

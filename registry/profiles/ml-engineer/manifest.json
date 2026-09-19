@@ -1,0 +1,76 @@
+{
+  "schema": "proagents/profile/v1",
+  "version": "2.1.0",
+  "profile": {
+    "name": "ML Engineer",
+    "slug": "ml-engineer",
+    "description": "Professional profile: measurement-driven machine learning — baselines before models, leakage audited out, evaluation that mirrors production, and models treated as mutable production systems with rollback paths.",
+    "author": "proagents",
+    "tags": [
+      "machine-learning",
+      "mlops",
+      "evaluation",
+      "production"
+    ]
+  },
+  "identity": "identity.json",
+  "expertise": [
+    "expertise/01-training-pipeline-design.json",
+    "expertise/02-evaluation-methodology.json",
+    "expertise/03-feature-engineering-and-leakage.json",
+    "expertise/04-data-versioning-and-reproducibility.json",
+    "expertise/05-serving-and-rollback.json",
+    "expertise/06-monitoring-for-drift-and-decay.json"
+  ],
+  "knowledge": [
+    "knowledge/ml/training-pipeline-design.json",
+    "knowledge/ml/evaluation-methodology.json",
+    "knowledge/ml/feature-engineering-and-leakage.json",
+    "knowledge/ml/data-versioning-and-reproducibility.json",
+    "knowledge/ml/serving-and-rollback.json",
+    "knowledge/ml/monitoring-drift-and-decay.json",
+    "knowledge/ml/method-baseline-first-evaluation.json",
+    "knowledge/ml/method-leakage-auditing.json",
+    "knowledge/ml/verification-checklist.json"
+  ],
+  "methods": [
+    "methods/01-baseline-first-evaluation.json",
+    "methods/02-leakage-auditing.json"
+  ],
+  "rules": [
+    "rules/01-never-present-a-model-without-its-baseline-comparison-comple.json",
+    "rules/02-never-trust-an-evaluation-whose-data-the-training-process-co.json",
+    "rules/03-never-deploy-a-model-without-a-rollback-path-and-a-canary-sl.json",
+    "rules/04-never-let-a-production-model-run-unmonitored-input-drift-out.json",
+    "rules/05-never-ship-a-model-whose-failure-mode-is-undefined-what-it-d.json"
+  ],
+  "standards": [
+    "standards/01-model-cards-for-deployed-models.json",
+    "standards/02-reproducibility-data-versioning-seeded-runs-environment-pinn.json"
+  ],
+  "tools": "tools/requirements.json",
+  "verification": {
+    "required": [
+      "verification/required/01-evaluation-reported-with-baseline-comparison-slice-breakdown.json",
+      "verification/required/02-leakage-audit-performed-on-the-feature-set-and-dataset-split.json",
+      "verification/required/03-serving-plan-includes-rollback-path-canary-slice-and-drift-m.json",
+      "verification/required/04-walk-the-verification-checklist-in-knowledge-ml-verification.json"
+    ],
+    "optional": [
+      "verification/optional/01-cost-latency-budget-of-the-model-measured-in-serving-conditi.json"
+    ]
+  },
+  "skills": [
+    "skills/01-obra-superpowers.json",
+    "skills/02-wesleyegberto-software-engineering-skills.json",
+    "skills/03-skills.json",
+    "skills/04-skills.json",
+    "skills/05-skills.json"
+  ],
+  "policies": [
+    "policies/01-training-data-is-privacy-reviewed-pii-is-minimized-or-exclud.json",
+    "policies/02-deployed-models-ship-model-cards-documenting-intended-use-an.json",
+    "policies/03-evaluation-datasets-are-access-controlled-test-sets-are-touc.json",
+    "policies/04-model-behavior-on-out-of-distribution-inputs-is-defined-not.json"
+  ]
+}

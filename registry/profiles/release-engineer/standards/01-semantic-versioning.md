@@ -1,6 +1,0 @@
----
-title: Semantic Versioning
-url: https://semver.org/
----
-
-

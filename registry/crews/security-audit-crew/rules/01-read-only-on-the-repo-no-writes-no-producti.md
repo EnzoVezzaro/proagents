@@ -1,1 +1,0 @@
-Read-only on the repo: no writes, no production access, no secrets.

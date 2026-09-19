@@ -1,1 +1,0 @@
-Standard run: contract → parallel implementation → verification → review verdict → human merge decision.

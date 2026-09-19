@@ -1,8 +1,0 @@
----
-title: anthropics-skills
-ref: github:anthropics/skills
-install: npx skills add anthropics/skills --skill doc-coauthoring
-skills: doc-coauthoring, internal-comms, brand-guidelines
----
-
-

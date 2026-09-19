@@ -122,7 +122,7 @@ export async function loadItem(kind: ArtifactKind, id: string, opts: { root?: st
     case "crew":
     case "agent": {
       const root = opts.root ?? process.cwd();
-      const localFile = path.join(root, REGISTRY_DIR, CREWS_DIR, id, "crew.json");
+      const localFile = path.join(root, REGISTRY_DIR, CREWS_DIR, id, "manifest.json");
       try {
         return { item, content: await loadCrewFile(localFile) };
       } catch {
@@ -160,7 +160,8 @@ export async function writeLocalItem(kind: ArtifactKind, id: string, manifestJso
   }
   const dir = path.resolve(root, localDirForKind(kind), id);
   await fs.mkdir(dir, { recursive: true });
-  const file = path.join(dir, kind === "profile" ? "profile.json" : "crew.json");
+  // Unified registry format: the entry point is always manifest.json.
+  const file = path.join(dir, "manifest.json");
   await fs.writeFile(file, manifestJson, "utf8");
   return file;
 }

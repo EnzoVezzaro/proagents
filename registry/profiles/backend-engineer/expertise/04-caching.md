@@ -1,5 +1,0 @@
----
-title: caching
----
-
-caching

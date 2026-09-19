@@ -1,5 +1,0 @@
----
-title: Never fix data with a one-off script that isn't versioned and revie…
----
-
-Never fix data with a one-off script that isn't versioned and reviewed — data repairs are pipelines too.

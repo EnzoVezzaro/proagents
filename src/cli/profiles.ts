@@ -423,13 +423,14 @@ async function resolveProfileItem(idOrFile: string, flags: Record<string, string
       fail(`cannot read profile file: ${(err as Error).message}`);
     }
   }
-  const folder = path.join(process.cwd(), REGISTRY_PROFILES_DIR, idOrFile, "profile.json");
+  // Unified registry format (manifest.json), then the legacy flat file.
+  const folder = path.join(process.cwd(), REGISTRY_PROFILES_DIR, idOrFile, "manifest.json");
   try {
     return await loadProfileFile(folder);
   } catch {
     // fall through to local .proagent / flat / remote
   }
-  const local = path.join(process.cwd(), LOCAL_PROFILES_DIR, idOrFile, "profile.json");
+  const local = path.join(process.cwd(), LOCAL_PROFILES_DIR, idOrFile, "manifest.json");
   try {
     return await loadProfileFile(local);
   } catch {
@@ -505,26 +506,31 @@ async function profileCreate(nameArg: string | undefined, flags: Record<string, 
   // Deterministic scaffold — the smallest manifest that passes PA030–PA035:
   // identity, one expertise domain, required tools, required verification.
   const manifest = {
+    schema: "proagents/profile/v1",
     version: "0.1.0",
     profile: { name, slug, description, tags: ["custom"] },
-    identity: "identity/01-identity.md",
-    expertise: ["expertise/01-core.md"],
+    identity: "identity.json",
+    expertise: ["expertise/01-core.json"],
     methods: [],
     skills: [],
     rules: [],
     standards: [],
-    tools: "tools/requirements.md",
+    tools: "tools/requirements.json",
     verification: {
-      required: ["verification/required/01-tests.md"],
+      required: ["verification/required/01-tests.json"],
       optional: [],
     },
   };
   const files: Record<string, string> = {
-    "profile.json": JSON.stringify(manifest, null, 2) + "\n",
-    "identity/01-identity.md": `---\ntitle: ${name}\n---\n\n${summary}\n`,
-    "expertise/01-core.md": `---\ntitle: core ${name.toLowerCase()} practice\n---\n\ncore ${name.toLowerCase()} practice\n`,
-    "tools/requirements.md": `---\ntitle: Tool requirements\nnote: Source of truth for this profile's tool requirements — edit this file, then re-validate.\nrequired:\n  - filesystem\n  - shell\n  - git\noptional: []\n---\n`,
-    "verification/required/01-tests.md": `---\ntitle: tests pass\n---\n\ntests pass after every source change\n`,
+    "manifest.json": JSON.stringify(manifest, null, 2) + "\n",
+    "identity.json": JSON.stringify({ title: name, body: summary }, null, 2) + "\n",
+    "expertise/01-core.json": JSON.stringify({ title: `core ${name.toLowerCase()} practice`, body: `core ${name.toLowerCase()} practice` }, null, 2) + "\n",
+    "tools/requirements.json": JSON.stringify(
+      { required: ["filesystem", "shell", "git"] },
+      null,
+      2,
+    ) + "\n",
+    "verification/required/01-tests.json": JSON.stringify({ title: "tests pass", body: "tests pass after every source change" }, null, 2) + "\n",
   };
   for (const [rel, content] of Object.entries(files)) {
     const abs = path.join(dir, rel);
@@ -534,7 +540,7 @@ async function profileCreate(nameArg: string | undefined, flags: Record<string, 
 
   // Gate on the same validator publish uses — a scaffold that failed PA03x
   // would be a bug, and reporting it here beats failing at equip time.
-  const hydrated = await loadProfileFile(path.join(dir, "profile.json"));
+  const hydrated = await loadProfileFile(path.join(dir, "manifest.json"));
   const problems = profileProblems(hydrated);
   if (problems.length > 0) {
     fail(`scaffold does not pass validation (this is a bug): ${problems.join("; ")}`);
@@ -545,10 +551,10 @@ async function profileCreate(nameArg: string | undefined, flags: Record<string, 
   for (const f of Object.keys(files)) console.log(`  + ${f}`);
   console.log("");
   console.log("Next:");
-  console.log(`  proagent profile validate ${dir}/profile.json   # gate (passes now, re-check as you edit)`);
+  console.log(`  proagent profile validate ${dir}/manifest.json   # gate (passes now, re-check as you edit)`);
   console.log(`  proagent equip ${slug}                          # equip it immediately — a checkout profile wins over packaged`);
   console.log(`  $EDITOR ${dir}                                  # deepen identity/expertise/rules/verification`);
-  console.log(`  proagent profile submit ${dir}/profile.json     # propose it to the registry when ready`);
+  console.log(`  proagent profile submit ${dir}/manifest.json     # propose it to the registry when ready`);
 }
 
 /** `proagent profile show <id>` — print the full manifest. */

@@ -1,1 +1,0 @@
-code-findings map to modeled threats or carry an explicit justification.

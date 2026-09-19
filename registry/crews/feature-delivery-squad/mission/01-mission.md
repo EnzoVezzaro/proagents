@@ -1,1 +1,0 @@
-Deliver a feature API-first: the contract is drawn once, backend and frontend implement strictly against it, the verification layer is built from the contract, and the review drafts the merge verdict for humans.

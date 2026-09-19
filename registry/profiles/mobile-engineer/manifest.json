@@ -1,0 +1,76 @@
+{
+  "schema": "proagents/profile/v1",
+  "version": "2.1.0",
+  "profile": {
+    "name": "Mobile Engineer",
+    "slug": "mobile-engineer",
+    "description": "Professional profile: mobile craft under real-world constraints — offline-first data, battery and memory budgets, release trains that ship safely, and testing across the device matrix that users actually hold.",
+    "author": "proagents",
+    "tags": [
+      "mobile",
+      "ios",
+      "android",
+      "offline-first",
+      "release"
+    ]
+  },
+  "identity": "identity.json",
+  "expertise": [
+    "expertise/01-offline-first-architecture.json",
+    "expertise/02-release-engineering.json",
+    "expertise/03-battery-and-memory-budgets.json",
+    "expertise/04-backward-compatibility-and-api-aging.json",
+    "expertise/05-device-matrix-testing.json",
+    "expertise/06-mobile-observability.json"
+  ],
+  "knowledge": [
+    "knowledge/mobile/offline-first-architecture.json",
+    "knowledge/mobile/release-engineering.json",
+    "knowledge/mobile/battery-and-memory-budgets.json",
+    "knowledge/mobile/backward-compatibility.json",
+    "knowledge/mobile/device-matrix-testing.json",
+    "knowledge/mobile/mobile-observability.json",
+    "knowledge/mobile/method-device-matrix-testing.json",
+    "knowledge/mobile/method-feature-flag-rollouts.json",
+    "knowledge/mobile/verification-checklist.json"
+  ],
+  "methods": [
+    "methods/01-device-matrix-testing.json",
+    "methods/02-feature-flag-rollouts.json"
+  ],
+  "rules": [
+    "rules/01-never-ship-a-data-change-without-a-migration-path-from-every.json",
+    "rules/02-never-block-the-main-thread-on-network-disk-or-another-proce.json",
+    "rules/03-never-release-without-crash-free-session-and-launch-time-che.json",
+    "rules/04-never-design-a-screen-assuming-the-network-is-there-design-a.json",
+    "rules/05-never-remove-a-backend-api-without-checking-the-installed-ba.json"
+  ],
+  "standards": [
+    "standards/01-platform-human-interface-guidelines-ios-material-design-andr.json",
+    "standards/02-semantic-versioning-for-internal-mobile-sdks-calendar-versio.json"
+  ],
+  "tools": "tools/requirements.json",
+  "verification": {
+    "required": [
+      "verification/required/01-changed-flows-tested-on-the-device-matrix-low-end-current-os.json",
+      "verification/required/02-offline-airplane-mode-behavior-demonstrated-for-every-networ.json",
+      "verification/required/03-battery-memory-cpu-profiled-for-new-background-work-or-heavy.json",
+      "verification/required/04-walk-the-verification-checklist-in-knowledge-mobile-verifica.json"
+    ],
+    "optional": [
+      "verification/optional/01-accessibility-pass-dynamic-type-font-scaling-talkback-voiceo.json"
+    ]
+  },
+  "skills": [
+    "skills/01-obra-superpowers.json",
+    "skills/02-wesleyegberto-software-engineering-skills.json",
+    "skills/03-agents.json",
+    "skills/04-agent-plugins.json"
+  ],
+  "policies": [
+    "policies/01-on-device-data-collection-is-minimized-crash-reports-are-pii.json",
+    "policies/02-every-permission-request-has-a-user-visible-justification.json",
+    "policies/03-released-binaries-keep-working-against-new-backends-expand-c.json",
+    "policies/04-battery-and-memory-budgets-are-release-gates-with-recorded-w.json"
+  ]
+}

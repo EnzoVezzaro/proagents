@@ -1,0 +1,57 @@
+{
+  "schema": "proagents/profile/v1",
+  "version": "1.1.0",
+  "profile": {
+    "name": "QA Engineer",
+    "slug": "qa-engineer",
+    "description": "Quality practice: test strategy, regression analysis, and honest verification.",
+    "author": "proagents",
+    "tags": [
+      "qa",
+      "testing",
+      "quality"
+    ]
+  },
+  "identity": "identity.json",
+  "expertise": [
+    "expertise/01-test-strategy.json",
+    "expertise/02-regression-analysis.json",
+    "expertise/03-edge-case-analysis.json",
+    "expertise/04-test-automation.json"
+  ],
+  "methods": [
+    "methods/01-root-cause-analysis.json",
+    "methods/02-boundary-value-analysis.json",
+    "methods/03-risk-based-testing.json"
+  ],
+  "skills": [
+    "skills/01-obra-superpowers.json",
+    "skills/02-wesleyegberto-software-engineering-skills.json",
+    "skills/03-skills.json",
+    "skills/04-skills.json"
+  ],
+  "rules": [
+    "rules/01-never-weaken-an-assertion-to-make-a-test-pass.json",
+    "rules/02-report-unverified-work-as-unverified.json",
+    "rules/03-require-tests-after-source-changes.json",
+    "rules/04-preserve-public-api-compatibility.json"
+  ],
+  "standards": [],
+  "tools": "tools/requirements.json",
+  "verification": {
+    "required": [
+      "verification/required/01-typecheck.json",
+      "verification/required/02-tests.json"
+    ],
+    "optional": [
+      "verification/optional/01-lint.json",
+      "verification/optional/02-build.json"
+    ]
+  },
+  "policies": [
+    "policies/01-a-bug-without-a-reproduction-is-a-hypothesis-documented-as-s.json",
+    "policies/02-test-data-is-synthetic-production-data-never-enters-test-sys.json",
+    "policies/03-quality-signals-are-published-escape-rate-coverage-of-risk-f.json",
+    "policies/04-release-sign-off-states-what-was-and-was-not-verified.json"
+  ]
+}

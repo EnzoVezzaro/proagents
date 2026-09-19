@@ -1,1 +1,0 @@
-pipelines and serving build against the same schema; mismatches are findings, not adaptations.

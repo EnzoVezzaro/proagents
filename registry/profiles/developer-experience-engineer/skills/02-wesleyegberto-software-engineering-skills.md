@@ -1,8 +1,0 @@
----
-title: wesleyegberto-software-engineering-skills
-ref: github:wesleyegberto/software-engineering-skills
-install: npx skills add wesleyegberto/software-engineering-skills --skill workflow-implement
-skills: workflow-implement, clean-code
----
-
-friction fixes land as normal reviewed work

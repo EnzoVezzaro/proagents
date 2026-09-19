@@ -1,5 +1,0 @@
----
-title: Semantic Versioning for API versions
----
-
-

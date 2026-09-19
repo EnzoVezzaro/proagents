@@ -1,0 +1,6 @@
+{
+  "from": "serving",
+  "to": "quality",
+  "artifact": "api-verification.md",
+  "body": "`serving` hands **api-verification.md** to `quality`."
+}

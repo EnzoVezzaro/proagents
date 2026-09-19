@@ -1,1 +1,0 @@
-The verdict is a proposal — final decisions belong to humans.

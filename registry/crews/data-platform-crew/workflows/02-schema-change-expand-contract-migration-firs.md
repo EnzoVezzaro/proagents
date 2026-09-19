@@ -1,1 +1,0 @@
-Schema change: expand/contract migration first, then affected pipelines and serving re-enter.

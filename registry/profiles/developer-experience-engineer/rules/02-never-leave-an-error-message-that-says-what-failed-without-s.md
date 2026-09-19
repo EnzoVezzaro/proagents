@@ -1,5 +1,0 @@
----
-title: Never leave an error message that says what failed without saying w…
----
-
-Never leave an error message that says what failed without saying where and the likely fix.

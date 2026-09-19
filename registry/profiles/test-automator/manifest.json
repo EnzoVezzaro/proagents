@@ -1,0 +1,78 @@
+{
+  "schema": "proagents/profile/v1",
+  "version": "2.1.0",
+  "profile": {
+    "name": "Test Automator",
+    "slug": "test-automator",
+    "description": "Professional profile: signal per minute of CI — deterministic tests that fail for exactly one reason, flake diagnosed to root cause and quarantined, pyramids that keep the fast layers trustworthy.",
+    "author": "proagents",
+    "tags": [
+      "testing",
+      "ci",
+      "flake",
+      "automation"
+    ]
+  },
+  "identity": "identity.json",
+  "expertise": [
+    "expertise/01-test-pyramid-architecture.json",
+    "expertise/02-deterministic-test-design.json",
+    "expertise/03-flake-diagnosis.json",
+    "expertise/04-fixture-and-factory-design.json",
+    "expertise/05-coverage-gap-analysis.json",
+    "expertise/06-ci-signal-engineering.json"
+  ],
+  "knowledge": [
+    "knowledge/testing/test-pyramid-architecture.json",
+    "knowledge/testing/deterministic-test-design.json",
+    "knowledge/testing/flake-diagnosis.json",
+    "knowledge/testing/fixture-and-factory-design.json",
+    "knowledge/testing/coverage-gap-analysis.json",
+    "knowledge/testing/ci-signal-engineering.json",
+    "knowledge/testing/method-isolation.json",
+    "knowledge/testing/method-coverage-gap-analysis.json",
+    "knowledge/testing/method-flake-quarantine.json",
+    "knowledge/testing/verification-checklist.json"
+  ],
+  "methods": [
+    "methods/01-isolation.json",
+    "methods/02-coverage-gap-analysis.json",
+    "methods/03-flake-quarantine.json"
+  ],
+  "rules": [
+    "rules/01-never-merge-a-test-that-failed-more-than-once-in-ci-without.json",
+    "rules/02-never-write-a-test-that-asserts-on-implementation-detail-whe.json",
+    "rules/03-never-add-a-sleep-to-make-a-test-pass-waits-are-conditions-n.json",
+    "rules/04-never-let-a-suite-grow-a-test-whose-failure-the-team-would-i.json",
+    "rules/05-never-claim-coverage-improvements-from-tests-that-cannot-fai.json"
+  ],
+  "standards": [
+    "standards/01-arrange-act-assert-structure.json",
+    "standards/02-google-s-flaky-test-taxonomy-systematic-vs-stochastic.json"
+  ],
+  "tools": "tools/requirements.json",
+  "verification": {
+    "required": [
+      "verification/required/01-every-new-test-demonstrated-to-fail-for-exactly-the-reason-i.json",
+      "verification/required/02-flaky-tests-reported-with-diagnosis-category-root-cause-fix.json",
+      "verification/required/03-suite-runtime-impact-stated-for-the-changed-areas-before-aft.json",
+      "verification/required/04-walk-the-verification-checklist-in-knowledge-testing-verific.json"
+    ],
+    "optional": [
+      "verification/optional/01-coverage-delta-report-for-the-changed-area.json"
+    ]
+  },
+  "skills": [
+    "skills/01-obra-superpowers.json",
+    "skills/02-wesleyegberto-software-engineering-skills.json",
+    "skills/03-skills.json",
+    "skills/04-agents.json",
+    "skills/05-skills.json"
+  ],
+  "policies": [
+    "policies/01-flake-rates-and-quarantines-are-published-never-hidden.json",
+    "policies/02-test-fixtures-contain-synthetic-data-only-never-production-p.json",
+    "policies/03-a-quarantined-test-always-carries-a-ticket-id-and-a-review-d.json",
+    "policies/04-retries-report-a-metric-they-never-substitute-for-diagnosis.json"
+  ]
+}

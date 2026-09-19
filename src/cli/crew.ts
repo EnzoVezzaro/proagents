@@ -337,21 +337,21 @@ async function resolveCrew(idOrFile: string, flags: Record<string, string | bool
       fail(`cannot read crew file: ${(err as Error).message}`);
     }
   }
-  // A directory holding crew.json (folder standard).
+  // A directory holding manifest.json (unified registry format).
   try {
-    return await loadCrewFile(path.join(idOrFile, "crew.json"));
+    return await loadCrewFile(path.join(idOrFile, "manifest.json"));
   } catch {
     // fall through
   }
-  // Consumer repo's local dir (.proagent/crews/<id>/crew.json).
+  // Consumer repo's local dir (.proagent/crews/<id>/manifest.json).
   try {
-    return await loadCrewFile(path.join(process.cwd(), LOCAL_CREWS_DIR, idOrFile, "crew.json"));
+    return await loadCrewFile(path.join(process.cwd(), LOCAL_CREWS_DIR, idOrFile, "manifest.json"));
   } catch {
     // fall through
   }
-  // Local registry checkout: crews/<id>/crew.json (folder standard).
+  // Local registry checkout: crews/<id>/manifest.json.
   try {
-    return await loadCrewFile(path.join(process.cwd(), "registry", "crews", idOrFile, "crew.json"));
+    return await loadCrewFile(path.join(process.cwd(), "registry", "crews", idOrFile, "manifest.json"));
   } catch {
     // fall through to remote
   }

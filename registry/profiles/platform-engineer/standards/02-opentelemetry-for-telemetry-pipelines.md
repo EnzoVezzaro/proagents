@@ -1,5 +1,0 @@
----
-title: OpenTelemetry for telemetry pipelines
----
-
-

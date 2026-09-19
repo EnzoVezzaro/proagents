@@ -64,40 +64,22 @@ async function parseJsonEntry(readFile: (rel: string) => Promise<string | undefi
   }
 }
 
-/** Minimal YAML frontmatter parse (no dependency): `key: value` lines. */
-function parseFrontmatter(text: string): { meta: Record<string, string>; body: string } {
-  const m = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/.exec(text);
-  if (!m) return { meta: {}, body: text.trim() };
-  const meta: Record<string, string> = {};
-  for (const line of (m[1] ?? "").split(/\r?\n/)) {
-    const idx = line.indexOf(":");
-    if (idx === -1) continue;
-    const key = line.slice(0, idx).trim();
-    const value = line.slice(idx + 1).trim();
-    if (key) meta[key] = value;
-  }
-  return { meta, body: (m[2] ?? "").trim() };
-}
-
 /**
- * A handoff contract file: YAML frontmatter carries the structured edge
- * (from/to/artifact); the body is the prose contract. This is the same
- * round-trip trick profile standards use (url/note frontmatter).
+ * Read a crew section file: a JSON object whose keys are the section's
+ * metadata plus an optional `body` string. Undefined when missing/unparsable.
  */
-function handoffFromFrontmatter(text: string): { handoff?: CrewHandoff; body: string } {
-  const { meta, body } = parseFrontmatter(text);
-  if (meta.from && meta.to && meta.artifact) {
-    return { handoff: { from: meta.from, to: meta.to, artifact: meta.artifact }, body };
+async function readSectionRaw(readFile: (rel: string) => Promise<string | undefined>, rel: string): Promise<{ meta: Record<string, string>; body: string } | undefined> {
+  const raw = await readFile(rel);
+  if (raw === undefined) return undefined;
+  try {
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    const { body, ...meta } = parsed;
+    const flat: Record<string, string> = {};
+    for (const [k, v] of Object.entries(meta)) flat[k] = typeof v === "string" ? v : (JSON.stringify(v) as string);
+    return { meta: flat, body: typeof body === "string" ? body : "" };
+  } catch {
+    return undefined;
   }
-  return { body };
-}
-
-/** Parse tools/requirements.md YAML frontmatter into required-tool strings. */
-function toolsFromFrontmatter(text: string): string[] {
-  const m = /^---\r?\n([\s\S]*?)\r?\n---/.exec(text);
-  if (!m) return [];
-  const meta = parseFrontmatter(`---\n${m[1]}\n---\n`).meta;
-  return meta.required ? meta.required.split(",").map((s) => s.trim()).filter(Boolean) : [];
 }
 
 // ---------------------------------------------------------------------------
@@ -171,8 +153,8 @@ export async function hydrateCrewDefinition(source: CrewDefinitionSource, dir?: 
   };
   const readMd = async (rel: unknown): Promise<string | undefined> => {
     if (typeof rel !== "string" || !isCrewPathEntry(rel)) return undefined;
-    const raw = await readFile(rel);
-    return raw === undefined ? undefined : raw.trim();
+    const section = await readSectionRaw(readFile, rel);
+    return section === undefined ? undefined : section.body.trim();
   };
   const readList = async (entries: unknown): Promise<string[]> => {
     if (!Array.isArray(entries)) return [];
@@ -291,10 +273,11 @@ export async function hydrateCrewDefinition(source: CrewDefinitionSource, dir?: 
         continue;
       }
       if (!isCrewPathEntry(h)) continue;
-      const raw = await readFile(h);
-      if (raw === undefined) continue;
-      const { handoff } = handoffFromFrontmatter(raw);
-      if (handoff) handoffList.push(handoff);
+      // Structured handoff: {from, to, artifact, body?}.
+      const section = await readSectionRaw(readFile, h);
+      if (section?.meta.from && section.meta.to && section.meta.artifact) {
+        handoffList.push({ from: section.meta.from, to: section.meta.to, artifact: section.meta.artifact });
+      }
     }
   } else if (typeof source.graph === "string" && isCrewPathEntry(source.graph)) {
     const json = (await parseJsonEntry(readFile, source.graph)) as { handoffs?: CrewHandoff[]; entryPoints?: string[] } | undefined;
@@ -303,17 +286,26 @@ export async function hydrateCrewDefinition(source: CrewDefinitionSource, dir?: 
   }
   out.handoffs = handoffList;
   // Handoff docs stay out of `workflows`: their contracts already live in
-  // out.handoffs (parsed from the same files' frontmatter). Appending the
+  // out.handoffs (parsed from the same files). Appending the
   // prose to out.workflows here would be re-serialized into workflows/ files
   // by dehydrateCrew and re-hydrated — duplicating it every round trip.
 
-  // Crew-level tools: tools/requirements.md frontmatter (required list).
+  // Crew-level tools: structured tools/requirements.json.
   if (typeof source.tools === "string" && isCrewPathEntry(source.tools)) {
-    const raw = await readFile(source.tools);
-    if (raw !== undefined) {
-      const required = toolsFromFrontmatter(raw);
-      if (required.length > 0) {
-        out.rules = [...(out.rules ?? []), `Crew-level required tools: ${required.join(", ")}.`];
+    const toolsJson = await readSectionRaw(readFile, source.tools);
+    if (toolsJson !== undefined) {
+      try {
+        const parsed = JSON.parse((await readFile(source.tools)) ?? "") as { required?: string[] | string };
+        const required = Array.isArray(parsed.required)
+          ? parsed.required
+          : typeof parsed.required === "string"
+            ? parsed.required.split(",").map((s) => s.trim()).filter(Boolean)
+            : [];
+        if (required.length > 0) {
+          out.rules = [...(out.rules ?? []), `Crew-level required tools: ${required.join(", ")}.`];
+        }
+      } catch {
+        /* tolerant */
       }
     }
   }
@@ -377,8 +369,9 @@ function finalizeInline(source: CrewDefinitionSource): CrewDefinition {
 }
 
 /**
- * Load a crew definition from a local crew.json (folder standard) or a flat
- * inline definition file. Deterministic; throws CREW_NOT_FOUND when missing.
+ * Load a crew definition from a manifest file — the unified registry format
+ * (manifest.json), the legacy crew.json folder standard, or a flat inline
+ * definition file. Deterministic; throws CREW_NOT_FOUND when missing.
  */
 export async function loadCrewFile(file: string): Promise<CrewDefinition> {
   let raw: string;
@@ -512,8 +505,8 @@ export async function hydrateCrewRemote(
 
   const readMd = async (rel: unknown): Promise<string | undefined> => {
     if (typeof rel !== "string" || !isCrewPathEntry(rel)) return undefined;
-    const raw = await readFile(rel);
-    return raw === undefined ? undefined : raw.trim();
+    const section = await readSectionRaw(readFile, rel);
+    return section === undefined ? undefined : section.body.trim();
   };
   const readList = async (rels: unknown): Promise<string[]> => {
     if (!Array.isArray(rels)) return [];
@@ -545,10 +538,10 @@ export async function hydrateCrewRemote(
         handoffList.push(h);
         continue;
       }
-      const raw = await readFile(h);
-      if (raw === undefined) continue;
-      const { handoff } = handoffFromFrontmatter(raw);
-      if (handoff) handoffList.push(handoff);
+      const section = await readSectionRaw(readFile, h);
+      if (section?.meta.from && section.meta.to && section.meta.artifact) {
+        handoffList.push({ from: section.meta.from, to: section.meta.to, artifact: section.meta.artifact });
+      }
     }
   } else if (typeof source.graph === "string" && isCrewPathEntry(source.graph)) {
     const raw = await readFile(source.graph);
@@ -571,9 +564,18 @@ export async function hydrateCrewRemote(
   if (typeof source.tools === "string" && isCrewPathEntry(source.tools)) {
     const raw = await readFile(source.tools);
     if (raw !== undefined) {
-      const required = toolsFromFrontmatter(raw);
-      if (required.length > 0) {
-        out.rules = [...(out.rules ?? []), `Crew-level required tools: ${required.join(", ")}.`];
+      try {
+        const parsed = JSON.parse(raw) as { required?: string[] | string };
+        const required = Array.isArray(parsed.required)
+          ? parsed.required
+          : typeof parsed.required === "string"
+            ? parsed.required.split(",").map((s) => s.trim()).filter(Boolean)
+            : [];
+        if (required.length > 0) {
+          out.rules = [...(out.rules ?? []), `Crew-level required tools: ${required.join(", ")}.`];
+        }
+      } catch {
+        /* tolerant */
       }
     }
   }
@@ -606,7 +608,7 @@ export async function hydrateCrewRemote(
 // ---------------------------------------------------------------------------
 
 export interface CrewFolderFiles {
-  "crew.json": string;
+  "manifest.json": string;
   "mcp/servers.json": string;
   [file: string]: string;
 }
@@ -624,7 +626,7 @@ export interface CrewFolderFiles {
  */
 export function dehydrateCrew(crew: CrewDefinition): CrewFolderFiles {
   const files: CrewFolderFiles = {
-    "crew.json": "",
+    "manifest.json": "",
     "mcp/servers.json": "",
   };
   files["mcp/servers.json"] = JSON.stringify(crew.mcpServers ?? [], null, 2) + "\n";
@@ -674,39 +676,31 @@ export function dehydrateCrew(crew: CrewDefinition): CrewFolderFiles {
     (items ?? []).forEach((body, i) => {
       const n = String(i + 1).padStart(2, "0");
       const slug = slugify(titleOf(body) || `${dir}-item`);
-      files[`${dir}/${n}-${slug}.md`] = body.trim() + "\n";
+      files[`${dir}/${n}-${slug}.json`] = JSON.stringify({ body: body.trim() }, null, 2) + "\n";
     });
   };
 
-  if (crew.mission?.trim()) files["mission/01-mission.md"] = crew.mission.trim() + "\n";
+  if (crew.mission?.trim()) files["mission.json"] = JSON.stringify({ body: crew.mission.trim() }, null, 2) + "\n";
   writeList("coordination", crew.coordination);
   writeList("tasks", crew.tasks);
   writeList("workflows", crew.workflows);
   writeList("rules", crew.rules);
   writeList("verification", crew.verification);
 
-  // Handoffs → frontmatter contract files.
+  // Handoffs → structured contract files.
   (crew.handoffs ?? []).forEach((h, i) => {
     const n = String(i + 1).padStart(2, "0");
-    const lines = [
-      "---",
-      `from: ${h.from}`,
-      `to: ${h.to}`,
-      `artifact: ${h.artifact}`,
-      "---",
-      "",
-      `\`${h.from}\` hands **${h.artifact}** to \`${h.to}\`.`,
-      "",
-    ];
-    files[`handoffs/${n}-${h.from}-to-${h.to}.md`] = lines.join("\n");
+    const json = { from: h.from, to: h.to, artifact: h.artifact };
+    files[`handoffs/${n}-${h.from}-to-${h.to}.json`] = JSON.stringify(json, null, 2) + "\n";
   });
 
-  files["crew.json"] =
+  files["manifest.json"] =
     JSON.stringify(
       {
+        schema: "proagents/crew/v1",
         version: crew.version,
         crew: { id: crew.id, name: crew.name, description: crew.description, author: crew.author, tags: crew.tags },
-        ...(crew.mission?.trim() ? { mission: "mission/01-mission.md" } : {}),
+        ...(crew.mission?.trim() ? { mission: "mission.json" } : {}),
         members: memberPaths,
         ...(listPaths("coordination", files).length > 0 ? { coordination: listPaths("coordination", files) } : {}),
         ...(listPaths("tasks", files).length > 0 ? { tasks: listPaths("tasks", files) } : {}),
@@ -727,7 +721,7 @@ export function dehydrateCrew(crew: CrewDefinition): CrewFolderFiles {
 /** Collect the already-written section files for a directory, in order. */
 function listPaths(dir: string, files: CrewFolderFiles): string[] {
   return Object.keys(files)
-    .filter((f) => f.startsWith(`${dir}/`) && f.endsWith(".md"))
+    .filter((f) => f.startsWith(`${dir}/`) && f.endsWith(".json"))
     .sort();
 }
 

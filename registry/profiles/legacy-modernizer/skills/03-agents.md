@@ -1,8 +1,0 @@
----
-title: agents
-ref: github:wshobson/agents
-install: npx skills add wshobson/agents --skill dotnet-backend-patterns
-skills: dotnet-backend-patterns, nodejs-backend-patterns
----
-
-target patterns for the two most common legacy stacks.

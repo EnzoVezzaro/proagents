@@ -62,13 +62,13 @@ describe("profile registry (PROFILES-REG)", () => {
       const checkoutCopy = manifest("senior-engineer");
       await fs.mkdir(path.join(root, "registry", "profiles", "senior-engineer"), { recursive: true });
       await fs.writeFile(
-        path.join(root, "registry", "profiles", "senior-engineer", "profile.json"),
+        path.join(root, "registry", "profiles", "senior-engineer", "manifest.json"),
         JSON.stringify(checkoutCopy),
       );
       // A registry-only profile must appear from the checkout.
       await fs.mkdir(path.join(root, "registry", "profiles", "marketplace-only"), { recursive: true });
       await fs.writeFile(
-        path.join(root, "registry", "profiles", "marketplace-only", "profile.json"),
+        path.join(root, "registry", "profiles", "marketplace-only", "manifest.json"),
         JSON.stringify(manifest("marketplace-only")),
       );
       const entries = await listProfiles(root);
@@ -197,8 +197,8 @@ describe("shipped registry catalog (PROFILES-CATALOG)", () => {
     const profileIds = catalog.items.filter((i) => i.kind === "profile").map((i) => i.id);
     expect(profileIds.length).toBeGreaterThanOrEqual(13);
     for (const id of profileIds) {
-      // Folder layout (profiles/<id>/profile.json) with flat legacy fallback.
-      const folderPath = path.resolve("registry", "profiles", id, "profile.json");
+      // Folder layout (profiles/<id>/manifest.json) with flat legacy fallback.
+      const folderPath = path.resolve("registry", "profiles", id, "manifest.json");
       const flatPath = path.resolve("registry", "profiles", `${id}.json`);
       const filePath = await fs
         .access(folderPath)

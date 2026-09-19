@@ -1,5 +1,0 @@
----
-title: Never design a screen assuming the network is there — design assumi…
----
-
-Never design a screen assuming the network is there — design assuming it drops mid-request, and handle that as the normal case.

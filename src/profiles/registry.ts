@@ -1,6 +1,5 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { parse as yamlParse } from "yaml";
 import type {
   ProfileManifest,
   ProfileManifestSource,
@@ -68,31 +67,27 @@ function isValidProfile(json: unknown): json is ProfileManifestSource {
 }
 
 // ---------------------------------------------------------------------------
-// Frontmatter helpers (constrained: "key: value" lines)
+// Section file reading — JSON only (unified registry format)
 // ---------------------------------------------------------------------------
 
-function parseFrontmatter(raw: string): { meta: Record<string, string>; body: string } {
-  const m = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/.exec(raw);
-  if (!m) return { meta: {}, body: raw.trim() };
-  const meta: Record<string, string> = {};
-  for (const line of (m[1] ?? "").split(/\r?\n/)) {
-    const idx = line.indexOf(":");
-    if (idx === -1) continue;
-    const key = line.slice(0, idx).trim();
-    const value = line.slice(idx + 1).trim();
-    if (key) meta[key] = value;
-  }
-  return { meta, body: (m[2] ?? "").trim() };
-}
-
-// ---------------------------------------------------------------------------
-// Hydration: path-format source → plain manifest
-// ---------------------------------------------------------------------------
-
-/** Read a section file: frontmatter meta + body. Undefined when missing. */
+/**
+ * Read a section file: a JSON object whose keys are the section's metadata
+ * plus an optional `body` string (the instructional content). Returns
+ * { meta, body }; undefined when missing or unparsable.
+ */
 async function readSectionFile(file: string): Promise<{ meta: Record<string, string>; body: string } | undefined> {
+  let raw: string;
   try {
-    return parseFrontmatter(await fs.readFile(file, "utf8"));
+    raw = await fs.readFile(file, "utf8");
+  } catch {
+    return undefined;
+  }
+  try {
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    const { body, ...meta } = parsed;
+    const flat: Record<string, string> = {};
+    for (const [k, v] of Object.entries(meta)) flat[k] = typeof v === "string" ? v : (JSON.stringify(v) as string);
+    return { meta: flat, body: typeof body === "string" ? body : "" };
   } catch {
     return undefined;
   }
@@ -125,14 +120,14 @@ async function hydrateSkillEntry(
       ...(meta.note || body ? { note: meta.note || body } : {}),
     };
   } else {
-    const name = meta.name ?? entry.replace(/^skills\//, "").replace(/\.md$/, "");
+    const name = meta.name ?? entry.replace(/^skills\//, "").replace(/\.(?:md|json)$/, "");
     skills.push(name);
     skillBodies[name] = { description: meta.description ?? "", body };
   }
   return { skills, skillsDetail, skillBodies };
 }
 
-/** Structured tools object as carried by tools/requirements.md frontmatter. */
+/** Structured tools object as carried by tools/requirements.{json,md}. */
 interface ToolsFrontmatter {
   required?: string[];
   optional?: string[];
@@ -141,11 +136,7 @@ interface ToolsFrontmatter {
   packages?: ProfilePackage[];
 }
 
-/** Parse the tools file's YAML frontmatter into the structured tools object. */
-function parseToolsFrontmatter(raw: string): ProfileManifest["tools"] {
-  const m = /^---\r?\n([\s\S]*?)\r?\n---/.exec(raw);
-  if (!m) return { required: [] };
-  const parsed = yamlParse(m[1] ?? "") as ToolsFrontmatter | null;
+function toolsFromJsonObject(parsed: ToolsFrontmatter | null): ProfileManifest["tools"] {
   return {
     required: parsed?.required ?? [],
     ...(parsed?.optional?.length ? { optional: parsed.optional } : {}),
@@ -162,8 +153,8 @@ const SECTION_LISTS = ["expertise", "methods", "rules", "policies", "standards"]
  * with the content of the file it points at (resolved against the manifest's
  * directory). identity hydrates to {title, summary} from its file; skills
  * entries rebuild skills/skillsDetail/skillBodies; tools hydrates from the
- * requirements file's YAML frontmatter; references rebuild from standards
- * files (url/note frontmatter). Tolerant by design: a missing file leaves
+ * structured tools/requirements.json; references rebuild from standards
+ * files (url/note keys). Tolerant by design: a missing file leaves
  * the path in place so validation can report it (PA042) instead of crashing.
  * Section entries hydrate to body, falling back to the file's title.
  */
@@ -208,10 +199,18 @@ export async function hydrateProfileManifest(json: ProfileManifestSource, dir?: 
     if (Object.keys(skillBodies).length > 0) out.skillBodies = skillBodies;
   }
 
-  // tools — a path hydrates from the requirements file's YAML frontmatter.
+  // tools — a path hydrates from the structured tools/requirements.json.
   if (typeof json.tools === "string" && isPathEntry(json.tools)) {
     const raw = await fs.readFile(path.join(dir, json.tools), "utf8").catch(() => undefined);
-    out.tools = raw !== undefined ? parseToolsFrontmatter(raw) : { required: [] };
+    if (raw === undefined) {
+      out.tools = { required: [] };
+    } else {
+      try {
+        out.tools = toolsFromJsonObject(JSON.parse(raw) as ToolsFrontmatter);
+      } catch {
+        out.tools = { required: [] };
+      }
+    }
   }
 
   // verification — both lists hydrate like the other sections.
@@ -268,10 +267,10 @@ async function listJson(dir: string): Promise<string[]> {
 }
 
 /**
- * List candidate manifest files for a profile source directory. Both layouts
- * are discovered so old checkouts keep working:
- *   flat:    <dir>/<slug>.json
- *   folder:  <dir>/<slug>/profile.json  (the standardized layout)
+ * List candidate manifest files for a profile source directory. Layouts,
+ * in precedence order:
+ *   folder:  <dir>/<slug>/manifest.json (unified registry format)
+ *   flat:    <dir>/<slug>.json (legacy inline)
  */
 async function listManifestCandidates(dir: string): Promise<string[]> {
   const flat = await listJson(dir);
@@ -280,12 +279,12 @@ async function listManifestCandidates(dir: string): Promise<string[]> {
     const entries = await fs.readdir(dir, { withFileTypes: true });
     folder = entries
       .filter((e) => e.isDirectory())
-      .map((e) => path.join(dir, e.name, "profile.json"))
+      .map((e) => path.join(dir, e.name, "manifest.json"))
       .sort();
   } catch {
     // Directory missing entirely — flat already returned [].
   }
-  return [...flat, ...folder];
+  return [...folder, ...flat];
 }
 
 /**
@@ -362,7 +361,7 @@ export async function resolveProfiles(slugs: string[], root: string = process.cw
 
 /**
  * Fetch a profile manifest from the remote Git-backed registry catalog
- * and hydrate it over HTTP: folder layout first (profiles/<id>/profile.json,
+ * and hydrate it over HTTP: folder layout first (profiles/<id>/manifest.json,
  * every section path fetched from profiles/<id>/…), then the legacy flat
  * layout (profiles/<id>.json, inline — nothing to hydrate). Mirrors fetchRaw
  * in crew/registry.ts: retry unauthenticated on 404, since an invalid token
@@ -378,7 +377,7 @@ export async function fetchProfileManifest(id: string, repo: string, ref: string
     return res.text();
   };
 
-  const manifestUrl = `${base}/${id}/profile.json`;
+  const manifestUrl = `${base}/${id}/manifest.json`;
   const rawManifest = await get(manifestUrl);
   if (rawManifest === undefined) {
     // Legacy flat layout (inline manifest — no hydration needed).
@@ -404,20 +403,29 @@ async function hydrateProfileManifestRemote(
   readFile: (rel: string) => Promise<string | undefined>,
 ): Promise<ProfileManifest> {
   const out = { ...json } as ProfileManifest;
-  const parseRemote = async (entry: string): Promise<string> => {
-    if (typeof entry !== "string" || !isPathEntry(entry)) return entry;
+  // Remote sections are JSON objects ({...meta, body}) — same as local.
+  const parseRemoteSection = async (entry: string): Promise<{ meta: Record<string, string>; body: string } | undefined> => {
+    if (typeof entry !== "string" || !isPathEntry(entry)) return undefined;
     const raw = await readFile(entry);
-    if (raw === undefined) return entry;
-    const { meta, body } = parseFrontmatter(raw);
-    return body || meta.title || entry;
+    if (raw === undefined) return undefined;
+    try {
+      const parsed = JSON.parse(raw) as Record<string, unknown>;
+      const { body, ...meta } = parsed;
+      const flat: Record<string, string> = {};
+      for (const [k, v] of Object.entries(meta)) flat[k] = typeof v === "string" ? v : (JSON.stringify(v) as string);
+      return { meta: flat, body: typeof body === "string" ? body : "" };
+    } catch {
+      return undefined;
+    }
+  };
+  const parseRemote = async (entry: string): Promise<string> => {
+    const section = await parseRemoteSection(entry);
+    return section?.body || section?.meta.title || entry;
   };
 
   if (typeof json.identity === "string" && isPathEntry(json.identity)) {
-    const raw = await readFile(json.identity);
-    if (raw !== undefined) {
-      const { meta, body } = parseFrontmatter(raw);
-      out.identity = { title: meta.title ?? "", summary: body };
-    }
+    const file = await parseRemoteSection(json.identity);
+    out.identity = { title: file?.meta.title ?? "", summary: file?.body ?? "" };
   }
   for (const section of SECTION_LISTS) {
     const arr = out[section];
@@ -432,12 +440,12 @@ async function hydrateProfileManifestRemote(
         skills.push(entry);
         continue;
       }
-      const raw = await readFile(entry);
-      if (raw === undefined) {
+      const file = await parseRemoteSection(entry);
+      if (file === undefined) {
         skills.push(entry);
         continue;
       }
-      const { meta, body } = parseFrontmatter(raw);
+      const { meta, body } = file;
       if (meta.ref) {
         skills.push(meta.ref);
         skillsDetail[meta.ref] = {
@@ -446,7 +454,7 @@ async function hydrateProfileManifestRemote(
           ...(meta.note || body ? { note: meta.note || body } : {}),
         };
       } else {
-        const name = meta.name ?? entry.replace(/^skills\//, "").replace(/\.md$/, "");
+        const name = meta.name ?? entry.replace(/^skills\//, "").replace(/\.(?:md|json)$/, "");
         skills.push(name);
         skillBodies[name] = { description: meta.description ?? "", body };
       }
@@ -457,7 +465,15 @@ async function hydrateProfileManifestRemote(
   }
   if (typeof json.tools === "string" && isPathEntry(json.tools)) {
     const raw = await readFile(json.tools);
-    out.tools = raw !== undefined ? parseToolsFrontmatter(raw) : { required: [] };
+    if (raw === undefined) {
+      out.tools = { required: [] };
+    } else {
+      try {
+        out.tools = toolsFromJsonObject(JSON.parse(raw) as ToolsFrontmatter);
+      } catch {
+        out.tools = { required: [] };
+      }
+    }
   }
   if (out.verification) {
     out.verification = {
@@ -469,12 +485,10 @@ async function hydrateProfileManifestRemote(
     const references: ProfileManifest["references"] = {};
     for (const [i, entry] of json.standards.entries()) {
       if (typeof entry !== "string" || !isPathEntry(entry)) continue;
-      const raw = await readFile(entry);
-      if (raw === undefined) continue;
-      const { meta } = parseFrontmatter(raw);
-      if (meta.url) {
-        const name = out.standards?.[i] ?? meta.title ?? "unknown";
-        references[name] = { url: meta.url, ...(meta.note ? { note: meta.note } : {}) };
+      const file = await parseRemoteSection(entry);
+      if (file?.meta.url) {
+        const name = out.standards?.[i] ?? file.meta.title ?? "unknown";
+        references[name] = { url: file.meta.url, ...(file.meta.note ? { note: file.meta.note } : {}) };
       }
     }
     if (Object.keys(references).length > 0) out.references = references;

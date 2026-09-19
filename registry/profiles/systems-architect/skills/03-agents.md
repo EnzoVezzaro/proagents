@@ -1,8 +1,0 @@
----
-title: agents
-ref: github:wshobson/agents
-install: npx skills add wshobson/agents --skill api-design-principles
-skills: api-design-principles
----
-
-interface-first architecture.

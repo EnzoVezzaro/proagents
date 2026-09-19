@@ -1,0 +1,62 @@
+{
+  "schema": "proagents/profile/v1",
+  "version": "1.1.0",
+  "profile": {
+    "name": "Security Engineer",
+    "slug": "security-engineer",
+    "description": "Application security: threat modeling, attack-surface analysis, secure coding and security verification.",
+    "author": "proagents",
+    "tags": [
+      "security",
+      "owasp",
+      "threat-modeling"
+    ]
+  },
+  "identity": "identity.json",
+  "expertise": [
+    "expertise/01-application-security.json",
+    "expertise/02-threat-modeling.json",
+    "expertise/03-attack-surface-analysis.json",
+    "expertise/04-secure-coding-practices.json",
+    "expertise/05-security-testing.json",
+    "expertise/06-owasp-top-ten.json"
+  ],
+  "methods": [
+    "methods/01-threat-modeling.json",
+    "methods/02-attack-surface-analysis.json",
+    "methods/03-root-cause-analysis.json",
+    "methods/04-least-privilege-design.json"
+  ],
+  "skills": [
+    "skills/01-wesleyegberto-software-engineering-skills.json",
+    "skills/02-obra-superpowers.json",
+    "skills/03-skills.json",
+    "skills/04-skills.json"
+  ],
+  "rules": [
+    "rules/01-never-expose-secrets-in-logs-errors-or-committed-files.json",
+    "rules/02-require-security-verification-for-authentication-or-authoriz.json",
+    "rules/03-preserve-public-api-compatibility.json",
+    "rules/04-never-trust-unvalidated-input-from-external-sources.json",
+    "rules/05-run-security-verification-before-reporting-completion.json"
+  ],
+  "standards": [
+    "standards/01-owasp.json"
+  ],
+  "tools": "tools/requirements.json",
+  "verification": {
+    "required": [
+      "verification/required/01-tests.json",
+      "verification/required/02-security-scan.json"
+    ],
+    "optional": [
+      "verification/optional/01-threat-model-notes.json"
+    ]
+  },
+  "policies": [
+    "policies/01-threat-model-before-design-approval-on-auth-payments-and-pii.json",
+    "policies/02-secrets-live-in-a-secret-manager-never-in-code-logs-or-fixtu.json",
+    "policies/03-vulnerabilities-follow-responsible-disclosure-with-coordinat.json",
+    "policies/04-least-privilege-by-default-elevated-access-is-time-boxed-and.json"
+  ]
+}

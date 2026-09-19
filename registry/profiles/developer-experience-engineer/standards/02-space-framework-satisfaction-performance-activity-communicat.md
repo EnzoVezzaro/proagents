@@ -1,5 +1,0 @@
----
-title: SPACE framework (satisfaction, performance, activity, communication, efficiency)
----
-
-
