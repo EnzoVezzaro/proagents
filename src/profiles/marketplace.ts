@@ -9,14 +9,14 @@ import { CrewError } from "../crew/types.js";
 
 /**
  * Profile marketplace publishing — mirrors the crew pipeline (Git-as-database:
- * items/<id>.json + catalog.json, committed through the GitHub Contents API).
+ * profiles/<id>/profile.json + catalog.json, committed through the GitHub Contents API).
  *
  * A profile "item file" is the ProfileManifest itself (same shape as
  * profiles/*.json); the catalog index entry carries kind: "profile".
  */
 
-/** Directory the item files live in (relative to repo root). */
-export const MARKETPLACE_ITEMS_DIR = ".marketplace/items";
+/** Directory the profile items live in (relative to repo root). */
+export const MARKETPLACE_ITEMS_DIR = ".marketplace/profiles";
 /** Path of the catalog index (relative to repo root). */
 export const CATALOG_PATH = ".marketplace/catalog.json";
 
@@ -56,8 +56,8 @@ function indexFields(manifest: ProfileManifest): {
 
 /**
  * Publish a profile to the Git-backed marketplace catalog: writes the full
- * manifest to items/<slug>.json and upserts the lightweight index entry with
- * kind: "profile". Two commits, both reviewable in Git history.
+ * manifest to profiles/<slug>/profile.json and upserts the lightweight index
+ * entry with kind: "profile". Two commits, both reviewable in Git history.
  */
 export async function publishProfile(manifest: ProfileManifest, target: GitHubCommitTarget): Promise<{ itemPath: string; catalogPath: string }> {
   const problems = profileProblems(manifest);
@@ -67,9 +67,8 @@ export async function publishProfile(manifest: ProfileManifest, target: GitHubCo
 
   const { slug, title, version, description, author, tags } = indexFields(manifest);
 
-  // 1. Upsert the full manifest (standardized folder layout; the legacy flat
-  //    items/<slug>.json is left untouched for backward compatibility).
-  const itemPath = `.marketplace/items/${slug}/profile.json`;
+  // 1. Upsert the full manifest (standardized folder layout).
+  const itemPath = `.marketplace/profiles/${slug}/profile.json`;
   const itemFile = await getRemoteFile(target, itemPath);
   await putRemoteFile(target, itemPath, JSON.stringify(manifest, null, 2) + "\n", itemFile.sha, `profile: publish ${slug}@${version}`);
 

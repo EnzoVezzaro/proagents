@@ -99,8 +99,8 @@ describe("profile CLI (PROFILES-CLI)", () => {
     const root = await makeRepo({});
     try {
       // Two marketplace profiles with contradictory rules → composition must block.
-      await fs.mkdir(path.join(root, ".marketplace", "items", "conflict-a"), { recursive: true });
-      await fs.mkdir(path.join(root, ".marketplace", "items", "conflict-b"), { recursive: true });
+      await fs.mkdir(path.join(root, ".marketplace", "profiles", "conflict-a"), { recursive: true });
+      await fs.mkdir(path.join(root, ".marketplace", "profiles", "conflict-b"), { recursive: true });
       const base = {
         version: "1.0.0",
         profile: { name: "A", slug: "conflict-a" },
@@ -110,11 +110,11 @@ describe("profile CLI (PROFILES-CLI)", () => {
         verification: { required: ["tests"] },
       };
       await fs.writeFile(
-        path.join(root, ".marketplace", "items", "conflict-a", "profile.json"),
+        path.join(root, ".marketplace", "profiles", "conflict-a", "profile.json"),
         JSON.stringify({ ...base, rules: ["never deploy on friday"] }),
       );
       await fs.writeFile(
-        path.join(root, ".marketplace", "items", "conflict-b", "profile.json"),
+        path.join(root, ".marketplace", "profiles", "conflict-b", "profile.json"),
         JSON.stringify({ ...base, profile: { name: "B", slug: "conflict-b" }, rules: ["deploy on friday"] }),
       );
       let failed = false;
@@ -198,7 +198,7 @@ describe("profile CLI (PROFILES-CLI)", () => {
   it("PROFILES-CLI-010: profile install <id> equips from a local catalog item", async () => {
     const root = await makeRepo({ "CLAUDE.md": "# x\n" });
     try {
-      await fs.mkdir(path.join(root, ".marketplace", "items"), { recursive: true });
+      await fs.mkdir(path.join(root, ".marketplace", "profiles"), { recursive: true });
       const item = {
         version: "1.0.0",
         profile: { name: "Local M", slug: "marketplace-local" },
@@ -207,11 +207,56 @@ describe("profile CLI (PROFILES-CLI)", () => {
         tools: { required: ["filesystem", "shell", "git"] },
         verification: { required: ["tests"] },
       };
-      await fs.writeFile(path.join(root, ".marketplace", "items", "marketplace-local.json"), JSON.stringify(item));
+      await fs.writeFile(path.join(root, ".marketplace", "profiles", "marketplace-local.json"), JSON.stringify(item));
       const parsed = JSON.parse(run(root, ["profile", "install", "marketplace-local", "--json"]));
       expect(parsed.status).toBe("ok");
       expect(parsed.profile).toEqual(["marketplace-local"]);
       expect(await fs.readFile(path.join(root, "CLAUDE.md"), "utf8")).toContain("Local M");
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("PROFILES-CLI-011: profile create scaffolds a valid, equippable custom profile", async () => {
+    const root = await makeRepo({ "CLAUDE.md": "# x\n" });
+    try {
+      const parsed = JSON.parse(run(root, ["profile", "create", "Prompt Engineer", "--json"]));
+      expect(parsed.status).toBe("ok");
+      expect(parsed.slug).toBe("prompt-engineer");
+      const dir = path.join(root, ".marketplace", "profiles", "prompt-engineer");
+      // Folder standard: identity/expertise/tools/verification all present.
+      expect(await fs.readFile(path.join(dir, "profile.json"), "utf8")).toContain("\"identity\": \"identity/01-identity.md\"");
+      expect(await fs.readFile(path.join(dir, "tools", "requirements.md"), "utf8")).toContain("required:");
+      // The scaffold passes the PA03x gate out of the box.
+      const gate = JSON.parse(run(root, ["profile", "validate", path.join(dir, "profile.json"), "--json"]));
+      expect(gate.status).toBe("ok");
+      // And it equips immediately — a checkout profile wins over packaged.
+      const equip = JSON.parse(run(root, ["equip", "prompt-engineer", "--json"]));
+      expect(equip.status).toBe("ok");
+      expect(equip.profile).toContain("prompt-engineer");
+      // Creating the same slug again fails instead of clobbering.
+      let failed = false;
+      try {
+        run(root, ["profile", "create", "Prompt Engineer"]);
+      } catch {
+        failed = true;
+      }
+      expect(failed).toBe(true);
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("PROFILES-CLI-012: profile create rejects a non-slug --slug", async () => {
+    const root = await makeRepo({});
+    try {
+      let failed = false;
+      try {
+        run(root, ["profile", "create", "Broken", "--slug", "Not A Slug"]);
+      } catch {
+        failed = true;
+      }
+      expect(failed).toBe(true);
     } finally {
       await fs.rm(root, { recursive: true, force: true });
     }

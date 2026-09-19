@@ -7,7 +7,7 @@ body:
     attributes:
       value: |
         Thanks for contributing a profession! Paste your **profile manifest JSON**
-        inside the block below — the same JSON shape as `.marketplace/items/security-engineer/profile.json`.
+        inside the block below — the same JSON shape as `.marketplace/profiles/security-engineer/profile.json`.
         The deterministic validator runs automatically on this issue (and on every edit),
         and a maintainer publishes with `/publish` after design review.
   - type: input

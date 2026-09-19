@@ -1,0 +1,1 @@
+Gate every pull request on a two-worker review: deep security/architecture review of the diff, then a standards pass that drafts the verdict. Strictly read-only on the repo — humans approve, merge or reject.

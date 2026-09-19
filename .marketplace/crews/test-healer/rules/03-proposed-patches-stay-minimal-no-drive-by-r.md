@@ -1,0 +1,1 @@
+Proposed patches stay minimal — no drive-by refactors.

@@ -1,0 +1,64 @@
+{
+  "version": "1.0.0",
+  "crew": {
+    "id": "feature-delivery-squad",
+    "name": "Feature Delivery Squad",
+    "description": "Five-worker feature delivery squad, profile-backed end to end: an API designer draws the contract, backend and frontend engineers implement against it, a test automator verifies, and a code reviewer drafts the merge verdict for humans.",
+    "author": "proagents",
+    "tags": [
+      "feature-delivery",
+      "api-first",
+      "fullstack",
+      "testing",
+      "profile-backed",
+      "multi-agent"
+    ]
+  },
+  "mission": "mission/01-mission.md",
+  "members": [
+    "members/01-api-designer.json",
+    "members/02-backend.json",
+    "members/03-frontend.json",
+    "members/04-test-automator.json",
+    "members/05-reviewer.json"
+  ],
+  "coordination": [
+    "coordination/01-api-designer-publishes-api-contract-md-before.md",
+    "coordination/02-backend-and-frontend-work-in-parallel-against.md",
+    "coordination/03-test-automator-verifies-against-the-contract.md",
+    "coordination/04-reviewer-receives-implementations-plus-the-te.md"
+  ],
+  "tasks": [
+    "tasks/01-api-designer-owns-the-contract-endpoints-sc.md",
+    "tasks/02-backend-owns-the-server-side-with-tests-along.md",
+    "tasks/03-frontend-owns-the-client-side-accessible-and.md",
+    "tasks/04-test-automator-owns-the-verification-layer-u.md",
+    "tasks/05-reviewer-owns-contract-conformance-review-and.md"
+  ],
+  "workflows": [
+    "workflows/01-standard-run-contract-parallel-implementat.md",
+    "workflows/02-change-request-contract-change-first-then-t.md"
+  ],
+  "handoffs": [
+    "handoffs/01-api-designer-to-backend.md",
+    "handoffs/02-api-designer-to-frontend.md",
+    "handoffs/03-backend-to-test-automator.md",
+    "handoffs/04-frontend-to-test-automator.md",
+    "handoffs/05-backend-to-reviewer.md",
+    "handoffs/06-frontend-to-reviewer.md",
+    "handoffs/07-test-automator-to-reviewer.md"
+  ],
+  "rules": [
+    "rules/01-no-endpoint-or-schema-drift-from-api-contract.md",
+    "rules/02-never-weaken-an-assertion-to-make-a-test-pass.md",
+    "rules/03-every-finding-cites-file-line-and-a-concrete.md"
+  ],
+  "verification": [
+    "verification/01-both-implementations-match-api-contract-md-s.md",
+    "verification/02-test-report-md-shows-the-pass-fail-matrix-un.md",
+    "verification/03-review-verdict-md-exists-with-an-explicit-app.md"
+  ],
+  "mcp": "mcp/servers.json",
+  "createdAt": "2026-09-18T00:00:00.000Z",
+  "updatedAt": "2026-09-18T00:00:00.000Z"
+}

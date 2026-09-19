@@ -98,10 +98,9 @@ Skills entries **reference** real skill collections (e.g. `github:obra/superpowe
 `github:anthropics/skills`) with per-repo install commands — skills are composed,
 never duplicated into the profile.
 
-All profiles are marketplace items: `.marketplace/items/<slug>/profile.json` is the
+All profiles are marketplace items: `.marketplace/profiles/<slug>/profile.json` is the
 single source of truth (the npm package ships this folder, so offline equip works).
-The legacy flat `items/<id>.json` layout is still discovered and fetched for backward
-compatibility.
+Crews live alongside them in `.marketplace/crews/<id>/`.
 
 ## Built-in profiles
 
@@ -276,16 +275,16 @@ report the offending profiles and a suggestion.
 ## Local and community profiles
 
 There is no separate local folder — the marketplace is the only source. To work on a
-profile locally, check out or create it under `.marketplace/items/` in your repo:
+profile locally, check out or create it under `.marketplace/profiles/` in your repo:
 
 ```bash
-mkdir -p .marketplace/items/my-profession
-$EDITOR .marketplace/items/my-profession/profile.json
+mkdir -p .marketplace/profiles/my-profession
+$EDITOR .marketplace/profiles/my-profession/profile.json
 proagent list          # your checkout wins over the packaged snapshot
 proagent equip my-profession
 ```
 
-A repo's `.marketplace/items` checkout **is** the marketplace: it wins over the packaged
+A repo's `.marketplace/profiles` checkout **is** the marketplace: it wins over the packaged
 snapshot shipped with the npm package (same slug → checkout version), and packaged items
 fill gaps for slugs the checkout does not have. Publishing is then just a PR with your
 item folder — the same files you tested locally.

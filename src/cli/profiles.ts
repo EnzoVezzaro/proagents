@@ -353,6 +353,8 @@ function printProfileHelp(): void {
 proagent profile — marketplace profile commands
 
 Usage:
+  proagent profile create <name>           Scaffold a custom profile into .marketplace/profiles/
+    --slug <slug> --description <text>     (folder standard; passes PA03x; equips immediately)
   proagent profile list                    List marketplace profiles (Git-backed catalog)
     --repo owner/name --ref branch --token <gh-token>
   proagent profile show <id>               Print a profile manifest from the catalog
@@ -373,7 +375,7 @@ Shortcuts: proagent equip (== profile install), proagent list (== profile list).
 /**
  * Load a profile manifest from a file or catalog id (local dir, then
  * remote), hydrating path entries either way. Folder layout first
- * (items/<id>/profile.json), then the legacy flat file.
+ * (profiles/<id>/profile.json), then the legacy flat file.
  */
 async function resolveProfileItem(idOrFile: string, flags: Record<string, string | boolean>): Promise<ProfileManifest> {
   if (idOrFile.endsWith(".json")) {
@@ -424,6 +426,85 @@ export async function runProfileList(flags: Record<string, string | boolean>, js
   }
 }
 
+/**
+ * `proagent profile create <name>` — scaffold a custom profile into the
+ * local marketplace checkout (.marketplace/profiles/<slug>/) in the folder
+ * standard, mirroring `crew create` for crews. The scaffold passes the
+ * PA03x gates and equips immediately; the operator deepens it in place.
+ */
+async function profileCreate(nameArg: string | undefined, flags: Record<string, string | boolean>, json: boolean): Promise<void> {
+  const name = (nameArg ?? (typeof flags.name === "string" ? flags.name : "")).trim();
+  if (!name) fail("Usage: proagent profile create <Name-or-slug> [--slug <slug>] [--description <text>]");
+  const slug =
+    (typeof flags.slug === "string" && flags.slug) ||
+    name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") ||
+    "custom-profile";
+  if (!/^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(slug)) {
+    fail(`profile slug "${slug}" must be a lowercase slug (a-z, 0-9, dashes)`);
+  }
+  const dir = path.join(process.cwd(), MARKETPLACE_ITEMS_DIR, slug);
+  if (await fs.access(dir).then(() => true, () => false)) {
+    fail(`profile folder already exists: ${dir} — pick another --slug or remove it first`);
+  }
+  const description =
+    (typeof flags.description === "string" && flags.description) ||
+    `Custom profession: ${name}. Deepen the identity, expertise, rules and verification before publishing.`;
+  const summary =
+    `You operate as a ${name.toLowerCase()}. ` +
+    (description.startsWith("Custom profession") ? "Deepen this operating summary as the profession takes shape." : description);
+
+  // Deterministic scaffold — the smallest manifest that passes PA030–PA035:
+  // identity, one expertise domain, required tools, required verification.
+  const manifest = {
+    version: "0.1.0",
+    profile: { name, slug, description, tags: ["custom"] },
+    identity: "identity/01-identity.md",
+    expertise: ["expertise/01-core.md"],
+    methods: [],
+    skills: [],
+    rules: [],
+    standards: [],
+    tools: "tools/requirements.md",
+    verification: {
+      required: ["verification/required/01-tests.md"],
+      optional: [],
+    },
+  };
+  const files: Record<string, string> = {
+    "profile.json": JSON.stringify(manifest, null, 2) + "\n",
+    "identity/01-identity.md": `---\ntitle: ${name}\n---\n\n${summary}\n`,
+    "expertise/01-core.md": `---\ntitle: core ${name.toLowerCase()} practice\n---\n\ncore ${name.toLowerCase()} practice\n`,
+    "tools/requirements.md": `---\ntitle: Tool requirements\nnote: Source of truth for this profile's tool requirements — edit this file, then re-validate.\nrequired:\n  - filesystem\n  - shell\n  - git\noptional: []\n---\n`,
+    "verification/required/01-tests.md": `---\ntitle: tests pass\n---\n\ntests pass after every source change\n`,
+  };
+  for (const [rel, content] of Object.entries(files)) {
+    const abs = path.join(dir, rel);
+    await fs.mkdir(path.dirname(abs), { recursive: true });
+    await fs.writeFile(abs, content, "utf8");
+  }
+
+  // Gate on the same validator publish uses — a scaffold that failed PA03x
+  // would be a bug, and reporting it here beats failing at equip time.
+  const hydrated = await loadProfileFile(path.join(dir, "profile.json"));
+  const problems = profileProblems(hydrated);
+  if (problems.length > 0) {
+    fail(`scaffold does not pass validation (this is a bug): ${problems.join("; ")}`);
+  }
+
+  if (json) return jsonOut({ status: "ok", slug, version: manifest.version, dir, files: Object.keys(files).map((f) => path.join(slug, f)) });
+  console.log(`✓ Created profile ${slug}@0.1.0 at ${dir}:`);
+  for (const f of Object.keys(files)) console.log(`  + ${f}`);
+  console.log("");
+  console.log("Next:");
+  console.log(`  proagent profile validate ${dir}/profile.json   # gate (passes now, re-check as you edit)`);
+  console.log(`  proagent equip ${slug}                          # equip it immediately — a checkout profile wins over packaged`);
+  console.log(`  $EDITOR ${dir}                                  # deepen identity/expertise/rules/verification`);
+  console.log(`  proagent profile submit ${dir}/profile.json     # propose it to the marketplace when ready`);
+}
+
 /** `proagent profile show <id>` — print the full manifest. */
 async function profileShow(id: string | undefined, flags: Record<string, string | boolean>, json: boolean): Promise<void> {
   if (!id) fail("Usage: proagent profile show <id>");
@@ -444,7 +525,9 @@ async function profileValidate(file: string | undefined, json: boolean): Promise
   if (!file) fail("Usage: proagent profile validate <file.json>");
   let manifest: ProfileManifest;
   try {
-    manifest = JSON.parse(await fs.readFile(file, "utf8")) as ProfileManifest;
+    // Hydrates path-format sections so the gate sees the real content —
+    // the same load publish/submit performs.
+    manifest = await loadProfileFile(file);
   } catch (err) {
     fail(`cannot read profile file: ${(err as Error).message}`);
   }
@@ -471,7 +554,9 @@ async function profilePublish(file: string | undefined, flags: Record<string, st
   if (!file) fail("Usage: proagent profile publish <file.json>");
   let manifest: ProfileManifest;
   try {
-    manifest = JSON.parse(await fs.readFile(file, "utf8")) as ProfileManifest;
+    // Hydrates path-format sections (identity/01-….md, …); inline manifests
+    // pass through — publish accepts both shapes.
+    manifest = await loadProfileFile(file);
   } catch (err) {
     fail(`cannot read profile file: ${(err as Error).message}`);
   }
@@ -495,7 +580,8 @@ async function profileSubmit(file: string | undefined, flags: Record<string, str
   if (!file) fail("Usage: proagent profile submit <file.json>");
   let manifest: ProfileManifest;
   try {
-    manifest = JSON.parse(await fs.readFile(file, "utf8")) as ProfileManifest;
+    // Hydrates path-format sections; inline manifests pass through.
+    manifest = await loadProfileFile(file);
   } catch (err) {
     fail(`cannot read profile file: ${(err as Error).message}`);
   }
@@ -565,6 +651,8 @@ export async function runProfileCommand(args: string[], flags: Record<string, st
   const rest = args.slice(1);
   const json = flags.json === true;
   switch (sub) {
+    case "create":
+      return profileCreate(rest[0], flags, json);
     case "list":
       return runProfileList(flags, json);
     case "show":

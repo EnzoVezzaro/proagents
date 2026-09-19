@@ -1,0 +1,1 @@
+quality receives pipeline notes and API verification and owns the final data-quality report.

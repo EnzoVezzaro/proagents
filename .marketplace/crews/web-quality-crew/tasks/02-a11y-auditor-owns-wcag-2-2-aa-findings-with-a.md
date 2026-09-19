@@ -1,0 +1,1 @@
+a11y-auditor owns WCAG 2.2 AA findings with affected users named.

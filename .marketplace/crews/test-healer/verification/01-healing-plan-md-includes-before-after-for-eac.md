@@ -1,0 +1,1 @@
+healing-plan.md includes before/after for each proposed change.

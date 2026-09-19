@@ -1,0 +1,35 @@
+{
+  "id": "triage",
+  "profile": "sre",
+  "role": "researcher",
+  "name": "Triage Analyst",
+  "permissions": {
+    "read": "repo",
+    "write": "none",
+    "production": "read",
+    "secrets": "none",
+    "tools": [
+      "log_search",
+      "read_file",
+      "git_log"
+    ],
+    "approvalGates": []
+  },
+  "mcpServers": [
+    "github"
+  ],
+  "context": [
+    {
+      "framework": "filesystem",
+      "scope": "docs/runbooks/**"
+    },
+    {
+      "framework": "git",
+      "scope": "recent commits touching incident area"
+    }
+  ],
+  "receivesFrom": [],
+  "emits": [
+    "triage-summary.md"
+  ]
+}

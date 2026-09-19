@@ -1,0 +1,1 @@
+No endpoint or schema drift from api-contract.md.

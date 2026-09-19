@@ -1,0 +1,32 @@
+{
+  "profile": "privacy-engineer",
+  "role": "reviewer",
+  "name": "Privacy Auditor",
+  "permissions": {
+    "read": "repo",
+    "write": "none",
+    "production": "none",
+    "secrets": "none",
+    "tools": [
+      "read_file",
+      "grep"
+    ],
+    "approvalGates": []
+  },
+  "mcpServers": [],
+  "context": [
+    {
+      "framework": "filesystem",
+      "scope": "src/**, migrations/**, docs/**"
+    }
+  ],
+  "receivesFrom": [
+    "scout",
+    "threat-modeler",
+    "code-auditor"
+  ],
+  "emits": [
+    "privacy-findings.md",
+    "audit-report.md"
+  ]
+}

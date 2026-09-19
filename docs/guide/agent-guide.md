@@ -82,7 +82,8 @@ rather than silently degrading.
 
 ## Marketplace operations
 
-The marketplace is Git-backed: the catalog repo's `items/*.json` are the listings. Agents
+The marketplace is Git-backed: the catalog repo's `.marketplace/profiles/` and
+`.marketplace/crews/` folders are the listings (indexed by `catalog.json`). Agents
 can drive the full submit loop without a terminal UI:
 
 ```bash

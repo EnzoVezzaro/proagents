@@ -460,4 +460,43 @@ describe("session CLI (SESSION-CLI)", () => {
       await fs.rm(root, { recursive: true, force: true });
     }
   });
+
+  it("SESSION-CLI-025: build --kind profile materializes the session as an equippable profile", async () => {
+    const root = await makeRepo();
+    try {
+      await seedSession(root);
+      const parsed = JSON.parse(run(root, ["build", "--kind", "profile", "--json"]));
+      expect(parsed.status).toBe("ok");
+      expect(parsed.kind).toBe("profile");
+      const dir = path.join(root, ".marketplace", "profiles", parsed.slug);
+      expect(await fs.readFile(path.join(dir, "profile.json"), "utf8")).toContain(parsed.slug);
+      // PA-gated: the scaffold passes profileProblems, so equip works now.
+      const equip = JSON.parse(run(root, ["equip", parsed.slug, "--json"]));
+      expect(equip.status).toBe("ok");
+      expect(equip.profile).toContain(parsed.slug);
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("SESSION-CLI-026: build --kind crew materializes the session as an installable crew", async () => {
+    const root = await makeRepo();
+    try {
+      await seedSession(root);
+      const parsed = JSON.parse(run(root, ["build", "--kind", "crew", "--json"]));
+      expect(parsed.status).toBe("ok");
+      expect(parsed.kind).toBe("crew");
+      const dir = path.join(root, ".marketplace", "crews", parsed.crewId);
+      await fs.access(path.join(dir, "crew.json"));
+      await fs.access(path.join(dir, "members"));
+      // The derived crew passes the PA043–PA048 gate.
+      const gate = JSON.parse(run(root, ["crew", "validate", dir, "--json"]));
+      expect(gate.status).toBe("ok");
+      // And installs without a profile resolver hit (members are profile-less).
+      const built = JSON.parse(run(root, ["crew", "build", path.join(dir, "crew.json"), "--json"]));
+      expect(built.status).toBe("ok");
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
 });

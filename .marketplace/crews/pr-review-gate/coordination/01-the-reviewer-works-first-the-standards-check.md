@@ -1,0 +1,1 @@
+The reviewer works first; the standards checker consumes only review-findings.md, never raw chat.

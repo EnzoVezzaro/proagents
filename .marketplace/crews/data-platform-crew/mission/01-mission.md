@@ -1,0 +1,1 @@
+Build the data platform schema-first: the schema is designed before pipeline code, pipelines are idempotent and quality-enforced, the serving layer respects query budgets, and QA verifies data quality end to end.

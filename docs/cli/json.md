@@ -90,6 +90,24 @@ proagent profile submit <file> --json      # → { status, slug, version, repo, 
 
 `profile validate` exits non-zero with `status: "invalid"` and the deterministic
 `problems[]` (PA03x codes) when the manifest fails — the same gate CI runs on proposals.
+`publish`/`submit`/`validate` hydrate path-format sections before validating, so both
+inline and folder-standard manifests work.
+
+### crew (marketplace group)
+
+```bash
+proagent crew list --json                  # → { status, repo, ref, catalog }
+proagent crew show <id> --json             # → { status, crew: <full CrewDefinition> }
+proagent crew validate <file|dir> --json   # → { status: "ok"|"invalid", crew, version, problems[], warnings[] }
+proagent crew install <id> --json          # → { status, installed: { crewId, version, filesWritten[], mcpMerged } }
+proagent crew build <file> --json          # same shape as install
+proagent crew publish <file> --json        # → { status, crewId, version, repo, ref, itemPath, catalogPath }
+proagent crew submit <file> --json         # → { status, crewId, version, repo, issue, url }
+```
+
+`crew validate` exits non-zero with the deterministic `problems[]` (including
+subagent-standard codes PA043–PA048) when the crew fails. Folder-standard
+manifests (crew.json + members/ + …) are hydrated before validation.
 
 ### validate --profiles
 

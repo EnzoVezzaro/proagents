@@ -5,11 +5,12 @@ import { callModel } from "../../llm.js";
 import { buildPreviewPrompt, installFilesBrowser, mcpJsonBrowser } from "../../preview.js";
 import { getRepoFile, listRepoTree, listUserRepos, putRepoFile, type RepoInfo } from "../../github.js";
 import type { CrewDefinition, MarketplaceCatalog } from "../../types.js";
+import { hydrateCrew } from "../../crew-hydrate.js";
 
 import { CATALOG_URL, catalogUrl } from "../../catalog.js";
 
 function itemUrl(id: string): string {
-  return catalogUrl(`items/${id}.json`);
+  return catalogUrl(`crews/${id}/crew.json`);
 }
 
 /**
@@ -55,10 +56,21 @@ export function PreviewPage(props: { id?: string; ctx: AppCtx }): React.JSX.Elem
 
   useEffect(() => {
     if (!crewId) return;
+    let cancelled = false;
+    // The manifest is a composition index — hydrate its section paths before
+    // the preview can render workers and permissions.
     fetch(itemUrl(crewId))
-      .then((r) => r.json() as Promise<CrewDefinition>)
-      .then(setCrew)
-      .catch(() => setCrew(null));
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error("not found"))))
+      .then((json) => hydrateCrew(json as Parameters<typeof hydrateCrew>[0], itemUrl(crewId).replace(/[^/]*$/, "")))
+      .then((def) => {
+        if (!cancelled) setCrew(def);
+      })
+      .catch(() => {
+        if (!cancelled) setCrew(null);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [crewId]);
 
   const providerReady = Boolean(settings.provider.apiKey);

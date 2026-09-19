@@ -1,0 +1,29 @@
+{
+  "id": "standards",
+  "profile": "code-reviewer",
+  "role": "reviewer",
+  "name": "Standards Checker",
+  "permissions": {
+    "read": "scoped",
+    "write": "none",
+    "production": "none",
+    "secrets": "none",
+    "tools": [
+      "read_file"
+    ],
+    "approvalGates": []
+  },
+  "mcpServers": [],
+  "context": [
+    {
+      "framework": "filesystem",
+      "scope": "CONTRIBUTING.md, docs/standards/**"
+    }
+  ],
+  "receivesFrom": [
+    "reviewer"
+  ],
+  "emits": [
+    "review-verdict.md"
+  ]
+}

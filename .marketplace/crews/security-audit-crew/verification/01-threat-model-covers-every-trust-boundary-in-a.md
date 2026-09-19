@@ -1,0 +1,1 @@
+threat-model covers every trust boundary in audit-scope.md.

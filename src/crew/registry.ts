@@ -11,9 +11,9 @@ import { dehydrateCrew, hydrateCrewRemote, loadCrewFile } from "./hydrate.js";
  * The catalog is a set of JSON files committed to this repository and served
  * by GitHub Pages:
  *
- *   .marketplace/catalog.json          index: lightweight MarketplaceItems
- *   .marketplace/items/<id>/crew.json  folder standard: index of paths
- *   .marketplace/items/<id>.json       legacy flat (inline) — still readable
+ *   .marketplace/catalog.json            index: lightweight MarketplaceItems
+ *   .marketplace/profiles/<id>/…         profile folders (profile.json index)
+ *   .marketplace/crews/<id>/crew.json    crew folders (composition index)
  *
  * Reads on the web app are same-origin fetches (static, cached, no backend).
  * Writes are commits via the GitHub Contents API from the dashboard or CLI —
@@ -22,6 +22,10 @@ import { dehydrateCrew, hydrateCrewRemote, loadCrewFile } from "./hydrate.js";
 
 export const MARKETPLACE_DIR = ".marketplace";
 export const CATALOG_PATH = `${MARKETPLACE_DIR}/catalog.json`;
+/** Crew items live in crews/<id>/ (folder standard, composition taxonomy). */
+export const CREWS_DIR = "crews";
+/** Profile items live in profiles/<slug>/ (folder standard). */
+export const PROFILES_DIR = "profiles";
 
 const REPO = "EnzoVezzaro/proagents";
 
@@ -74,38 +78,26 @@ export async function readCatalogRemote(repo: string = REPO, ref = "main", token
 
 /**
  * Fetch a full crew definition from the remote catalog and hydrate it over
- * HTTP. Folder standard first (items/<id>/crew.json + section files), then
- * the legacy flat layout (items/<id>.json, inline — nothing to hydrate).
+ * HTTP (crews/<id>/crew.json + section files). No legacy fallback: the
+ * split layout (profiles/ + crews/) is the only published shape.
  */
 export async function fetchCrewDefinition(id: string, repo: string = REPO, ref = "main", token?: string): Promise<CrewDefinition> {
-  const base = `https://raw.githubusercontent.com/${repo}/${ref}/${MARKETPLACE_DIR}/items/${id}`;
+  const base = `https://raw.githubusercontent.com/${repo}/${ref}/${MARKETPLACE_DIR}/${CREWS_DIR}/${id}`;
   const headers = token ? { authorization: `Bearer ${token}` } : {};
 
   let manifestRes = await fetch(`${base}/crew.json`, { headers });
   if (manifestRes.status === 404 && token) manifestRes = await fetch(`${base}/crew.json`);
-  if (manifestRes.ok) {
-    const json: unknown = JSON.parse(await manifestRes.text());
-    const getRaw = async (rel: string): Promise<string | undefined> => {
-      if (rel.includes("..") || rel.startsWith("/")) return undefined;
-      let res = await fetch(`${base}/${rel}`, { headers });
-      if (res.status === 404 && token) res = await fetch(`${base}/${rel}`);
-      if (!res.ok) return undefined;
-      return res.text();
-    };
-    const crew = await hydrateCrewRemote(json, getRaw);
-    const problems = crewProblems(crew);
-    if (problems.length > 0) {
-      throw new CrewError("CREW_VALIDATION_ERROR", `downloaded crew failed validation: ${problems.join("; ")}`, { problems });
-    }
-    return crew;
-  }
-
-  // Legacy flat layout (inline manifest — no hydration needed).
-  const flatRes = await fetch(`${base}.json`, { headers });
-  const status = flatRes.status;
-  if (status === 404) throw new CrewError("CREW_NOT_FOUND", `crew not found in marketplace: ${id}`);
-  if (!flatRes.ok) throw new CrewError("CREW_REGISTRATION_ERROR", `crew fetch failed: HTTP ${flatRes.status}`);
-  const crew = (await flatRes.json()) as CrewDefinition;
+  if (manifestRes.status === 404) throw new CrewError("CREW_NOT_FOUND", `crew not found in marketplace: ${id}`);
+  if (!manifestRes.ok) throw new CrewError("CREW_REGISTRATION_ERROR", `crew fetch failed: HTTP ${manifestRes.status}`);
+  const json: unknown = JSON.parse(await manifestRes.text());
+  const getRaw = async (rel: string): Promise<string | undefined> => {
+    if (rel.includes("..") || rel.startsWith("/")) return undefined;
+    let res = await fetch(`${base}/${rel}`, { headers });
+    if (res.status === 404 && token) res = await fetch(`${base}/${rel}`);
+    if (!res.ok) return undefined;
+    return res.text();
+  };
+  const crew = await hydrateCrewRemote(json, getRaw);
   const problems = crewProblems(crew);
   if (problems.length > 0) {
     throw new CrewError("CREW_VALIDATION_ERROR", `downloaded crew failed validation: ${problems.join("; ")}`, { problems });
@@ -115,23 +107,8 @@ export async function fetchCrewDefinition(id: string, repo: string = REPO, ref =
 
 /** Load a crew definition from the local marketplace dir (tests/CLI dev). */
 export async function readCrewDefinitionLocal(root: string, id: string): Promise<CrewDefinition> {
-  // Folder standard first: items/<id>/crew.json (paths hydrated from files).
-  try {
-    return await loadCrewFile(path.join(root, MARKETPLACE_DIR, "items", id, "crew.json"));
-  } catch (err) {
-    if (!(err instanceof CrewError) || err.code !== "CREW_NOT_FOUND") {
-      // Folder manifest exists but is malformed — report it, don't mask it
-      // with the flat fallback.
-      if (err instanceof CrewError && err.code === "CREW_CONFIG_ERROR") throw err;
-    }
-  }
-  // Legacy flat layout: items/<id>.json (inline).
-  const file = path.join(root, MARKETPLACE_DIR, "items", `${id}.json`);
-  try {
-    return JSON.parse(await fs.readFile(file, "utf8")) as CrewDefinition;
-  } catch {
-    throw new CrewError("CREW_NOT_FOUND", `crew not found locally: ${id} (expected ${file})`);
-  }
+  const file = path.join(root, MARKETPLACE_DIR, CREWS_DIR, id, "crew.json");
+  return loadCrewFile(file);
 }
 
 // ---------------------------------------------------------------------------
@@ -193,10 +170,11 @@ export async function putRemoteFile(target: GitHubCommitTarget, filePath: string
 
 /**
  * Publish (create or update) a crew in the Git-backed catalog. The crew is
- * dehydrated into the folder standard and committed file by file
- * (crew.json, graph.json, mcp/servers.json, workers/<id>/worker.json +
- * instructions.md), then the lightweight index entry is upserted in
- * catalog.json. Each commit is reviewable in Git history.
+ * dehydrated into the folder standard (composition taxonomy: crew.json,
+ * mission/, members/, coordination/, tasks/, workflows/, handoffs/, rules/,
+ * verification/, mcp/servers.json) and committed file by file, then the
+ * lightweight index entry is upserted in catalog.json. Each commit is
+ * reviewable in Git history.
  */
 export async function publishCrew(crew: CrewDefinition, target: GitHubCommitTarget): Promise<{ itemPath: string; catalogPath: string; files: string[] }> {
   const problems = crewProblems(crew);
@@ -205,7 +183,7 @@ export async function publishCrew(crew: CrewDefinition, target: GitHubCommitTarg
   }
 
   // 1. Upsert the folder-standard item files.
-  const itemDir = `${MARKETPLACE_DIR}/items/${crew.id}`;
+  const itemDir = `${MARKETPLACE_DIR}/${CREWS_DIR}/${crew.id}`;
   const folderFiles = dehydrateCrew(crew);
   for (const [rel, content] of Object.entries(folderFiles)) {
     const filePath = `${itemDir}/${rel}`;

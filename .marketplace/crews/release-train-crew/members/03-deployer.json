@@ -1,0 +1,34 @@
+{
+  "profile": "devops-engineer",
+  "role": "operator",
+  "name": "DevOps Engineer",
+  "permissions": {
+    "read": "repo",
+    "write": "scoped",
+    "production": "write",
+    "secrets": "named",
+    "tools": [
+      "read_file",
+      "write_file",
+      "run_pipeline",
+      "deploy"
+    ],
+    "approvalGates": [
+      "deploy",
+      "run_pipeline"
+    ]
+  },
+  "mcpServers": [],
+  "context": [
+    {
+      "framework": "filesystem",
+      "scope": ".github/workflows/**, infra/**, docs/runbooks/**"
+    }
+  ],
+  "receivesFrom": [
+    "release"
+  ],
+  "emits": [
+    "rollout-log.md"
+  ]
+}

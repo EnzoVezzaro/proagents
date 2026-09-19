@@ -1,0 +1,29 @@
+{
+  "profile": "performance-engineer",
+  "role": "researcher",
+  "name": "Performance Auditor",
+  "permissions": {
+    "read": "repo",
+    "write": "none",
+    "production": "read",
+    "secrets": "none",
+    "tools": [
+      "read_file",
+      "grep",
+      "run_tests"
+    ],
+    "approvalGates": []
+  },
+  "mcpServers": [],
+  "context": [
+    {
+      "framework": "filesystem",
+      "scope": "web/**, src/**"
+    }
+  ],
+  "receivesFrom": [],
+  "emits": [
+    "perf-findings.md",
+    "perf-budgets.md"
+  ]
+}

@@ -1,0 +1,1 @@
+Serving endpoints respect their query budgets.

@@ -1,0 +1,1 @@
+privacy-auditor synthesizes the final report from all findings without adding new scope.

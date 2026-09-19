@@ -1,0 +1,1 @@
+verification-report.md states closed / partially closed / open with evidence.

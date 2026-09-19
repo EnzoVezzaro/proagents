@@ -1,0 +1,59 @@
+{
+  "version": "1.0.0",
+  "crew": {
+    "id": "data-platform-crew",
+    "name": "Data Platform Crew",
+    "description": "Four-worker data platform crew, profile-backed: a database engineer owns the schema, a data engineer builds the pipelines, a backend engineer exposes the serving layer, and QA verifies data quality end to end.",
+    "author": "proagents",
+    "tags": [
+      "data",
+      "pipelines",
+      "schema",
+      "quality",
+      "profile-backed",
+      "multi-agent"
+    ]
+  },
+  "mission": "mission/01-mission.md",
+  "members": [
+    "members/01-schema.json",
+    "members/02-pipelines.json",
+    "members/03-serving.json",
+    "members/04-quality.json"
+  ],
+  "coordination": [
+    "coordination/01-schema-publishes-schema-design-md-before-any.md",
+    "coordination/02-pipelines-and-serving-build-against-the-same.md",
+    "coordination/03-quality-receives-pipeline-notes-and-api-verif.md"
+  ],
+  "tasks": [
+    "tasks/01-schema-owns-tables-constraints-indexes-and.md",
+    "tasks/02-pipelines-owns-idempotent-backfillable-jobs.md",
+    "tasks/03-serving-owns-the-bounded-serving-api-limits.md",
+    "tasks/04-quality-owns-end-to-end-verification-of-pipel.md"
+  ],
+  "workflows": [
+    "workflows/01-standard-run-schema-parallel-pipelines-s.md",
+    "workflows/02-schema-change-expand-contract-migration-firs.md"
+  ],
+  "handoffs": [
+    "handoffs/01-schema-to-pipelines.md",
+    "handoffs/02-schema-to-serving.md",
+    "handoffs/03-pipelines-to-serving.md",
+    "handoffs/04-pipelines-to-quality.md",
+    "handoffs/05-serving-to-quality.md"
+  ],
+  "rules": [
+    "rules/01-every-migration-ships-with-a-rollback.md",
+    "rules/02-production-data-never-moves-through-test-syst.md",
+    "rules/03-personal-data-columns-are-named-and-minimized.md"
+  ],
+  "verification": [
+    "verification/01-pipeline-output-satisfies-schema-constraints.md",
+    "verification/02-serving-endpoints-respect-their-query-budgets.md",
+    "verification/03-quality-report-md-states-what-was-verified-an.md"
+  ],
+  "mcp": "mcp/servers.json",
+  "createdAt": "2026-09-18T00:00:00.000Z",
+  "updatedAt": "2026-09-18T00:00:00.000Z"
+}

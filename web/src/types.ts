@@ -128,8 +128,27 @@ export interface CrewDefinition {
   mcpServers: CrewMcpServer[];
   handoffs: CrewHandoff[];
   entryPoints: string[];
+  mission?: string;
+  coordination?: string[];
+  tasks?: string[];
+  workflows?: string[];
+  rules?: string[];
+  verification?: string[];
   createdAt: string;
   updatedAt: string;
+}
+
+/** A crew member — a profile binding with an explicit permission model. */
+export interface CrewMemberSource {
+  profile: string;
+  role: string;
+  id?: string;
+  name?: string;
+  permissions: CrewPermissions;
+  mcpServers?: string[];
+  context?: CrewContext[];
+  receivesFrom?: string[];
+  emits?: string[];
 }
 
 export interface CrewDefinitionSource {
@@ -141,14 +160,23 @@ export interface CrewDefinitionSource {
     author: string;
     tags: string[];
   };
-  /** Paths to worker.json manifests, or inline worker objects. */
-  workers: string[] | CrewWorker[];
+  /** Paths to member files (composition) or inline members (builders). */
+  members?: string[] | CrewMemberSource[];
+  /** Legacy: paths to worker.json manifests, or inline worker objects. */
+  workers?: string[] | CrewWorker[];
+  mission?: string;
+  coordination?: string[];
+  tasks?: string[];
+  workflows?: string[];
+  handoffs?: (string | CrewHandoff)[];
+  rules?: string[];
+  verification?: string[];
+  tools?: string;
   /** Path to mcp/servers.json, or an inline list (legacy/builder). */
   mcp?: string;
   mcpServers?: CrewMcpServer[];
   /** Path to graph.json, or inline (legacy/builder). */
   graph?: string;
-  handoffs?: CrewHandoff[];
   entryPoints?: string[];
   createdAt?: string;
   updatedAt?: string;

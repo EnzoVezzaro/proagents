@@ -80,7 +80,7 @@ tools:    { required: [filesystem, shell, git] }
 verification: { required: [tests, security-scan] }
 ```
 
-Drop your own under `.marketplace/items/<slug>/` in your repo — a checkout copy wins over
+Drop your own under `.marketplace/profiles/<slug>/` in your repo — a checkout copy wins over
 the packaged snapshot for the same slug.
 
 ## The interview path: build a specialized agent

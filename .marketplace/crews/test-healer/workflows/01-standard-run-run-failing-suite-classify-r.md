@@ -1,0 +1,1 @@
+Standard run: run failing suite → classify (regression / brittle assertion / environment drift) → healing-plan.md with before/after.

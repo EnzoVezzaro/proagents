@@ -1,0 +1,31 @@
+{
+  "profile": "qa-engineer",
+  "role": "verifier",
+  "name": "QA Engineer",
+  "permissions": {
+    "read": "repo",
+    "write": "none",
+    "production": "none",
+    "secrets": "none",
+    "tools": [
+      "read_file",
+      "run_tests",
+      "grep"
+    ],
+    "approvalGates": []
+  },
+  "mcpServers": [],
+  "context": [
+    {
+      "framework": "filesystem",
+      "scope": "tests/**, src/pipelines/**, src/api/**"
+    }
+  ],
+  "receivesFrom": [
+    "pipelines",
+    "serving"
+  ],
+  "emits": [
+    "quality-report.md"
+  ]
+}

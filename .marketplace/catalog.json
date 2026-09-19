@@ -86,6 +86,25 @@
       "updatedAt": "2026-09-17T23:30:46.429Z"
     },
     {
+      "id": "data-platform-crew",
+      "name": "Data Platform Crew",
+      "version": "1.0.0",
+      "description": "Four-worker data platform crew, profile-backed: a database engineer owns the schema, a data engineer builds the pipelines, a backend engineer exposes the serving layer, and QA verifies data quality end to end.",
+      "author": "proagents",
+      "tags": [
+        "data",
+        "pipelines",
+        "schema",
+        "quality",
+        "profile-backed",
+        "multi-agent"
+      ],
+      "kind": "crew",
+      "downloads": 0,
+      "createdAt": "2026-09-18T00:00:00.000Z",
+      "updatedAt": "2026-09-18T00:00:00.000Z"
+    },
+    {
       "id": "database-engineer",
       "name": "Database Engineer",
       "version": "1.1.0",
@@ -134,6 +153,25 @@
       "downloads": 0,
       "createdAt": "1970-01-01T00:00:00.000Z",
       "updatedAt": "1970-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "feature-delivery-squad",
+      "name": "Feature Delivery Squad",
+      "version": "1.0.0",
+      "description": "Five-worker feature delivery squad, profile-backed end to end: an API designer draws the contract, backend and frontend engineers implement against it, a test automator verifies, and a code reviewer drafts the merge verdict for humans.",
+      "author": "proagents",
+      "tags": [
+        "feature-delivery",
+        "api-first",
+        "fullstack",
+        "testing",
+        "profile-backed",
+        "multi-agent"
+      ],
+      "kind": "crew",
+      "downloads": 0,
+      "createdAt": "2026-09-18T00:00:00.000Z",
+      "updatedAt": "2026-09-18T00:00:00.000Z"
     },
     {
       "id": "frontend-engineer",
@@ -338,6 +376,44 @@
       "updatedAt": "2026-09-17T23:30:46.430Z"
     },
     {
+      "id": "release-train-crew",
+      "name": "Release Train Crew",
+      "version": "1.0.0",
+      "description": "Four-worker release crew, profile-backed: QA signs off the candidate, the release engineer cuts the train, the DevOps engineer runs the approval-gated rollout, and the SRE watches the error budget after deploy.",
+      "author": "proagents",
+      "tags": [
+        "release",
+        "deployments",
+        "ci-cd",
+        "sre",
+        "profile-backed",
+        "multi-agent"
+      ],
+      "kind": "crew",
+      "downloads": 0,
+      "createdAt": "2026-09-18T00:00:00.000Z",
+      "updatedAt": "2026-09-18T00:00:00.000Z"
+    },
+    {
+      "id": "security-audit-crew",
+      "name": "Security Audit Crew",
+      "version": "1.0.0",
+      "description": "Four-worker security audit crew, profile-backed: a systems architect scopes the audit, a security engineer threat-models, a second security engineer reviews the code against the model, and a privacy engineer covers PII flows. Read-only on the repo — the audit report is a proposal for humans.",
+      "author": "proagents",
+      "tags": [
+        "security",
+        "privacy",
+        "audit",
+        "threat-modeling",
+        "profile-backed",
+        "multi-agent"
+      ],
+      "kind": "crew",
+      "downloads": 0,
+      "createdAt": "2026-09-18T00:00:00.000Z",
+      "updatedAt": "2026-09-18T00:00:00.000Z"
+    },
+    {
       "id": "security-engineer",
       "name": "Security Engineer",
       "version": "1.1.0",
@@ -469,6 +545,25 @@
       "downloads": 0,
       "createdAt": "2026-09-15T00:00:00.000Z",
       "updatedAt": "2026-09-15T00:00:00.000Z"
+    },
+    {
+      "id": "web-quality-crew",
+      "name": "Web Quality Crew",
+      "version": "1.0.0",
+      "description": "Four-worker web quality crew, profile-backed: performance and accessibility engineers audit in parallel, the frontend engineer fixes within the budgets, and QA verifies the regressions are gone — not just quiet.",
+      "author": "proagents",
+      "tags": [
+        "web",
+        "performance",
+        "accessibility",
+        "quality",
+        "profile-backed",
+        "multi-agent"
+      ],
+      "kind": "crew",
+      "downloads": 0,
+      "createdAt": "2026-09-18T00:00:00.000Z",
+      "updatedAt": "2026-09-18T00:00:00.000Z"
     }
   ]
 }

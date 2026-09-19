@@ -76,6 +76,44 @@ Full details: [Professional profiles](/guide/profiles).
 
 All support `--json`.
 
+## Marketplace groups
+
+The Git-backed marketplace has two command groups — one per item kind. Both
+resolve a local checkout first (`.marketplace/profiles/`, `.marketplace/crews/`),
+then fall back to the remote catalog (`--repo owner/name --ref branch --token <gh-token>`).
+
+### crew
+
+| Command | Purpose |
+|---|---|
+| `crew list` | List marketplace crews in the catalog |
+| `crew show <id>` | Print a crew definition (workers, permissions, MCP) |
+| `crew validate <crew.json\|dir>` | Hydrate + validate a crew manifest (folder standard or inline); enforces PA043–PA048 |
+| `crew install <id>` | Install a crew into the current repo (`.agents/crews/<id>/` + `.mcp.json`) |
+| `crew install <id> --dry-run` | Show the install plan without writing |
+| `crew build <crew.json>` | Install from a local manifest (builder output or folder-standard `crew.json`) |
+| `crew create <profile…>` | Compose existing profiles into a custom crew folder in `.marketplace/crews/` (every member binds a profile) |
+| `crew publish <file>` | Direct catalog commit (contents:write) |
+| `crew submit <file>` | File a marketplace proposal issue (recommended) |
+
+`crew create` flags: `--name`, `--id`, `--description`, `--role <member-role>`
+(one per member, in argument order). `publish`/`submit` accept both
+folder-standard and inline JSON manifests — folder manifests are hydrated
+before validation.
+
+### profile
+
+| Command | Purpose |
+|---|---|
+| `profile list` | List marketplace profiles in the catalog |
+| `profile show <id>` | Print a profile manifest (hydrated) |
+| `profile install <id>` | Resolve + validate + equip from the catalog (same as `equip`) |
+| `profile validate <file.json>` | Validate a profile manifest (hydrates path-format sections) |
+| `profile publish <file.json>` | Direct catalog commit (contents:write) |
+| `profile submit <file.json>` | File a marketplace proposal issue (recommended) |
+
+Shortcuts: `proagent equip` = `profile install`, `proagent list` = `profile list`.
+
 ## Typical session (human, interactive)
 
 ```bash

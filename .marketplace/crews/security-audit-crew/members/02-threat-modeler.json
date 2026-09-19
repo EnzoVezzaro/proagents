@@ -1,0 +1,29 @@
+{
+  "profile": "security-engineer",
+  "role": "researcher",
+  "name": "Threat Modeler",
+  "permissions": {
+    "read": "repo",
+    "write": "none",
+    "production": "none",
+    "secrets": "none",
+    "tools": [
+      "read_file",
+      "grep"
+    ],
+    "approvalGates": []
+  },
+  "mcpServers": [],
+  "context": [
+    {
+      "framework": "filesystem",
+      "scope": "src/auth/**, src/api/**, docs/**"
+    }
+  ],
+  "receivesFrom": [
+    "scout"
+  ],
+  "emits": [
+    "threat-model.md"
+  ]
+}

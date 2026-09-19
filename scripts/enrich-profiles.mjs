@@ -433,7 +433,7 @@ const CONFIG = {
 // Apply
 let touched = 0;
 const missing = [];
-for (const dir of ["profiles", ".marketplace/items"]) {
+for (const dir of ["profiles", ".marketplace/profiles"]) {
   for (const f of fs.readdirSync(dir).filter((f) => f.endsWith(".json"))) {
     const p = `${dir}/${f}`;
     const raw = JSON.parse(fs.readFileSync(p, "utf8"));

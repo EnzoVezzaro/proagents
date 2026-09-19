@@ -1,0 +1,32 @@
+{
+  "profile": "systems-architect",
+  "role": "researcher",
+  "name": "Audit Scout",
+  "permissions": {
+    "read": "repo",
+    "write": "none",
+    "production": "none",
+    "secrets": "none",
+    "tools": [
+      "read_file",
+      "grep",
+      "git_log"
+    ],
+    "approvalGates": []
+  },
+  "mcpServers": [],
+  "context": [
+    {
+      "framework": "filesystem",
+      "scope": "src/**, docs/**"
+    },
+    {
+      "framework": "git",
+      "scope": "recent history of auth and data areas"
+    }
+  ],
+  "receivesFrom": [],
+  "emits": [
+    "audit-scope.md"
+  ]
+}

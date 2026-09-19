@@ -60,15 +60,15 @@ describe("profile registry (PROFILES-REG)", () => {
     try {
       // A checkout copy of a packaged slug wins (it is what the repo manages).
       const checkoutCopy = manifest("senior-engineer");
-      await fs.mkdir(path.join(root, ".marketplace", "items", "senior-engineer"), { recursive: true });
+      await fs.mkdir(path.join(root, ".marketplace", "profiles", "senior-engineer"), { recursive: true });
       await fs.writeFile(
-        path.join(root, ".marketplace", "items", "senior-engineer", "profile.json"),
+        path.join(root, ".marketplace", "profiles", "senior-engineer", "profile.json"),
         JSON.stringify(checkoutCopy),
       );
       // A marketplace-only profile must appear from the checkout.
-      await fs.mkdir(path.join(root, ".marketplace", "items", "marketplace-only"), { recursive: true });
+      await fs.mkdir(path.join(root, ".marketplace", "profiles", "marketplace-only"), { recursive: true });
       await fs.writeFile(
-        path.join(root, ".marketplace", "items", "marketplace-only", "profile.json"),
+        path.join(root, ".marketplace", "profiles", "marketplace-only", "profile.json"),
         JSON.stringify(manifest("marketplace-only")),
       );
       const entries = await listProfiles(root);
@@ -197,9 +197,9 @@ describe("shipped marketplace catalog (PROFILES-CATALOG)", () => {
     const profileIds = catalog.items.filter((i) => i.kind === "profile").map((i) => i.id);
     expect(profileIds.length).toBeGreaterThanOrEqual(13);
     for (const id of profileIds) {
-      // Folder layout (items/<id>/profile.json) with flat legacy fallback.
-      const folderPath = path.resolve(".marketplace", "items", id, "profile.json");
-      const flatPath = path.resolve(".marketplace", "items", `${id}.json`);
+      // Folder layout (profiles/<id>/profile.json) with flat legacy fallback.
+      const folderPath = path.resolve(".marketplace", "profiles", id, "profile.json");
+      const flatPath = path.resolve(".marketplace", "profiles", `${id}.json`);
       const filePath = await fs
         .access(folderPath)
         .then(() => folderPath)

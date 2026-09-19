@@ -1,0 +1,1 @@
+threat-modeler owns STRIDE-per-boundary analysis with mitigations present/missing.

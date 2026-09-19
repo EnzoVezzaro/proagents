@@ -280,7 +280,7 @@ function* profileDirs(roots) {
 }
 
 const [, , cmd, arg] = process.argv;
-const ROOTS = [".marketplace/items"];
+const ROOTS = [".marketplace/profiles"];
 
 if (cmd === "materialize" && arg) {
   console.log("materialized:", materializeProfile(arg));

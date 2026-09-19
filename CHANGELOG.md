@@ -7,11 +7,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed — the marketplace splits into profiles/ and crews/
+
+- **`.marketplace/items/` is gone**, split by kind: profiles live in
+  `.marketplace/profiles/<slug>/` and crews in `.marketplace/crews/<id>/`. The
+  catalog index (`catalog.json`) is unchanged and still lists both kinds — the
+  `kind` field is the discriminator. All loaders (`profiles/registry.ts`,
+  `crew/registry.ts`, SPA) resolve the new layout; the npm package ships both
+  folders; publishing (`profile publish`, `crew publish`) writes the new paths.
+  A repo checkout now overrides per kind: `.marketplace/profiles/` for equip,
+  `.marketplace/crews/` for crew install.
+
+### Fixed — marketplace write commands hydrate folder manifests
+
+- `crew publish`, `crew submit`, `profile publish`, `profile submit` and
+  `profile validate` parsed their input with raw `JSON.parse`, rejecting the
+  folder-standard/path-format files the tooling itself produces (`crew create`
+  output, builder exports). All five now load through the hydrating loaders
+  (`loadCrewFile` / `loadProfileFile`), so both shapes validate and publish
+  identically.
+- Hydration no longer appends handoff contract prose into `workflows` — it was
+  re-serialized into `workflows/` files by `dehydrateCrew` and duplicated on
+  every hydrate→dehydrate→hydrate round trip (caught by the fixed-point check).
+  Handoff contracts live in `crew.handoffs` only.
+
+### Added — five profile-backed crews
+
+- **Five new marketplace crews**, every worker bound to a Professional Profile
+  (agent + subagents that operate as professions, not hand-rolled prompts):
+  - `feature-delivery-squad` (5 workers) — API designer → backend + frontend
+    implementers → test automator → code reviewer; the API contract is the
+    shared artifact every other worker consumes.
+  - `data-platform-crew` (4) — database engineer (schema) → data engineer
+    (pipelines) + backend engineer (serving) → QA; schema-first, quality-gated.
+  - `release-train-crew` (4) — QA sign-off → release engineer → approval-gated
+    DevOps rollout (PA043 by design: production write gated on `deploy` and
+    `run_pipeline`) → SRE post-deploy watch.
+  - `security-audit-crew` (4) — systems architect scopes, security engineer
+    threat-models, second security engineer audits code against the model,
+    privacy engineer covers PII flows and synthesizes the report; read-only.
+  - `web-quality-crew` (4) — performance + accessibility auditors run in
+    parallel, frontend engineer fixes within both budgets, QA verifies against
+    the original findings.
+- All five follow the crew folder standard (`crew.json` index +
+  `workers/<id>/worker.json` + `instructions.md` + `mcp/servers.json` +
+  `graph.json`), pass PA043–PA047 and the dehydrate/rehydrate fixed point, and
+  bind only to profiles that exist in the catalog. New `CREW-CATALOG` test
+  block keeps the whole set honest: folder↔catalog consistency, resolvable
+  profile bindings, and canonical id ordering.
+
 ### Added — crews follow the folder standard (and the subagent standards)
 
 - **Crews moved to the same folder standard as profiles.** The 3 shipped crews
   (`pr-review-gate`, `incidere-incident-response`, `test-healer`) are now folders —
-  `items/<id>/crew.json` (index) + `workers/<w>/worker.json` + `instructions.md` +
+  `crews/<id>/crew.json` (index) + `workers/<w>/worker.json` + `instructions.md` +
   `mcp/servers.json` + `graph.json` — instead of one flat JSON with inline worker
   instructions. Same authority model as profiles: the manifest is the index, the
   files are the source; hydration at load time, round-trip fixed point checked by

@@ -1,0 +1,1 @@
+Make web quality a two-axis gate: performance and accessibility are audited in parallel, fixed within both budgets, and verified against the original findings — regressions reopen at higher severity.

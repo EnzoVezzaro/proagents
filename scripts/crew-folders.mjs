@@ -1,19 +1,21 @@
-// Crew folder standard — mirrors scripts/profile-folders.mjs:
+// Crew folder standard — the two directions:
 //
-//   convert-all   flat .marketplace/items/<id>.json → folder .marketplace/items/<id>/
-//                 (crew.json + workers/<w>/worker.json + instructions.md +
-//                  mcp/servers.json + graph.json), one-time migration
-//   check-all     fixed point: every folder crew hydrates, passes crewProblems
-//                 (incl. PA043–PA047), and dehydrate→hydrate is content-identical
+//   convert-all   legacy items/<id>/ crew folders → crews/<id>/ composition
+//                 taxonomy (crew.json + mission/ + members/ + coordination/ +
+//                 tasks/ + workflows/ + handoffs/ + rules/ + verification/ +
+//                 mcp/), one-time migration
+//   check-all     fixed point: every crews/<id>/ folder hydrates, passes
+//                 crewProblems (incl. PA043–PA048), and dehydrate→hydrate is
+//                 content-identical
 //
-// Authority model: crew.json is the index; the worker/mcp/graph files are the
-// source. Uses the built core (dist/) for hydration, dehydration and
-// validation so the script and the runtime can never disagree.
+// Authority model: crew.json is the index; the section files are the source.
+// Uses the built core (dist/) for hydration, dehydration and validation so
+// the script and the runtime can never disagree.
 
 import fs from "node:fs";
 import path from "node:path";
 
-const ITEMS = ".marketplace/items";
+const CREWS = ".marketplace/crews";
 
 async function loadCore() {
   try {
@@ -29,19 +31,19 @@ async function loadCore() {
 }
 
 function flatCrewFiles() {
-  if (!fs.existsSync(ITEMS)) return [];
+  if (!fs.existsSync(CREWS)) return [];
   return fs
-    .readdirSync(ITEMS)
+    .readdirSync(CREWS)
     .filter((f) => f.endsWith(".json"))
-    .map((f) => path.join(ITEMS, f));
+    .map((f) => path.join(CREWS, f));
 }
 
 function folderCrewDirs() {
-  if (!fs.existsSync(ITEMS)) return [];
+  if (!fs.existsSync(CREWS)) return [];
   return fs
-    .readdirSync(ITEMS, { withFileTypes: true })
-    .filter((e) => e.isDirectory() && fs.existsSync(path.join(ITEMS, e.name, "crew.json")))
-    .map((e) => path.join(ITEMS, e.name));
+    .readdirSync(CREWS, { withFileTypes: true })
+    .filter((e) => e.isDirectory() && fs.existsSync(path.join(CREWS, e.name, "crew.json")))
+    .map((e) => path.join(CREWS, e.name));
 }
 
 async function convert(file, core) {
@@ -51,7 +53,7 @@ async function convert(file, core) {
     console.error(`  skipped ${file}: invalid crew (${problems.join("; ")})`);
     return false;
   }
-  const dir = path.join(ITEMS, crew.id);
+  const dir = path.join(CREWS, crew.id);
   const files = core.hydrate.dehydrateCrew(crew);
   fs.mkdirSync(dir, { recursive: true });
   for (const [rel, content] of Object.entries(files)) {

@@ -1,0 +1,34 @@
+{
+  "profile": "api-designer",
+  "role": "architect",
+  "name": "API Designer",
+  "permissions": {
+    "read": "repo",
+    "write": "none",
+    "production": "none",
+    "secrets": "none",
+    "tools": [
+      "read_file",
+      "grep",
+      "git_log"
+    ],
+    "approvalGates": []
+  },
+  "mcpServers": [
+    "github"
+  ],
+  "context": [
+    {
+      "framework": "filesystem",
+      "scope": "docs/**, src/api/**"
+    },
+    {
+      "framework": "git",
+      "scope": "history of the API surface"
+    }
+  ],
+  "receivesFrom": [],
+  "emits": [
+    "api-contract.md"
+  ]
+}

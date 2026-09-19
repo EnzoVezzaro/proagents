@@ -1,0 +1,35 @@
+{
+  "id": "reviewer",
+  "profile": "security-engineer",
+  "role": "researcher",
+  "name": "Security & Architecture Reviewer",
+  "permissions": {
+    "read": "repo",
+    "write": "none",
+    "production": "none",
+    "secrets": "none",
+    "tools": [
+      "read_file",
+      "git_diff",
+      "git_log"
+    ],
+    "approvalGates": []
+  },
+  "mcpServers": [
+    "github"
+  ],
+  "context": [
+    {
+      "framework": "filesystem",
+      "scope": "src/**"
+    },
+    {
+      "framework": "git",
+      "scope": "history of changed files"
+    }
+  ],
+  "receivesFrom": [],
+  "emits": [
+    "review-findings.md"
+  ]
+}

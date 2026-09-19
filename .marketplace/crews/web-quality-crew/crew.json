@@ -1,0 +1,58 @@
+{
+  "version": "1.0.0",
+  "crew": {
+    "id": "web-quality-crew",
+    "name": "Web Quality Crew",
+    "description": "Four-worker web quality crew, profile-backed: performance and accessibility engineers audit in parallel, the frontend engineer fixes within the budgets, and QA verifies the regressions are gone — not just quiet.",
+    "author": "proagents",
+    "tags": [
+      "web",
+      "performance",
+      "accessibility",
+      "quality",
+      "profile-backed",
+      "multi-agent"
+    ]
+  },
+  "mission": "mission/01-mission.md",
+  "members": [
+    "members/01-perf-auditor.json",
+    "members/02-a11y-auditor.json",
+    "members/03-fixer.json",
+    "members/04-verifier.json"
+  ],
+  "coordination": [
+    "coordination/01-perf-auditor-and-a11y-auditor-run-in-parallel.md",
+    "coordination/02-fixer-works-both-finding-sets-together-a-fi.md",
+    "coordination/03-verifier-re-checks-against-the-original-findi.md"
+  ],
+  "tasks": [
+    "tasks/01-perf-auditor-owns-measured-findings-and-enfor.md",
+    "tasks/02-a11y-auditor-owns-wcag-2-2-aa-findings-with-a.md",
+    "tasks/03-fixer-owns-the-fixes-each-with-a-test-that-f.md",
+    "tasks/04-verifier-owns-the-closed-partially-closed.md"
+  ],
+  "workflows": [
+    "workflows/01-standard-run-parallel-audits-budget-bounde.md"
+  ],
+  "handoffs": [
+    "handoffs/01-perf-auditor-to-fixer.md",
+    "handoffs/02-a11y-auditor-to-fixer.md",
+    "handoffs/03-perf-auditor-to-verifier.md",
+    "handoffs/04-a11y-auditor-to-verifier.md",
+    "handoffs/05-fixer-to-verifier.md"
+  ],
+  "rules": [
+    "rules/01-every-perf-finding-carries-a-number-not-a-vibe.md",
+    "rules/02-every-a11y-finding-cites-the-wcag-criterion-a.md",
+    "rules/03-never-weaken-an-assertion-to-make-a-test-pass.md"
+  ],
+  "verification": [
+    "verification/01-both-budgets-hold-simultaneously-on-the-fixed.md",
+    "verification/02-verification-report-md-states-closed-partia.md",
+    "verification/03-any-regression-introduced-by-a-fix-reopens-it.md"
+  ],
+  "mcp": "mcp/servers.json",
+  "createdAt": "2026-09-18T00:00:00.000Z",
+  "updatedAt": "2026-09-18T00:00:00.000Z"
+}

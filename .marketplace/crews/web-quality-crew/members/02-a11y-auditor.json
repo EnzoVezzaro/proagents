@@ -1,0 +1,28 @@
+{
+  "profile": "accessibility-engineer",
+  "role": "researcher",
+  "name": "Accessibility Auditor",
+  "permissions": {
+    "read": "repo",
+    "write": "none",
+    "production": "none",
+    "secrets": "none",
+    "tools": [
+      "read_file",
+      "grep",
+      "run_tests"
+    ],
+    "approvalGates": []
+  },
+  "mcpServers": [],
+  "context": [
+    {
+      "framework": "filesystem",
+      "scope": "web/**, src/ui/**"
+    }
+  ],
+  "receivesFrom": [],
+  "emits": [
+    "a11y-findings.md"
+  ]
+}

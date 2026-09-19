@@ -1,0 +1,32 @@
+{
+  "profile": "qa-engineer",
+  "role": "verifier",
+  "name": "QA Sign-off",
+  "permissions": {
+    "read": "repo",
+    "write": "none",
+    "production": "none",
+    "secrets": "none",
+    "tools": [
+      "read_file",
+      "run_tests",
+      "git_log"
+    ],
+    "approvalGates": []
+  },
+  "mcpServers": [],
+  "context": [
+    {
+      "framework": "filesystem",
+      "scope": "tests/**, CHANGELOG.md, docs/**"
+    },
+    {
+      "framework": "git",
+      "scope": "commits since the last release tag"
+    }
+  ],
+  "receivesFrom": [],
+  "emits": [
+    "signoff-report.md"
+  ]
+}

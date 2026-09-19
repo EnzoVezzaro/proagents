@@ -312,7 +312,7 @@ The schema is provider-agnostic and independent of any particular coding-agent h
 The loader hydrates path entries to content at read time, so equip, compile, crews and
 the marketplace SPA all see the same plain manifest.
 
-Profiles live in one place — the marketplace catalog (`.marketplace/items/<slug>/`),
+Profiles live in one place — the marketplace catalog (`.marketplace/profiles/<slug>/`),
 which ships with the npm package and is updated through PRs. A repo's own checkout of
 that folder wins over the packaged snapshot; there is no separate local profiles folder.
 
@@ -876,9 +876,10 @@ Context
 
 The marketplace is therefore an ecosystem for distributing reusable professional capabilities and complete agent systems.
 
-It is also the single source of profiles: the catalog lives in `.marketplace/` (items in
-`items/<slug>/` plus a `catalog.json` index), the npm package ships it for offline use,
-and contributions land through PRs to the same files.
+It is also the single source of profiles: the catalog lives in `.marketplace/`
+(profiles in `profiles/<slug>/`, crews in `crews/<id>/`, plus a `catalog.json` index),
+the npm package ships it for offline use, and contributions land through PRs to the
+same files.
 
 ```bash
 proagent crew list

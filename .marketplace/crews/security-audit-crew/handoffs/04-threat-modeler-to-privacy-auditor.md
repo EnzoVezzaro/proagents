@@ -1,0 +1,7 @@
+---
+from: threat-modeler
+to: privacy-auditor
+artifact: threat-model.md
+---
+
+`threat-modeler` hands **threat-model.md** to `privacy-auditor`.

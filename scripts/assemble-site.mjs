@@ -48,8 +48,9 @@ cpSync(DOCS_DIST, SITE, { recursive: true });
 
 // Git-backed catalog data → served at /proagents/.marketplace/*.
 // Items may carry subdirectories (knowledge references), so copy recursively.
-mkdirSync(join(SITE, ".marketplace", "items"), { recursive: true });
+mkdirSync(join(SITE, ".marketplace"), { recursive: true });
 cpSync(".marketplace/catalog.json", join(SITE, ".marketplace/catalog.json"));
-cpSync(".marketplace/items", join(SITE, ".marketplace/items"), { recursive: true });
+cpSync(".marketplace/profiles", join(SITE, ".marketplace/profiles"), { recursive: true });
+cpSync(".marketplace/crews", join(SITE, ".marketplace/crews"), { recursive: true });
 
 console.log(`assemble-site: wrote ${resolve(SITE)} (VitePress site + marketplace page + catalog)`);

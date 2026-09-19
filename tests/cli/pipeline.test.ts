@@ -12,7 +12,7 @@ import path from "node:path";
  *   benchmark its performance with the deterministic runner.
  *
  * The example repo is seeded exactly like a marketplace consumer's checkout:
- * `.marketplace/items/` carries the profile files (the Git-backed catalog),
+ * `.marketplace/profiles/` carries the profile files (the Git-backed catalog),
  * so nothing here touches the network. The two profiles under test are the
  * newest marketplace additions (release-engineer, privacy-engineer).
  */
@@ -35,9 +35,9 @@ function makeRepo(files: Record<string, string>): string {
 function marketplaceFiles(): Record<string, string> {
   const files: Record<string, string> = {};
   for (const slug of NEW_PROFILES) {
-    const dir = path.join(CHECKOUT, ".marketplace", "items", slug);
+    const dir = path.join(CHECKOUT, ".marketplace", "profiles", slug);
     for (const rel of collectFiles(dir, "")) {
-      files[`.marketplace/items/${slug}/${rel}`] = fs.readFileSync(path.join(dir, rel), "utf8");
+      files[`.marketplace/profiles/${slug}/${rel}`] = fs.readFileSync(path.join(dir, rel), "utf8");
     }
   }
   return files;
@@ -191,7 +191,7 @@ describe("pipeline e2e — profile → equip → compiled agent → performance"
       tools: { required: ["filesystem"] },
       verification: { required: ["review"] },
     });
-    const root = withRepo({ "AGENTS.md": "# Example app\n", ".marketplace/items/bad-profile/profile.json": broken });
+    const root = withRepo({ "AGENTS.md": "# Example app\n", ".marketplace/profiles/bad-profile/profile.json": broken });
     const { stdout, status } = run(root, ["equip", "bad-profile", "--target", "codex", "--json"], true);
     expect(status).toBe(1);
     const parsed = JSON.parse(stdout);

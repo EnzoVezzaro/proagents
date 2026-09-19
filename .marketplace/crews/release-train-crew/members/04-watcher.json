@@ -1,0 +1,31 @@
+{
+  "profile": "sre",
+  "role": "observer",
+  "name": "SRE Watcher",
+  "permissions": {
+    "read": "repo",
+    "write": "none",
+    "production": "read",
+    "secrets": "none",
+    "tools": [
+      "read_file",
+      "log_search",
+      "metric_query"
+    ],
+    "approvalGates": []
+  },
+  "mcpServers": [],
+  "context": [
+    {
+      "framework": "filesystem",
+      "scope": "docs/runbooks/**, infra/**"
+    }
+  ],
+  "receivesFrom": [
+    "release",
+    "deployer"
+  ],
+  "emits": [
+    "post-deploy-watch.md"
+  ]
+}

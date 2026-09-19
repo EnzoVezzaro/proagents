@@ -2,14 +2,18 @@ name: Marketplace PR validation
 
 # Publishing path #2: pull requests. The SPA's "Publish via pull request"
 # flow and manual contributions both land as PRs touching
-# .marketplace/items/*.json (+ catalog.json). Every changed item is run
-# through the same deterministic validators the CLI and SPA use; the catalog
-# index must stay consistent with the item files.
+# .marketplace/profiles/** or .marketplace/crews/** (+ catalog.json). Every
+# changed item is run through the same deterministic validators the CLI and
+# SPA use; the catalog index must stay consistent with the item files.
 
 on:
   pull_request:
     paths:
       - ".marketplace/**"
+
+permissions:
+  contents: read
+  pull-requests: write
 
 permissions:
   contents: read
@@ -37,7 +41,7 @@ jobs:
       - name: List changed marketplace items
         id: changed
         run: |
-          git diff --name-only --diff-filter=ACM "origin/${{ github.base_ref }}...HEAD" -- '.marketplace/items/*.json' '.marketplace/items/*/profile.json' '.marketplace/items/*/crew.json' > /tmp/items.txt || true
+          git diff --name-only --diff-filter=ACM "origin/${{ github.base_ref }}...HEAD" -- '.marketplace/profiles/*/profile.json' '.marketplace/crews/*/crew.json' > /tmp/items.txt || true
           echo "count=$(wc -l < /tmp/items.txt | tr -d ' ')" >> "$GITHUB_OUTPUT"
           echo "files<<FILES_EOF" >> "$GITHUB_OUTPUT"
           cat /tmp/items.txt >> "$GITHUB_OUTPUT"
@@ -63,6 +67,7 @@ jobs:
               import path from 'node:path';
               import { crewProblems } from './dist/crew/validate.js';
               import { loadCrewFile } from './dist/crew/hydrate.js';
+              import { asCrewSource } from './dist/crew/hydrate.js';
               import { profileProblems } from './dist/profiles/marketplace.js';
               const f = '$f';
               const kind = '$kind';
@@ -73,9 +78,14 @@ jobs:
                 problems = profileProblems(item, path.dirname(f));
               } else if (kind === 'crew') {
                 // Hydrate the folder-standard manifest first; PA043–PA047 run
-                // against the hydrated definition, PA047 against the folder.
+                // against the hydrated definition, PA047/PA048 against the
+                // folder and the raw source manifest.
                 const crew = await loadCrewFile(f);
-                problems = crewProblems(crew);
+                problems = crewProblems(crew, {
+                  crewDir: path.dirname(f),
+                  workerEntries: asCrewSource(JSON.parse(fs.readFileSync(f, 'utf8'))).members,
+                  source: JSON.parse(fs.readFileSync(f, 'utf8')),
+                });
               } else {
                 problems = ['unrecognized marketplace item shape'];
               }
@@ -100,7 +110,7 @@ jobs:
             for (const f of changed) {
               const item = JSON.parse(fs.readFileSync(f, "utf8"));
               const id = item.profile?.slug ?? item.crew?.id ?? item.id;
-              const rel = f.replace(".marketplace/items/", "");
+              const rel = f.replace(".marketplace/profiles/", "").replace(".marketplace/crews/", "");
               const expectedName = rel.endsWith("/profile.json")
                 ? rel.replace(/\/profile\.json$/, "")
                 : rel.endsWith("/crew.json")

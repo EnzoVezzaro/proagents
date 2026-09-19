@@ -1,0 +1,1 @@
+Remediation executes only after a recorded human approval per gated tool call.

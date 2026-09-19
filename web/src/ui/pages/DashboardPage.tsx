@@ -24,7 +24,7 @@ export function DashboardPage(props: { ctx: AppCtx; user: { login: string } | nu
             .map(async (i) => {
               // Folder standard first (crew.json for crews, profile.json for
               // profiles), flat legacy fallback.
-              const base = catalogUrl(`items/${i.id}/`);
+              const base = catalogUrl(`${i.kind === "profile" ? "profiles" : "crews"}/${i.id}/`);
               for (const rel of ["crew.json", "profile.json", `../${i.id}.json`]) {
                 const res = await fetch(new URL(rel, base).href);
                 if (!res.ok) continue;

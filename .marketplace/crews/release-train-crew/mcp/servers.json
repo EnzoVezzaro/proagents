@@ -1,0 +1,12 @@
+[
+  {
+    "name": "github",
+    "transport": "http",
+    "url": "https://api.githubcopilot.com/mcp/",
+    "allowedTools": [
+      "get_file_contents",
+      "list_commits",
+      "create_pull_request"
+    ]
+  }
+]

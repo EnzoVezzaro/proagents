@@ -1,0 +1,1 @@
+schema publishes schema-design.md before any pipeline or serving work starts.

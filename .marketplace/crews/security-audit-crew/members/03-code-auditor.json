@@ -1,0 +1,30 @@
+{
+  "profile": "security-engineer",
+  "role": "reviewer",
+  "name": "Code Security Auditor",
+  "permissions": {
+    "read": "repo",
+    "write": "none",
+    "production": "none",
+    "secrets": "none",
+    "tools": [
+      "read_file",
+      "grep",
+      "git_diff"
+    ],
+    "approvalGates": []
+  },
+  "mcpServers": [],
+  "context": [
+    {
+      "framework": "filesystem",
+      "scope": "src/**"
+    }
+  ],
+  "receivesFrom": [
+    "threat-modeler"
+  ],
+  "emits": [
+    "code-findings.md"
+  ]
+}

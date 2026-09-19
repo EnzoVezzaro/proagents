@@ -18,7 +18,7 @@ repo, and any item pulls into your repository with one command.
 | Piece | Where | What it is |
 |---|---|---|
 | Marketplace app | [`/proagents/`](https://enzovezzaro.github.io/proagents/) | Static SPA (React + Vite) deployed to GitHub Pages — runs entirely in your browser |
-| Catalog | `.marketplace/catalog.json` + `.marketplace/items/*.json` | **Git-as-database**: the repo itself is the data layer; every listing is a reviewable JSON file, and Pages serves reads |
+| Catalog | `.marketplace/catalog.json` + `.marketplace/profiles/` + `.marketplace/crews/` | **Git-as-database**: the repo itself is the data layer; every listing is a reviewable JSON file, and Pages serves reads |
 | CLI | `proagent equip <slug>` · `proagent crew …` | the courier: pulls a spec (profile or crew) and hands it to your harness |
 | Installer | `.agents/skills/<profile>/` + instructions block · `.agents/crews/<id>/` + `.mcp.json` | the on-disk layout any agent runtime can execute |
 
@@ -50,10 +50,10 @@ proagent compile security-engineer --target codex # explicit harness
 
 ### Remote vs local equip
 
-`npx proagent equip <slug>` resolves in order: your repo's `.marketplace/items/` checkout →
+`npx proagent equip <slug>` resolves in order: your repo's `.marketplace/profiles/` checkout →
 the packaged snapshot shipped with the npm package → the remote catalog (fetched from the
 catalog repo). Consequence: a profile you just built **works locally immediately** (drop
-the item folder in `.marketplace/items/`), but the same one-liner only works remotely for
+the item folder in `.marketplace/profiles/`), but the same one-liner only works remotely for
 other people **after the profile is merged into the catalog repo** — which is exactly what
 publishing does.
 
@@ -81,18 +81,25 @@ Crews follow the same folder standard as profiles — the manifest is an index,
 the folders are the source:
 
 ```
-.marketplace/items/<crew-id>/
+.marketplace/crews/<crew-id>/
 ├── crew.json                          # the index: version, crew metadata, section paths
-├── workers/<worker-id>/
-│   ├── worker.json                    # role, permissions, mcp, context, edges
-│   └── instructions.md                # the worker's prose (what used to be inline)
-├── mcp/servers.json                   # crew-level MCP servers
-└── graph.json                         # { handoffs, entryPoints }
+├── mission/01-mission.md              # why the team exists
+├── members/NN-<member-id>.json        # profile bindings (CrewMemberSource)
+├── coordination/NN-*.md               # how members coordinate and decide
+├── tasks/NN-*.md                      # the units of work each member owns
+├── workflows/NN-*.md                  # end-to-end team workflows
+├── handoffs/NN-*.md                   # per-edge handoff contracts (frontmatter)
+├── rules/NN-*.md                      # team-level normative rules
+├── verification/NN-*.md               # how the crew verifies its output
+└── mcp/servers.json                   # crew-level MCP servers
 ```
 
-Edit a worker by editing its `worker.json` / `instructions.md`; add a worker by
-adding a folder and listing it in `crew.json`. The CLI, SPA and CI all hydrate
-the paths at load time — same model as `profile.json`.
+Every member binds an existing profile (`profile` field in its member file) —
+expertise, methods and rules come from the profile, never from the crew;
+permissions are explicit per member and never inherited. Edit the team by
+editing the section files; add a member by adding a `members/NN-<id>.json`
+binding and listing it in `crew.json`. The CLI, SPA and CI all hydrate the
+paths at load time — same model as `profile.json`.
 
 Crews are also held to the **subagent standards** (the crew-side form of the
 PA001–PA013 architecture rules), enforced by the validator at publish and PR
@@ -102,8 +109,10 @@ time:
 - **PA044**: secret access without approval gates
 - **PA045**: an orphaned worker that exchanges no artifacts with the graph
 - **PA046**: a worker receiving from more than 5 upstreams
-- **PA047** (error): a worker manifest path that is missing, unloaded, or
-  living in a folder that doesn't match the worker id
+- **PA047** (error): a member file that is missing, did not load, or whose
+  filename stem matches no member id/profile
+- **PA048** (error): a declared section file (mission, members, tasks, …)
+  that cannot be loaded from the crew folder
 
 ## Install a crew (the one-liner)
 
@@ -190,7 +199,7 @@ Marketplace submissions are gated by CI on two paths:
 
 1. **Pull request (recommended — used by the profile builder's *Ship* tab).** Sign in with
    GitHub, press **Publish via pull request**: the app creates a branch
-   (`proagent-profile/<slug>`), commits `items/<slug>.json` + the catalog index, and opens
+   (`proagent-profile/<slug>`), commits `profiles/<slug>/profile.json` + the catalog index, and opens
    a PR. The `Marketplace PR validation` workflow validates every changed item with the
    same deterministic validator and checks index consistency. Contributors without push
    access are supported automatically (the branch lands on a fork). A maintainer merge
@@ -301,10 +310,11 @@ proagent profile validate my-profile.json # must pass
 proagent profile submit my-profile.json   # files the proposal issue; CI validates it
 ```
 
-A maintainer then comments `/publish` on the issue, which commits `items/<id>.json` and
-updates `catalog.json` — the next Pages build serves them. Direct commits are still
-available to maintainers via `proagent crew publish` / `proagent profile publish`
-(contents:write), but proposals are the reviewable, auditable default.
+A maintainer then comments `/publish` on the issue, which commits the item folder
+(`profiles/<slug>/` or `crews/<id>/`) and updates `catalog.json` — the next Pages build
+serves them. Direct commits are still available to maintainers via `proagent crew
+publish` / `proagent profile publish` (contents:write), but proposals are the
+reviewable, auditable default.
 
 ## Known limitations
 

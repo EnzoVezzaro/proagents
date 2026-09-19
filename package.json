@@ -55,7 +55,8 @@
   },
   "files": [
     "dist",
-    ".marketplace/items",
+    ".marketplace/profiles",
+    ".marketplace/crews",
     ".marketplace/catalog.json",
     ".agents/skills/proagent",
     "README.md",

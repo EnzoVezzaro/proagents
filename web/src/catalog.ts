@@ -12,7 +12,7 @@
 
 const SITE_ROOT = new URL(import.meta.env.BASE_URL, window.location.href).href;
 
-/** Full URL of a catalog file: "catalog.json" or "items/<id>.json". */
+/** Full URL of a catalog file: "catalog.json", "profiles/<id>/…", "crews/<id>/…". */
 export function catalogUrl(file: string): string {
   return new URL(`.marketplace/${file}`, SITE_ROOT).href;
 }

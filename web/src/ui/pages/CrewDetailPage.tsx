@@ -8,13 +8,13 @@ import { hydrateCrew } from "../../crew-hydrate.js";
 import { ProfileDetail } from "./ProfileDetailPage.js";
 
 function itemUrl(id: string): string {
-  // Folder layout first (items/<id>/profile.json), flat legacy fallback.
-  return catalogUrl(`items/${id}/profile.json`);
+  // Profile folder standard (profiles/<id>/profile.json).
+  return catalogUrl(`profiles/${id}/profile.json`);
 }
 
 function crewUrl(id: string): string {
-  // Crew folder standard first (items/<id>/crew.json), flat legacy fallback.
-  return catalogUrl(`items/${id}/crew.json`);
+  // Crew folder standard (crews/<id>/crew.json).
+  return catalogUrl(`crews/${id}/crew.json`);
 }
 
 export function CrewDetailPage(props: { id: string; ctx: AppCtx }): React.JSX.Element {
@@ -25,11 +25,11 @@ export function CrewDetailPage(props: { id: string; ctx: AppCtx }): React.JSX.El
 
   useEffect(() => {
     let cancelled = false;
-    // Kind dispatch: the catalog index names the kind; the item file may be a
-    // profile manifest or a crew definition. Folder standard first for both:
-    // items/<id>/profile.json and items/<id>/crew.json, flat legacy fallback.
+    // Kind dispatch: the catalog index names the kind; the item file is a
+    // profile manifest (profiles/<id>/profile.json) or a crew definition
+    // (crews/<id>/crew.json).
     const loadItem = async (): Promise<{ item: unknown; base: string }> => {
-      for (const url of [itemUrl(id), crewUrl(id), catalogUrl(`items/${id}.json`)]) {
+      for (const url of [itemUrl(id), crewUrl(id)]) {
         const res = await fetch(url);
         if (res.ok) return { item: await res.json(), base: url.replace(/[^/]*$/, "") };
         if (res.status !== 404) throw new Error(`HTTP ${res.status}`);

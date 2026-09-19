@@ -1,0 +1,31 @@
+{
+  "profile": "qa-engineer",
+  "role": "verifier",
+  "name": "QA Verifier",
+  "permissions": {
+    "read": "repo",
+    "write": "none",
+    "production": "none",
+    "secrets": "none",
+    "tools": [
+      "read_file",
+      "run_tests"
+    ],
+    "approvalGates": []
+  },
+  "mcpServers": [],
+  "context": [
+    {
+      "framework": "filesystem",
+      "scope": "tests/**, web/**"
+    }
+  ],
+  "receivesFrom": [
+    "perf-auditor",
+    "a11y-auditor",
+    "fixer"
+  ],
+  "emits": [
+    "verification-report.md"
+  ]
+}

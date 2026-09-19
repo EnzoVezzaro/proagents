@@ -1,0 +1,52 @@
+{
+  "version": "1.0.0",
+  "crew": {
+    "id": "incidere-incident-response",
+    "name": "Incidere — Incident Response",
+    "description": "Three-worker incident response crew: triage the signal, draft stakeholder comms, execute approval-gated mitigation. Reads your repo's runbooks and incident history for context.",
+    "author": "proagents",
+    "tags": [
+      "incident-response",
+      "sre",
+      "on-call",
+      "comms",
+      "multi-agent"
+    ]
+  },
+  "mission": "mission/01-mission.md",
+  "members": [
+    "members/01-triage.json",
+    "members/02-remediation.json",
+    "members/03-comms.json"
+  ],
+  "coordination": [
+    "coordination/01-triage-runs-first-both-comms-and-remediation.md",
+    "coordination/02-comms-drafts-updates-independently-of-mitigat.md",
+    "coordination/03-remediation-executes-only-after-a-recorded-hu.md"
+  ],
+  "tasks": [
+    "tasks/01-triage-owns-investigation-logs-metrics-rec.md",
+    "tasks/02-comms-owns-stakeholder-updates-status-page.md",
+    "tasks/03-remediation-owns-the-mitigation-plan-and-the.md"
+  ],
+  "workflows": [
+    "workflows/01-standard-run-triage-triage-summary-md-co.md"
+  ],
+  "handoffs": [
+    "handoffs/01-triage-to-comms.md",
+    "handoffs/02-triage-to-remediation.md"
+  ],
+  "rules": [
+    "rules/01-triage-quotes-evidence-for-every-claim-file.md",
+    "rules/02-comms-never-speculates-beyond-the-triage-summ.md",
+    "rules/03-remediation-s-restartservice-and-runbookexec.md"
+  ],
+  "verification": [
+    "verification/01-triage-summary-md-cites-evidence-for-every-se.md",
+    "verification/02-mitigation-actions-map-to-approved-runbook-st.md",
+    "verification/03-every-gated-tool-call-has-a-recorded-human-ap.md"
+  ],
+  "mcp": "mcp/servers.json",
+  "createdAt": "2026-09-15T00:00:00.000Z",
+  "updatedAt": "2026-09-15T00:00:00.000Z"
+}

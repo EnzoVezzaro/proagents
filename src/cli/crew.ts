@@ -58,7 +58,12 @@ function remoteOpts(flags: Record<string, string | boolean>): { repo: string; re
   return { repo, ref, token };
 }
 
-export async function runCrewCommand(args: string[], flags: Record<string, string | boolean>): Promise<void> {
+export async function runCrewCommand(
+  args: string[],
+  flags: Record<string, string | boolean>,
+  /** Repeatable flags in order — `crew create --role` is order-sensitive. */
+  flagList: Map<string, string[]> = new Map(),
+): Promise<void> {
   const sub = args[0];
   const rest = args.slice(1);
   const json = flags.json === true;
@@ -67,13 +72,15 @@ export async function runCrewCommand(args: string[], flags: Record<string, strin
     case "list":
       return crewList(flags, json);
     case "validate":
-      return crewValidate(rest[0], json);
+      return crewValidate(rest[0], flags, json);
     case "show":
       return crewShow(rest[0], flags, json);
     case "install":
       return crewInstall(rest[0], flags, json);
     case "build":
       return crewBuild(rest[0], flags, json);
+    case "create":
+      return crewCreate(rest, flags, json, flagList.get("role") ?? (typeof flags.role === "string" ? [flags.role] : []));
     case "publish":
       return crewPublish(rest[0], flags, json);
     case "submit":
@@ -124,6 +131,155 @@ async function crewBuild(file: string | undefined, flags: Record<string, string 
   console.log("Crew is ready. Point your agent runtime at .agents/crews/ and .mcp.json.");
 }
 
+/**
+ * `proagent crew create <profile-slug>…` — compose existing profiles into a
+ * custom crew. Generates only the crew-specific artifacts (mission, members,
+ * coordination, tasks, workflows, handoffs, rules, verification, tools) in
+ * .marketplace/crews/<id>/; profiles are referenced, never copied. Members
+ * carry explicit permission models (read-only by default); the pipeline is a
+ * simple chain in argument order with a named-artifact handoff per edge.
+ */
+async function crewCreate(
+  slugs: string[],
+  flags: Record<string, string | boolean>,
+  json: boolean,
+  roleFlags: string[] = [],
+): Promise<void> {
+  const unique = [...new Set(slugs.filter((s) => typeof s === "string" && s.trim()))];
+  if (unique.length < 2) {
+    fail("Usage: proagent crew create <profile-slug> <profile-slug> […]  (at least 2 members)");
+  }
+
+  // Resolve every profile first — a crew member without a resolvable
+  // profession is a broken composition, never a silent skip.
+  const resolve = crewProfileResolver();
+  const profiles: Array<{ slug: string; manifest: ProfileManifest }> = [];
+  for (const slug of unique) {
+    const manifest = await resolve(slug);
+    if (!manifest) {
+      fail(
+        `cannot resolve profile "${slug}" — equip it, place it in .marketplace/profiles/, or check the spelling\n` +
+          `  (available: proagent profile list)`,
+      );
+    }
+    profiles.push({ slug, manifest: manifest! });
+  }
+
+  // Roles: every --role occurrence applies in order to the members;
+  // members beyond the list default to "implementer".
+  const name = typeof flags.name === "string" && flags.name ? flags.name : `${profiles.map((p) => p.manifest.profile.name).join(" + ")} Crew`;
+  const id =
+    (typeof flags.id === "string" && flags.id) ||
+    slugifyCrewName(name);
+  if (!/^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(id)) {
+    fail(`crew id "${id}" must be a lowercase slug (a-z, 0-9, dashes)`);
+  }
+  const description =
+    (typeof flags.description === "string" && flags.description) ||
+    `Custom ${profiles.length}-member crew composed from profiles: ${profiles.map((p) => p.slug).join(", ")}.`;
+
+  // Default pipeline: chain in argument order. Member 1 starts; each later
+  // member receives the previous member's artifact.
+  const members = profiles.map((p, i) => ({
+    profile: p.slug,
+    role: roleFlags[i] ?? "implementer",
+    // Explicit permission model — read-only by default; the operator tightens
+    // or gates as needed. Composition never inherits trust implicitly.
+    permissions: {
+      read: "repo" as const,
+      write: "none" as const,
+      production: "none" as const,
+      secrets: "none" as const,
+      tools: ["read_file", "grep", "run_tests"],
+      approvalGates: [] as string[],
+    },
+    mcpServers: [],
+    context: [],
+    receivesFrom: i === 0 ? [] : [profiles[i - 1]!.slug],
+    emits: [`handoff-${String(i + 1).padStart(2, "0")}.md`],
+  }));
+  const handoffs = members.slice(1).map((m, i) => ({
+    from: members[i]!.profile,
+    to: m.profile,
+    artifact: members[i]!.emits[0]!,
+  }));
+
+  const now = "2026-01-01T00:00:00.000Z"; // deterministic default; bump on real publish
+  const crew: CrewDefinition = {
+    id,
+    name,
+    version: "0.1.0",
+    description,
+    author: "local",
+    tags: ["custom", "profile-backed", "multi-agent"],
+    workers: members.map((m, i) => ({
+      id: m.profile,
+      name: profiles[i]!.manifest.profile.name,
+      role: m.role,
+      description: `Operates as the ${m.profile} profile; role in this crew: ${m.role}.`,
+      profile: m.profile,
+      permissions: m.permissions,
+      mcpServers: m.mcpServers,
+      context: m.context,
+      instructions: "",
+      receivesFrom: m.receivesFrom,
+      emits: m.emits,
+    })),
+    mcpServers: [],
+    handoffs,
+    entryPoints: [members[0]!.profile],
+    mission: `The ${name} exists to ${description.replace(/^Custom /, "")} Members operate as their bound profiles; work moves through named-artifact handoffs in pipeline order.`,
+    coordination: [
+      "Members coordinate exclusively through named-artifact handoffs — never a shared pool.",
+      "A member that cannot meet its handoff contract escalates instead of improvising.",
+    ],
+    tasks: members.map((m) => `${m.profile} owns the ${m.role} work for this crew and emits ${m.emits[0]}.`),
+    workflows: [
+      "Standard run: start at the entry member, follow handoff edges to the last member, humans decide at every approval gate.",
+    ],
+    rules: [
+      "Every member stays inside its permission model.",
+      "Handoff artifacts are named and reviewable — no ambient context.",
+    ],
+    verification: [
+      "Each handoff artifact exists and names its producer.",
+      "No member exceeded its permission model (checked against the agent.json contracts).",
+    ],
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  const problems = crewProblems(crew);
+  if (problems.length > 0) {
+    fail(`generated crew does not pass validation (this is a bug): ${problems.join("; ")}`);
+  }
+
+  const { writeCrewFolder } = await import("../crew/hydrate.js");
+  const dir = path.join(process.cwd(), ".marketplace", "crews", id);
+  const written = await writeCrewFolder(crew, dir);
+
+  if (json) return jsonOut({ status: "ok", crewId: id, version: crew.version, dir, files: written });
+  console.log(`✓ Created crew ${id}@${crew.version} at ${dir}:`);
+  for (const f of written) console.log(`  + ${f}`);
+  console.log("");
+  console.log("Next:");
+  console.log(`  proagent crew validate ${dir}        # gate before publishing`);
+  console.log(`  proagent crew build ${dir}/crew.json # install into this repo`);
+  console.log(`  proagent crew submit ${dir}/crew.json # propose it to the marketplace`);
+}
+
+function slugifyCrewName(name: string): string {
+  return (
+    name
+      .toLowerCase()
+      .replace(/\s+crew$/i, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 60)
+      .replace(/-+$/g, "") || "custom-crew"
+  );
+}
+
 function printCrewHelp(): void {
   console.log(`
 proagent crew — build, publish and install agent crews
@@ -137,16 +293,27 @@ Subcommands:
     --ref branch            Catalog branch (default main)
     --token <gh-token>      Token for private catalogs (or GITHUB_TOKEN env)
   show <id>                 Print a crew definition (workers, permissions, MCP)
-  validate <crew.json|dir>  Validate a crew manifest (folder standard hydrated) —
-                            subagent standards PA043–PA047 are enforced
+  validate <id|crew.json|dir> — Validate a crew (folder standard hydrated) —
+                            subagent standards PA043–PA048 are enforced
   install <id>              Install a crew from the catalog into the current repo
   build <crew.json>         Install a crew from a local manifest (builder output
                             or folder-standard crew.json)
     --file <crew.json>      Explicit manifest path
     --dry-run               Show the plan without writing
     --repo / --ref / --token
+  create <profile-slug>…    Compose existing profiles into a custom crew: generates
+                            the crew folder (crew.json + mission/ + members/ +
+                            coordination/ + tasks/ + handoffs/ + rules/ +
+                            verification/ + tools/) in the current repo's
+                            .marketplace/crews/. Every member binds a profile —
+                            the crew never duplicates profession content.
+    --name <Crew Name>      Crew name (default: derived from the slugs)
+    --id <crew-slug>        Crew id (default: derived from the name)
+    --description <text>    One-line description
+    --role <member-role>    Role for the next member in pipeline order (one per
+                            member, applied in argument order)
   publish <crew.json>       Commit a crew to the catalog (folder-standard layout:
-                            crew.json + workers/ + mcp/ + graph.json)
+                            crew.json + members/ + mission/ + … + mcp/)
     --repo / --ref / --token (required token with contents:write)
   submit <crew.json>        File a marketplace proposal issue (recommended)
     --repo owner/name       Target repo (default: the marketplace repo)
@@ -174,16 +341,9 @@ async function resolveCrew(idOrFile: string, flags: Record<string, string | bool
   } catch {
     // fall through
   }
-  // Local marketplace checkout: folder standard first, then legacy flat.
+  // Local marketplace checkout: crews/<id>/crew.json (folder standard).
   try {
-    return await loadCrewFile(path.join(process.cwd(), ".marketplace", "items", idOrFile, "crew.json"));
-  } catch {
-    // fall through to flat
-  }
-  try {
-    return JSON.parse(
-      await fs.readFile(path.join(process.cwd(), ".marketplace", "items", `${idOrFile}.json`), "utf8"),
-    ) as CrewDefinition;
+    return await loadCrewFile(path.join(process.cwd(), ".marketplace", "crews", idOrFile, "crew.json"));
   } catch {
     // fall through to remote
   }
@@ -208,12 +368,22 @@ async function crewList(flags: Record<string, string | boolean>, json: boolean):
   if (profileCount > 0) console.log(`  (…and ${profileCount} profile(s) — see: proagent profile list)`);
 }
 
-async function crewValidate(target: string | undefined, json: boolean): Promise<void> {
-  if (!target) fail("Usage: proagent crew validate <crew.json | crew-folder>");
+async function crewValidate(target: string | undefined, flags: Record<string, string | boolean>, json: boolean): Promise<void> {
+  if (!target) fail("Usage: proagent crew validate <id | crew.json | crew-folder>");
+  // Resolve like show/install: a catalog id (local checkout, then remote), a
+  // folder holding crew.json, or a manifest/inline definition file.
+  let crew: CrewDefinition;
+  if (!target.endsWith(".json") && !target.endsWith(".yaml")) {
+    try {
+      crew = await resolveCrew(target, flags);
+      return reportCrewValidation(crew, target, json);
+    } catch {
+      // fall through to file handling below
+    }
+  }
   // Folder standard (a crew.json manifest or a folder containing one) is
   // hydrated — path entries load their content — then validated.
   const manifestPath = target.endsWith("crew.json") ? target : path.join(target, "crew.json");
-  let crew: CrewDefinition;
   try {
     crew = await loadCrewFile(manifestPath);
   } catch {
@@ -225,10 +395,17 @@ async function crewValidate(target: string | undefined, json: boolean): Promise<
       fail(`cannot read crew manifest: ${(err as Error).message}`);
     }
   }
+  reportCrewValidation(crew, target, json);
+}
+
+function reportCrewValidation(crew: CrewDefinition, source: string, json: boolean): void {
   const problems = crewProblems(crew);
   const warnings = crewWarnings(crew);
   if (problems.length > 0) process.exitCode = 1; // non-zero even in --json mode
-  if (json) return jsonOut({ status: problems.length === 0 ? "ok" : "invalid", crew: crew.id, version: crew.version, problems, warnings });
+  if (json) {
+    jsonOut({ status: problems.length === 0 ? "ok" : "invalid", crew: crew.id, version: crew.version, problems, warnings });
+    return;
+  }
   if (problems.length === 0) {
     console.log(`✓ Crew "${crew.id}" v${crew.version} is valid (${crew.workers.length} workers, ${crew.mcpServers.length} MCP servers).`);
     for (const w of warnings) console.log(`  ⚠ ${w}`);
@@ -278,7 +455,9 @@ async function crewPublish(file: string | undefined, flags: Record<string, strin
   if (!file) fail("Usage: proagent crew publish <file.json>");
   let crew: CrewDefinition;
   try {
-    crew = JSON.parse(await fs.readFile(file, "utf8")) as CrewDefinition;
+    // Hydrates folder-standard manifests (crew.json + members/ + …); inline
+    // definitions pass through — publish accepts both shapes.
+    crew = await loadCrewFile(file);
   } catch (err) {
     fail(`cannot read crew file: ${(err as Error).message}`);
   }
@@ -307,9 +486,15 @@ async function crewSubmit(file: string | undefined, flags: Record<string, string
   if (!file) fail("Usage: proagent crew submit <file.json>");
   let crew: CrewDefinition;
   try {
-    crew = JSON.parse(await fs.readFile(file, "utf8")) as CrewDefinition;
-  } catch (err) {
-    fail(`cannot read crew file: ${(err as Error).message}`);
+    // Hydrates folder-standard manifests; inline definitions pass through.
+    crew = await loadCrewFile(file);
+  } catch {
+    // Flat inline definition fallback.
+    try {
+      crew = JSON.parse(await fs.readFile(file, "utf8")) as CrewDefinition;
+    } catch (err) {
+      fail(`cannot read crew file: ${(err as Error).message}`);
+    }
   }
   const problems = crewProblems(crew);
   if (problems.length > 0) fail(`refusing to submit an invalid crew: ${problems.join("; ")}`);

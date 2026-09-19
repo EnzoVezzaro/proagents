@@ -1,0 +1,1 @@
+reviewer owns deep diff review: security boundaries, permission drift, architectural fit.

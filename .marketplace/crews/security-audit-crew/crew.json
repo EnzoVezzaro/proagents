@@ -1,0 +1,58 @@
+{
+  "version": "1.0.0",
+  "crew": {
+    "id": "security-audit-crew",
+    "name": "Security Audit Crew",
+    "description": "Four-worker security audit crew, profile-backed: a systems architect scopes the audit, a security engineer threat-models, a second security engineer reviews the code against the model, and a privacy engineer covers PII flows. Read-only on the repo — the audit report is a proposal for humans.",
+    "author": "proagents",
+    "tags": [
+      "security",
+      "privacy",
+      "audit",
+      "threat-modeling",
+      "profile-backed",
+      "multi-agent"
+    ]
+  },
+  "mission": "mission/01-mission.md",
+  "members": [
+    "members/01-scout.json",
+    "members/02-threat-modeler.json",
+    "members/03-code-auditor.json",
+    "members/04-privacy-auditor.json"
+  ],
+  "coordination": [
+    "coordination/01-scout-publishes-audit-scope-md-auditors-cons.md",
+    "coordination/02-code-auditor-maps-every-finding-to-a-modeled.md",
+    "coordination/03-privacy-auditor-synthesizes-the-final-report.md"
+  ],
+  "tasks": [
+    "tasks/01-scout-owns-the-evidence-based-surface-map-en.md",
+    "tasks/02-threat-modeler-owns-stride-per-boundary-analy.md",
+    "tasks/03-code-auditor-owns-code-level-findings-ranked.md",
+    "tasks/04-privacy-auditor-owns-pii-flow-tracing-and-the.md"
+  ],
+  "workflows": [
+    "workflows/01-standard-run-scope-threat-model-code-aud.md"
+  ],
+  "handoffs": [
+    "handoffs/01-scout-to-threat-modeler.md",
+    "handoffs/02-scout-to-privacy-auditor.md",
+    "handoffs/03-threat-modeler-to-code-auditor.md",
+    "handoffs/04-threat-modeler-to-privacy-auditor.md",
+    "handoffs/05-code-auditor-to-privacy-auditor.md"
+  ],
+  "rules": [
+    "rules/01-read-only-on-the-repo-no-writes-no-producti.md",
+    "rules/02-never-quote-secret-values-reference-by-loca.md",
+    "rules/03-findings-cite-file-line-the-owasp-category.md"
+  ],
+  "verification": [
+    "verification/01-threat-model-covers-every-trust-boundary-in-a.md",
+    "verification/02-code-findings-map-to-modeled-threats-or-carry.md",
+    "verification/03-audit-report-md-deduplicates-and-ranks-withou.md"
+  ],
+  "mcp": "mcp/servers.json",
+  "createdAt": "2026-09-18T00:00:00.000Z",
+  "updatedAt": "2026-09-18T00:00:00.000Z"
+}

@@ -1,0 +1,32 @@
+{
+  "profile": "frontend-engineer",
+  "role": "implementer",
+  "name": "Frontend Engineer",
+  "permissions": {
+    "read": "repo",
+    "write": "scoped",
+    "production": "none",
+    "secrets": "none",
+    "tools": [
+      "read_file",
+      "write_file",
+      "run_tests",
+      "grep"
+    ],
+    "approvalGates": []
+  },
+  "mcpServers": [],
+  "context": [
+    {
+      "framework": "filesystem",
+      "scope": "web/**, src/ui/**, tests/**"
+    }
+  ],
+  "receivesFrom": [
+    "perf-auditor",
+    "a11y-auditor"
+  ],
+  "emits": [
+    "fix-notes.md"
+  ]
+}

@@ -13,7 +13,7 @@ import { isPathEntry, validateProfile } from "./validation.js";
 
 /**
  * Profile registry — deterministic loading and discovery of Professional
- * Agent Profiles. Marketplace-only: the Git-backed `.marketplace/items/`
+ * Agent Profiles. Marketplace-only: the Git-backed `.marketplace/profiles/`
  * folders are the single source (shipped with the npm package and
  * overridable by a local checkout); crews/agents are marketplace items of
  * their own kinds.
@@ -29,15 +29,17 @@ import { isPathEntry, validateProfile } from "./validation.js";
 
 /**
  * Profiles shipped with the npm package are the packaged marketplace items.
- * `dist/profiles/registry.js` → `<pkgroot>/.marketplace/items`.
+ * `dist/profiles/registry.js` → `<pkgroot>/.marketplace/profiles`.
  */
 const BUILTIN_DIR = path.resolve(
   path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1")),
-  "../../.marketplace/items",
+  "../../.marketplace/profiles",
 );
 
-/** Local checkout of the Git-backed marketplace. */
-export const MARKETPLACE_ITEMS_DIR = ".marketplace/items";
+/** Local checkout of the Git-backed marketplace (profile slice). */
+export const MARKETPLACE_ITEMS_DIR = ".marketplace/profiles";
+/** Back-compat alias for the profile slice of the marketplace. */
+export const MARKETPLACE_PROFILES_DIR = MARKETPLACE_ITEMS_DIR;
 
 export interface ProfileEntry {
   manifest: ProfileManifest;
@@ -283,12 +285,12 @@ async function listManifestCandidates(dir: string): Promise<string[]> {
 /**
  * List all discoverable profiles. Sources, in precedence order per slug
  * The marketplace is the single source of truth. A repo's own
- * ./.marketplace/items checkout IS the marketplace (it is what the repo
+ * ./.marketplace/profiles checkout IS the marketplace (it is what the repo
  * manages via PRs), so it wins; the packaged snapshot shipped with the npm
  * package fills gaps only:
- *   1. marketplace — a ./.marketplace/items checkout in the current repo
+ *   1. marketplace — a ./.marketplace/profiles checkout in the current repo
  *      (skipped when it is the same directory as the packaged source)
- *   2. builtin — the packaged .marketplace/items shipped with the package
+ *   2. builtin — the packaged .marketplace/profiles shipped with the package
  * Deterministic ordering by slug. No network: remote items are fetched
  * explicitly (see fetchProfileManifest), never during discovery.
  */
@@ -342,9 +344,9 @@ export async function resolveProfiles(slugs: string[], root: string = process.cw
 
 /**
  * Fetch a profile manifest from the remote Git-backed marketplace catalog
- * and hydrate it over HTTP: folder layout first (items/<id>/profile.json,
- * every section path fetched from items/<id>/…), then the legacy flat
- * layout (items/<id>.json, inline — nothing to hydrate). Mirrors fetchRaw
+ * and hydrate it over HTTP: folder layout first (profiles/<id>/profile.json,
+ * every section path fetched from profiles/<id>/…), then the legacy flat
+ * layout (profiles/<id>.json, inline — nothing to hydrate). Mirrors fetchRaw
  * in crew/registry.ts: retry unauthenticated on 404, since an invalid token
  * makes GitHub raw answer 404 even for public files.
  */

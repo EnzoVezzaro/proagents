@@ -120,6 +120,18 @@ export interface CrewDefinition {
   handoffs: CrewHandoff[];
   /** Entry point worker(s) — where work starts. */
   entryPoints: string[];
+  /** Why the team exists (hydrated from mission/ files). */
+  mission?: string;
+  /** How members coordinate and decide (hydrated from coordination/ files). */
+  coordination?: string[];
+  /** The units of work each member owns (hydrated from tasks/ files). */
+  tasks?: string[];
+  /** End-to-end team workflows (hydrated from workflows/ files). */
+  workflows?: string[];
+  /** Team-level normative rules (hydrated from rules/ files). */
+  rules?: string[];
+  /** How the crew verifies its own output (hydrated from verification/ files). */
+  verification?: string[];
   /** ISO date. */
   createdAt: string;
   updatedAt: string;
@@ -148,15 +160,48 @@ export type CrewWorkerSource = Omit<CrewWorker, "instructions"> & {
 };
 
 /**
- * Source shape of the folder-standard crew.json — every content field is a
- * path into the crew folder; hydration (crew/hydrate.ts) turns it into a
- * plain CrewDefinition:
+ * A crew member — the composition unit. A member binds an existing
+ * Professional Profile (its profession) to a pipeline role and an explicit
+ * permission model; expertise/methods/rules/verification come from the
+ * profile, never from the crew. Permissions are required: composition never
+ * inherits trust implicitly.
+ */
+export interface CrewMemberSource {
+  /** Profile slug this member operates as (marketplace or built-in). */
+  profile: string;
+  /** Pipeline role inside the crew, e.g. "schema-owner". */
+  role: string;
+  /** Optional explicit worker id; defaults to the profile slug (uniquified). */
+  id?: string;
+  /** Optional display name; defaults to the profile's name at install time. */
+  name?: string;
+  /** Explicit permission model — required, never inherited from the profile. */
+  permissions: CrewPermissions;
+  /** Names into crew.mcpServers. */
+  mcpServers?: string[];
+  /** Context frameworks scoped for this member. */
+  context?: CrewContext[];
+  /** Upstream members this one receives named artifacts from. */
+  receivesFrom?: string[];
+  /** Named artifacts this member emits downstream. */
+  emits?: string[];
+}
+
+/**
+ * Source shape of the folder-standard crew.json — the composition index.
+ * Every content field is a path into the crew folder; hydration
+ * (crew/hydrate.ts) turns it into a plain CrewDefinition:
  *
- *   items/<id>/crew.json                     this index
- *   items/<id>/workers/<w>/worker.json       per-worker contract
- *   items/<id>/workers/<w>/instructions.md   per-worker prose
- *   items/<id>/mcp/servers.json              crew-level MCP servers
- *   items/<id>/graph.json                    { handoffs, entryPoints }
+ *   crews/<id>/crew.json                     this index
+ *   crews/<id>/mission/01-mission.md         why the team exists
+ *   crews/<id>/members/NN-<slug>.json        profile bindings (CrewMemberSource)
+ *   crews/<id>/coordination/NN-*.md          how the team coordinates/decides
+ *   crews/<id>/tasks/NN-*.md                 the units of work each member owns
+ *   crews/<id>/workflows/NN-*.md             end-to-end team workflows
+ *   crews/<id>/handoffs/NN-*.md              per-edge handoff contracts
+ *   crews/<id>/rules/NN-*.md                 team-level normative rules
+ *   crews/<id>/verification/NN-*.md          how the crew verifies its output
+ *   crews/<id>/tools/requirements.md         crew-level tool requirements
  *
  * Inline shapes (full CrewDefinition, or CrewDefinitionSource with inline
  * workers/mcpServers/handoffs) are accepted everywhere a source is read, so
@@ -165,15 +210,32 @@ export type CrewWorkerSource = Omit<CrewWorker, "instructions"> & {
 export interface CrewDefinitionSource {
   version: string;
   crew: CrewMeta;
-  /** Paths to worker.json manifests, or inline worker objects. */
-  workers: string[] | CrewWorkerSource[];
+  /** Paths to member files (composition) or inline worker objects (legacy). */
+  members?: string[] | CrewMemberSource[];
+  /** Legacy/builders: paths to worker.json manifests, or inline workers. */
+  workers?: string[] | CrewWorkerSource[];
+  /** Path to the mission file (mission/01-mission.md). */
+  mission?: string;
+  /** Paths to coordination docs, or hydrated strings (builders). */
+  coordination?: string[];
+  /** Paths to task docs, or hydrated strings (builders). */
+  tasks?: string[];
+  /** Paths to workflow docs, or hydrated strings (builders). */
+  workflows?: string[];
+  /** Paths to handoff contracts, or inline handoff objects (legacy). */
+  handoffs?: string[] | CrewHandoff[];
+  /** Paths to team rules, or hydrated strings (builders). */
+  rules?: string[];
+  /** Paths to verification docs, or hydrated strings (builders). */
+  verification?: string[];
+  /** Path to the crew-level tool requirements (tools/requirements.md). */
+  tools?: string;
   /** Path to the crew-level MCP server list (mcp/servers.json). */
   mcp?: string;
   /** Inline MCP servers (builder/legacy). */
   mcpServers?: CrewMcpServer[];
-  /** Path to graph.json ({ handoffs, entryPoints }). */
+  /** Path to graph.json ({ handoffs, entryPoints }) — legacy layout. */
   graph?: string;
-  handoffs?: CrewHandoff[];
   entryPoints?: string[];
   /** ISO dates (deterministic default: epoch, never "now"). */
   createdAt?: string;
@@ -191,7 +253,7 @@ export interface MarketplaceCatalog {
   items: MarketplaceItem[];
 }
 
-/** Lightweight catalog entry (full definition lives in items/<id>.json). */
+/** Lightweight catalog entry (full definition lives in crews/<id>/crew.json). */
 export interface MarketplaceItem {
   id: string;
   name: string;

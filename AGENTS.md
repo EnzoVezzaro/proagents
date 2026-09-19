@@ -33,7 +33,8 @@ not a prompt generator.
    project — the app mounts as a client-only island on /marketplace; one
    package.json, one lockfile, one test runner; `scripts/assemble-site.mjs`
    is the single source of the Pages artifact layout.)
-7. **Canonical profiles are portable.** The marketplace (`.marketplace/items/`) is the
+7. **Canonical profiles are portable.** The marketplace (`.marketplace/profiles/` +
+   `.marketplace/crews/`) is the
    single source of profiles — the npm package ships it, and the profile schema never
    references a specific harness; only `src/adapters/` knows how to compile per target.
    Manifests use the folder standard: every section entry is a path into the item's

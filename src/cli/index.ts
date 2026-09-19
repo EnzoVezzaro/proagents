@@ -48,12 +48,22 @@ interface ParsedArgs {
   command: string;
   args: string[];
   flags: Record<string, string | boolean>;
+  /** Every `--flag value` occurrence in order — repeatable flags (e.g. crew
+   *  create --role) collapse to last-wins in `flags`, so order-sensitive
+   *  commands read from here instead. */
+  flagList: Map<string, string[]>;
 }
 
 function parseArgs(argv: string[]): ParsedArgs {
   const [command = "help", ...rest] = argv;
   const flags: Record<string, string | boolean> = {};
+  const flagList = new Map<string, string[]>();
   const args: string[] = [];
+  const pushValue = (key: string, value: string): void => {
+    const list = flagList.get(key);
+    if (list) list.push(value);
+    else flagList.set(key, [value]);
+  };
   for (let i = 0; i < rest.length; i++) {
     const token = rest[i] ?? "";
     if (token.startsWith("--")) {
@@ -61,6 +71,7 @@ function parseArgs(argv: string[]): ParsedArgs {
       const next = rest[i + 1];
       if (next !== undefined && !next.startsWith("--")) {
         flags[key] = next;
+        pushValue(key, next);
         i++;
       } else {
         flags[key] = true;
@@ -69,7 +80,7 @@ function parseArgs(argv: string[]): ParsedArgs {
       args.push(token);
     }
   }
-  return { command, args, flags };
+  return { command, args, flags, flagList };
 }
 
 function printHelp(): void {
@@ -78,6 +89,11 @@ proagent ${VERSION} — professional profiles for existing coding agents
 
 Usage:
   proagent <command> [options]
+
+Two paths, one catalog:
+  A) BUILD custom → proagent init → question/answer → build
+     (or scaffold directly: profile create / crew create)
+  B) EQUIP marketplace → equip <slug> / crew install <id>
 
 Profile commands:
   detect                    Detect coding-agent harnesses and capabilities
@@ -95,13 +111,15 @@ Agent-building commands:
   context frameworks        List available context frameworks
   spec                      Generate the agent architecture specification
   validate                  Validate the architecture (or --profiles)
-  build                     Generate deployable agent skills
+  build                     Compile the session into agent skills (default)
+    --kind profile          …or materialize it as a custom profile
+    --kind crew             …or as a custom crew (.marketplace/crews/)
   agents                    List agents in the generated architecture
   inspect                   Dump full session state (for agents/humans)
   improve                   Show or configure self-improvement
   benchmark                 Benchmark subcommands (proagent benchmark help)
-  crew                      Marketplace crews: list/show/validate/install/publish (proagent crew help)
-  profile                   Marketplace profiles: list/show/install/validate/publish/submit (proagent profile help)
+  crew                      Marketplace crews: create/list/show/validate/install/build/publish/submit (proagent crew help)
+  profile                   Marketplace profiles: create/list/show/install/validate/publish/submit (proagent profile help)
   help                      Show this help
 
 Global options:
@@ -382,6 +400,14 @@ async function cmdBuild(flags: Record<string, string | boolean>, args: string[])
     return;
   }
 
+  // `build --kind profile|crew` materializes the derived architecture as a
+  // custom marketplace item instead of agent skills (the default).
+  if (flags.kind === "profile" || flags.kind === "crew") {
+    const { buildKindProfile, buildKindCrew } = await import("./build-kind.js");
+    if (flags.kind === "profile") return buildKindProfile(arch, flags, isJson(flags));
+    return buildKindCrew(arch, flags, isJson(flags));
+  }
+
   const runtime = detectRuntimeCapabilities();
   const gaps = capabilityGaps(arch.runtime, runtime).filter((g) => g.required && !g.available);
   const outDir = typeof flags.output === "string" ? flags.output : path.join(".agents", "skills");
@@ -602,7 +628,7 @@ async function cmdImprove(args: string[], flags: Record<string, string | boolean
 }
 
 async function main(): Promise<void> {
-  const { command, args, flags } = parseArgs(process.argv.slice(2));
+  const { command, args, flags, flagList } = parseArgs(process.argv.slice(2));
   warnIfStandalone(command, isJson(flags));
 
   switch (command) {
@@ -639,7 +665,7 @@ async function main(): Promise<void> {
       return cmdImprove(improveArgs, flags);
     }
     case "benchmark": return runBenchmarkCommand(args, flags);
-    case "crew": return runCrewCommand(args, flags);
+    case "crew": return runCrewCommand(args, flags, flagList);
     case "--version":
     case "-v":
     case "version":

@@ -1,0 +1,40 @@
+{
+  "version": "1.0.0",
+  "crew": {
+    "id": "test-healer",
+    "name": "Test Healer",
+    "description": "Single agent that diagnoses failing tests, separates real regressions from brittle assertions, and proposes minimal patches for humans to review.",
+    "author": "proagents",
+    "tags": [
+      "testing",
+      "ci",
+      "debugging",
+      "single-agent"
+    ]
+  },
+  "mission": "mission/01-mission.md",
+  "members": [
+    "members/01-healer.json"
+  ],
+  "coordination": [
+    "coordination/01-single-member-crew-coordination-is-with-huma.md"
+  ],
+  "tasks": [
+    "tasks/01-healer-owns-root-causing-failures-run-the-su.md"
+  ],
+  "workflows": [
+    "workflows/01-standard-run-run-failing-suite-classify-r.md"
+  ],
+  "rules": [
+    "rules/01-never-weaken-an-assertion-to-make-a-test-pass.md",
+    "rules/02-environment-drift-is-reported-not-patched-ar.md",
+    "rules/03-proposed-patches-stay-minimal-no-drive-by-r.md"
+  ],
+  "verification": [
+    "verification/01-healing-plan-md-includes-before-after-for-eac.md",
+    "verification/02-the-classification-states-the-evidence-for-re.md"
+  ],
+  "mcp": "mcp/servers.json",
+  "createdAt": "2026-09-15T00:00:00.000Z",
+  "updatedAt": "2026-09-15T00:00:00.000Z"
+}
