@@ -97,7 +97,7 @@ mechanisms: project instructions, skills directories, rules and hooks.
 | **Build a crew spec** | The professional system you need doesn't exist yet — as a spec your harness executes | `proagent init --intent "…"` → progressive interview → `spec`/`validate`/`build` |
 
 Both paths share the same primitives: skills, rules, verification, context frameworks,
-validation codes, and the marketplace.
+validation codes, and the registry.
 
 ## Design non-negotiables
 

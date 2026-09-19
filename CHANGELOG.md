@@ -7,6 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — the Registry layer: spec → resolve → lock → setup
+
+The unified artifact model from NEW_CHANGES.md is implemented end to end. One artifact
+vocabulary (13 kinds: profile, crew, agent, workflow, capability, skill, tool, mcp,
+prompt, hook, adapter, policy, template, extension), capabilities as the central
+abstraction, and a reproducible environment pipeline:
+
+- **`src/registry/`** (new layer, per the AGENTS.md separation invariant): `types.ts`
+  (artifact envelope, source declarations, spec/lock, PA5xx), `catalog.ts` (unified
+  read API over the Git-backed catalog; falls back to the packaged npm copy in consumer
+  repos), `sources.ts` + `source-adapters.ts` (federated search — skills.sh, npm, MCP
+  registry, GitHub — declared as data in `registry/sources/*.yaml`, policy-gated,
+  degrading never crashing), `capabilities.ts` (seed taxonomy + alias resolution + the
+  deterministic manifest → capabilities mapper), `resolver.ts` (capability →
+  implementation graph, pure — same inputs, byte-identical lock), `spec.ts` /
+  `lock.ts` (canonical `proagents.yaml` / `proagents.lock`, no timestamps,
+  sha256 checksums), `validate.ts` (the PA5xx aggregator), `setup.ts`.
+- **PA5xx validation codes** — spec/registry checks with suggestions: PA500–PA506
+  (spec structure, unsatisfiable/ambiguous capabilities, cycles, harness
+  compatibility, policy violations) and PA510–PA512 (stale lock, checksum mismatch,
+  invalid lock schema).
+- **New CLI commands** (`src/cli/registry.ts`, all `--json` outputs additive):
+  `search`, `info`, `install`, `remove`, `update`, `list --kind`, `resolve --select`,
+  `lock`, `compose <kind:id>…`, `setup [--harness] [--dry-run]`, `validate --spec`,
+  and `build --kind spec` (emit a spec draft from an interview session). Bare `list`,
+  `equip` and all existing commands are unchanged. Catalog/taxonomy/source lookups
+  fall back to the packaged registry when the working directory has no checkout.
+- **`proagent setup`** — the end-to-end pipeline: read spec → search allowed sources →
+  resolve → validate → compose the spec's profiles (PA02x) → compile for the target
+  harness → install crews (`.mcp.json` merge) → report limitations honestly. A blocked
+  setup writes nothing; `--dry-run` stops after resolution.
+- **Studio Build mode** (the primary experience): `ProjectBuilderPage` walks intent →
+  capabilities → artifacts → policies → export and downloads a portable
+  `proagents.yaml`. Client-side validation mirrors PA501/PA502/PA505; the full PA5xx
+  set stays with `proagent resolve`. Discover is demoted to a secondary route with a
+  **Use in Project** handoff into the builder. `registry/capabilities/index.json` now
+  ships with the site for the capability picker.
+- **Tests**: `tests/registry/` (core), `tests/cli/registry.test.ts` (21 end-to-end
+  JSON contracts incl. PA502/PA510/PA511 behavior), `web/src/project-spec.test.ts` +
+  `ProjectBuilderPage.test.tsx`. Docs: registry guide "Projects" section, CLI
+  reference, JSON interface (PA5xx table), getting-started.
+
 ### Changed — the marketplace splits into profiles/ and crews/
 
 - **`.marketplace/items/` is gone**, split by kind: profiles live in

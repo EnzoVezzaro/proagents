@@ -1,5 +1,5 @@
 /**
- * GitHub skills-repo import — the pure logic behind the marketplace's
+ * GitHub skills-repo import — the pure logic behind the registry's
  * "paste a repo URL" flow. Many community skills live as plain agent-skill
  * collections (any nested SKILL.md in a GitHub repo), which the catalog
  * cannot list individually. This module parses repo references and builds

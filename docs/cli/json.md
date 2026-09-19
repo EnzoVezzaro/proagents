@@ -40,7 +40,7 @@ proagent inspect security-engineer --json
 ```
 
 `list` returns `{ status, command, profiles: [{ slug, name, version, description, origin, tags }] }`.
-`origin` is `builtin`, `local` or `marketplace`.
+`origin` is `builtin`, `local` or `marketplace` (a registry checkout — the value predates the registry rebrand and stays for JSON stability).
 
 `inspect` returns `{ status, command, profile: <full ProfileManifest>, origin }`.
 
@@ -77,7 +77,7 @@ non-zero:
 { "status": "blocked", "command": "equip", "conflicts": [{ "code": "PA022", "severity": "error", "message": "…", "profiles": ["a", "b"], "suggestion": "…" }] }
 ```
 
-### profile (marketplace group)
+### profile (registry group)
 
 ```bash
 proagent profile list --json               # → { status, repo, ref, profiles[] }
@@ -93,7 +93,7 @@ proagent profile submit <file> --json      # → { status, slug, version, repo, 
 `publish`/`submit`/`validate` hydrate path-format sections before validating, so both
 inline and folder-standard manifests work.
 
-### crew (marketplace group)
+### crew (registry group)
 
 ```bash
 proagent crew list --json                  # → { status, repo, ref, catalog }
@@ -124,6 +124,71 @@ proagent validate --profiles --json
   ]
 }
 ```
+
+## Registry commands
+
+The unified artifact model — kinds: `profile · crew · agent · workflow · capability ·
+skill · tool · mcp · prompt · hook · adapter · policy · template · extension`.
+
+### search / info / list --kind
+
+```bash
+proagent search "browser automation" --type profile --json
+proagent info profile:accessibility-engineer --json
+proagent list --kind crew --json
+```
+
+`search` → `{ status, command, query, kind?, findings: [{ kind, name, description, source, sourceLabel, reference, score, native? }], sources: [{ source, count, error? }] }`.
+`native: true` marks catalog hits; `sources[]` reports per-source counts, and degraded
+sources carry an `error` note (federation degrades, never crashes).
+
+`info` → `{ status, command, item: <MarketplaceItem>, content?: <manifest>, loader: boolean }`.
+`loader: false` = schema-complete kind with no item loader yet (metadata only).
+
+`list --kind <k>` → `{ status, command, kind, items: [<MarketplaceItem>] }`.
+
+### resolve / lock
+
+```bash
+proagent resolve --json
+proagent lock --select browser-automation=skill:playwright-agent --json
+```
+
+`resolve` → `{ status, command, graph: { resolved, unresolved, ambiguous, artifactRefs, cycles }, findings }`.
+
+`lock` (writes `proagents.lock`) → `{ status, command, file, lock: { schema, specHash, resolved } }`.
+Both exit non-zero on resolution errors (PA502/PA504) — `lock` additionally refuses
+ambiguous capabilities (PA503) unless `--select` pins them.
+
+### setup / validate --spec
+
+```bash
+proagent setup --json                 # spec → resolve → validate → equip/install
+proagent setup --harness codex --json # explicit target
+proagent validate --spec --json       # end-to-end PA5xx check of spec (+ lock)
+```
+
+`setup` → `{ command, status: "ok"|"blocked", spec?, findings, conflicts, harness?, files, limitations, steps: [{ step, ok, detail? }] }`.
+Steps report each pipeline stage; blocked setups write nothing.
+
+`validate --spec` → `{ status: "ok"|"invalid", command, spec?, findings }`.
+
+### PA5xx — spec/registry validation codes
+
+| Code | Meaning |
+|---|---|
+| `PA500` | unknown artifact kind in spec |
+| `PA501` | invalid proagents.yaml schema |
+| `PA502` | unsatisfiable capability (no implementation on any allowed source) |
+| `PA503` | ambiguous capability, no selection (non-interactive) |
+| `PA504` | capability/artifact circular dependency |
+| `PA505` | harness incompatibility (artifact vs harness.compatibility) |
+| `PA506` | policy violation (e.g. network allowlist wildcard) |
+| `PA510` | lock stale (specHash mismatch) |
+| `PA511` | lock checksum mismatch / unverified |
+| `PA512` | invalid lock schema |
+
+Every finding carries `severity`, `message`, `suggestion`, and where applicable `entities`.
 
 ## init
 

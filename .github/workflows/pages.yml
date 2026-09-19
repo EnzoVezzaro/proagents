@@ -1,4 +1,4 @@
-name: Deploy the VitePress site (docs + marketplace island) to GitHub Pages
+name: Deploy the VitePress site (docs + Studio island) to GitHub Pages
 
 on:
   push:
@@ -26,7 +26,7 @@ jobs:
       - run: npm ci
 
       # One project, one build: a single VitePress site whose home page mounts
-      # the marketplace island. Catalog + redirect shim + branded 404 are
+      # the Studio island. Catalog + redirect shim + branded 404 are
       # assembled by the same script local builds use.
       - run: npm run site:build
 

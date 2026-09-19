@@ -4,7 +4,7 @@
  *   [core]  tsc --watch   → dist/ (CLI/library build, rebuilds on save)
  *   [docs]  vitepress dev → http://localhost:5173/proagents/docs/
  *
- * Docs and the marketplace app are ONE VitePress site now: the app island
+ * Docs and the Studio app are ONE VitePress site now: the app island
  * mounts on the home page and the React bundle hot-reloads through the same
  * dev server. Output is prefixed and cross-forwarded, so a crash in either
  * process is visible in the single terminal you're watching.

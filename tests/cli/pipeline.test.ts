@@ -11,10 +11,10 @@ import path from "node:path";
  *   verify the compiled agent (skill + instructions + manifest) →
  *   benchmark its performance with the deterministic runner.
  *
- * The example repo is seeded exactly like a marketplace consumer's checkout:
- * `.marketplace/profiles/` carries the profile files (the Git-backed catalog),
+ * The example repo is seeded exactly like a registry consumer's checkout:
+ * `registry/profiles/` carries the profile files (the Git-backed catalog),
  * so nothing here touches the network. The two profiles under test are the
- * newest marketplace additions (release-engineer, privacy-engineer).
+ * newest registry additions (release-engineer, privacy-engineer).
  */
 
 const CLI = path.resolve("dist/cli/index.js");
@@ -31,13 +31,13 @@ function makeRepo(files: Record<string, string>): string {
   return root;
 }
 
-/** Seed the marketplace items the way a consumer sees them (folder layout). */
-function marketplaceFiles(): Record<string, string> {
+/** Seed the registry items the way a consumer sees them (folder layout). */
+function registryFiles(): Record<string, string> {
   const files: Record<string, string> = {};
   for (const slug of NEW_PROFILES) {
-    const dir = path.join(CHECKOUT, ".marketplace", "profiles", slug);
+    const dir = path.join(CHECKOUT, "registry", "profiles", slug);
     for (const rel of collectFiles(dir, "")) {
-      files[`.marketplace/profiles/${slug}/${rel}`] = fs.readFileSync(path.join(dir, rel), "utf8");
+      files[`registry/profiles/${slug}/${rel}`] = fs.readFileSync(path.join(dir, rel), "utf8");
     }
   }
   return files;
@@ -75,8 +75,8 @@ function withRepo(files: Record<string, string>): string {
 }
 
 describe("pipeline e2e — profile → equip → compiled agent → performance", () => {
-  it("PIPELINE-E2E-001: the two new marketplace profiles validate clean", () => {
-    const root = withRepo(marketplaceFiles());
+  it("PIPELINE-E2E-001: the two new registry profiles validate clean", () => {
+    const root = withRepo(registryFiles());
     const { stdout, status } = run(root, ["validate", "--profiles", "--json"]);
     expect(status).toBe(0);
     const parsed = JSON.parse(stdout);
@@ -88,8 +88,8 @@ describe("pipeline e2e — profile → equip → compiled agent → performance"
     }
   });
 
-  it("PIPELINE-E2E-002: list discovers them as marketplace-origin profiles", () => {
-    const root = withRepo(marketplaceFiles());
+  it("PIPELINE-E2E-002: list discovers them as registry-origin profiles", () => {
+    const root = withRepo(registryFiles());
     const parsed = JSON.parse(run(root, ["list", "--json"]).stdout);
     const entries = Object.fromEntries(parsed.profiles.map((p: { slug: string }) => [p.slug, p]));
     for (const slug of NEW_PROFILES) {
@@ -99,7 +99,7 @@ describe("pipeline e2e — profile → equip → compiled agent → performance"
   });
 
   it("PIPELINE-E2E-003: inspect exposes the release-engineer contract", () => {
-    const root = withRepo(marketplaceFiles());
+    const root = withRepo(registryFiles());
     const parsed = JSON.parse(run(root, ["inspect", "release-engineer", "--json"]).stdout);
     expect(parsed.status).toBe("ok");
     expect(parsed.profile.profile.slug).toBe("release-engineer");
@@ -108,8 +108,7 @@ describe("pipeline e2e — profile → equip → compiled agent → performance"
     expect(parsed.profile.methods).toContain("rollback-first-design");
   });
 
-  it("PIPELINE-E2E-004: equip compiles skill + instructions into the example repo", () => {
-    const root = withRepo({ "AGENTS.md": "# Example app\n", ...marketplaceFiles() });
+  it("PIPELINE-E2E-004: equip compiles skill + instructions into the example repo", () => {      const root = withRepo({ "AGENTS.md": "# Example app\n", ...registryFiles() });
     const parsed = JSON.parse(run(root, ["equip", "release-engineer", "--target", "codex", "--json"]).stdout);
     expect(parsed.status).toBe("ok");
     const byMechanism = Object.fromEntries(parsed.files.map((f: { mechanism: string; path: string }) => [f.mechanism, f.path]));
@@ -123,7 +122,7 @@ describe("pipeline e2e — profile → equip → compiled agent → performance"
     expect(skill).toContain("You operate as a release engineer");
     expect(skill).toContain("Never deploy without a tested rollback path.");
     expect(skill).toContain("## Expertise");
-    // Knowledge references ship with the marketplace item and render in the skill.
+    // Knowledge references ship with the registry item and render in the skill.
     expect(skill).toContain("## Knowledge");
     expect(skill).toContain("knowledge/release-checklist.md");
 
@@ -139,8 +138,7 @@ describe("pipeline e2e — profile → equip → compiled agent → performance"
     expect(agents).toContain("# Example app"); // existing content preserved
   });
 
-  it("PIPELINE-E2E-005: composed equip merges identities and is idempotent", () => {
-    const root = withRepo({ "AGENTS.md": "# Example app\n", ...marketplaceFiles() });
+  it("PIPELINE-E2E-005: composed equip merges identities and is idempotent", () => {      const root = withRepo({ "AGENTS.md": "# Example app\n", ...registryFiles() });
     const args = ["equip", "release-engineer", "privacy-engineer", "--target", "codex", "--json"];
     const first = JSON.parse(run(root, args).stdout);
     expect(first.status).toBe("ok");
@@ -157,8 +155,7 @@ describe("pipeline e2e — profile → equip → compiled agent → performance"
     expect(agents.match(/proagent:profile:start/g)).toHaveLength(1);
   });
 
-  it("PIPELINE-E2E-006: re-equipping the same profile never duplicates blocks", () => {
-    const root = withRepo({ "AGENTS.md": "# Example app\n", ...marketplaceFiles() });
+  it("PIPELINE-E2E-006: re-equipping the same profile never duplicates blocks", () => {      const root = withRepo({ "AGENTS.md": "# Example app\n", ...registryFiles() });
     const args = ["equip", "release-engineer", "--target", "codex", "--json"];
     run(root, args);
     run(root, args);
@@ -167,8 +164,7 @@ describe("pipeline e2e — profile → equip → compiled agent → performance"
     expect(agents.match(/Never bump a version without a changelog entry\./g)).toHaveLength(1);
   });
 
-  it("PIPELINE-E2E-007: compile --output redirects the artifact outside the repo", () => {
-    const root = withRepo({ "AGENTS.md": "# Example app\n", ...marketplaceFiles() });
+  it("PIPELINE-E2E-007: compile --output redirects the artifact outside the repo", () => {      const root = withRepo({ "AGENTS.md": "# Example app\n", ...registryFiles() });
     const parsed = JSON.parse(run(root, ["compile", "release-engineer", "--target", "codex", "--output", "out", "--json"]).stdout);
     expect(parsed.status).toBe("ok");
     expect(parsed.files.length).toBeGreaterThan(0);
@@ -191,7 +187,7 @@ describe("pipeline e2e — profile → equip → compiled agent → performance"
       tools: { required: ["filesystem"] },
       verification: { required: ["review"] },
     });
-    const root = withRepo({ "AGENTS.md": "# Example app\n", ".marketplace/profiles/bad-profile/profile.json": broken });
+    const root = withRepo({ "AGENTS.md": "# Example app\n", "registry/profiles/bad-profile/profile.json": broken });
     const { stdout, status } = run(root, ["equip", "bad-profile", "--target", "codex", "--json"], true);
     expect(status).toBe(1);
     const parsed = JSON.parse(stdout);
@@ -201,8 +197,7 @@ describe("pipeline e2e — profile → equip → compiled agent → performance"
     expect(fs.existsSync(path.join(root, ".agents"))).toBe(false);
   });
 
-  it("PIPELINE-E2E-009: the equipped agent passes a deterministic benchmark (score 100)", () => {
-    const root = withRepo({ "AGENTS.md": "# Example app\n", ...marketplaceFiles() });
+  it("PIPELINE-E2E-009: the equipped agent passes a deterministic benchmark (score 100)", () => {      const root = withRepo({ "AGENTS.md": "# Example app\n", ...registryFiles() });
     run(root, ["equip", "release-engineer", "--target", "codex", "--json"]);
 
     // A suite exercising the profile's own contract: artifacts + behavior
@@ -280,8 +275,7 @@ describe("pipeline e2e — profile → equip → compiled agent → performance"
     expect(regressions.comparison.regressions).toHaveLength(0);
   });
 
-  it("PIPELINE-E2E-010: the equipped example repo passes validate --profiles (the CLI's own verify step)", () => {
-    const root = withRepo({ "AGENTS.md": "# Example app\n", ...marketplaceFiles() });
+  it("PIPELINE-E2E-010: the equipped example repo passes validate --profiles (the CLI's own verify step)", () => {      const root = withRepo({ "AGENTS.md": "# Example app\n", ...registryFiles() });
     run(root, ["equip", "release-engineer", "privacy-engineer", "--target", "codex", "--json"]);
     const { status } = run(root, ["validate", "--profiles"]);
     expect(status).toBe(0);

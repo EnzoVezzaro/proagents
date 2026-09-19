@@ -6,22 +6,32 @@ import { crewProblems } from "./validate.js";
 import { dehydrateCrew, hydrateCrewRemote, loadCrewFile } from "./hydrate.js";
 
 /**
- * Marketplace registry — Git-as-database (GitRows pattern).
+ * Registry — Git-as-database (GitRows pattern).
  *
  * The catalog is a set of JSON files committed to this repository and served
  * by GitHub Pages:
  *
- *   .marketplace/catalog.json            index: lightweight MarketplaceItems
- *   .marketplace/profiles/<id>/…         profile folders (profile.json index)
- *   .marketplace/crews/<id>/crew.json    crew folders (composition index)
+ *   registry/catalog.json            index: lightweight MarketplaceItems
+ *   registry/profiles/<id>/…         profile folders (profile.json index)
+ *   registry/crews/<id>/crew.json    crew folders (composition index)
  *
  * Reads on the web app are same-origin fetches (static, cached, no backend).
  * Writes are commits via the GitHub Contents API from the dashboard or CLI —
  * the Git history IS the audit log, and every change is a reviewable diff.
  */
 
-export const MARKETPLACE_DIR = ".marketplace";
-export const CATALOG_PATH = `${MARKETPLACE_DIR}/catalog.json`;
+export const REGISTRY_DIR = "registry";
+export const CATALOG_PATH = `${REGISTRY_DIR}/catalog.json`;
+
+/**
+ * Per-repo local item dirs (.proagent/) — where `build --kind`, `profile
+ * create` and `crew create` materialize custom items in a CONSUMER repo.
+ * `registry/` stays the canonical source of THIS repo's catalog only;
+ * a consumer's own creations belong under .proagent/ (session artifacts
+ * already live in .proagent/, so the whole local state is one folder).
+ */
+export const LOCAL_PROFILES_DIR = ".proagent/profiles";
+export const LOCAL_CREWS_DIR = ".proagent/crews";
 /** Crew items live in crews/<id>/ (folder standard, composition taxonomy). */
 export const CREWS_DIR = "crews";
 /** Profile items live in profiles/<slug>/ (folder standard). */
@@ -82,12 +92,12 @@ export async function readCatalogRemote(repo: string = REPO, ref = "main", token
  * split layout (profiles/ + crews/) is the only published shape.
  */
 export async function fetchCrewDefinition(id: string, repo: string = REPO, ref = "main", token?: string): Promise<CrewDefinition> {
-  const base = `https://raw.githubusercontent.com/${repo}/${ref}/${MARKETPLACE_DIR}/${CREWS_DIR}/${id}`;
+  const base = `https://raw.githubusercontent.com/${repo}/${ref}/${REGISTRY_DIR}/${CREWS_DIR}/${id}`;
   const headers = token ? { authorization: `Bearer ${token}` } : {};
 
   let manifestRes = await fetch(`${base}/crew.json`, { headers });
   if (manifestRes.status === 404 && token) manifestRes = await fetch(`${base}/crew.json`);
-  if (manifestRes.status === 404) throw new CrewError("CREW_NOT_FOUND", `crew not found in marketplace: ${id}`);
+  if (manifestRes.status === 404) throw new CrewError("CREW_NOT_FOUND", `crew not found in registry: ${id}`);
   if (!manifestRes.ok) throw new CrewError("CREW_REGISTRATION_ERROR", `crew fetch failed: HTTP ${manifestRes.status}`);
   const json: unknown = JSON.parse(await manifestRes.text());
   const getRaw = async (rel: string): Promise<string | undefined> => {
@@ -105,10 +115,15 @@ export async function fetchCrewDefinition(id: string, repo: string = REPO, ref =
   return crew;
 }
 
-/** Load a crew definition from the local marketplace dir (tests/CLI dev). */
+/** Load a crew definition from the local registry dir (tests/CLI dev). */
 export async function readCrewDefinitionLocal(root: string, id: string): Promise<CrewDefinition> {
-  const file = path.join(root, MARKETPLACE_DIR, CREWS_DIR, id, "crew.json");
+  const file = path.join(root, REGISTRY_DIR, CREWS_DIR, id, "crew.json");
   return loadCrewFile(file);
+}
+
+/** Load a crew definition from the consumer repo's local dir (.proagent/crews). */
+export async function readCrewDefinitionLocalDir(root: string, id: string): Promise<CrewDefinition> {
+  return loadCrewFile(path.join(root, LOCAL_CREWS_DIR, id, "crew.json"));
 }
 
 // ---------------------------------------------------------------------------
@@ -183,7 +198,7 @@ export async function publishCrew(crew: CrewDefinition, target: GitHubCommitTarg
   }
 
   // 1. Upsert the folder-standard item files.
-  const itemDir = `${MARKETPLACE_DIR}/${CREWS_DIR}/${crew.id}`;
+  const itemDir = `${REGISTRY_DIR}/${CREWS_DIR}/${crew.id}`;
   const folderFiles = dehydrateCrew(crew);
   for (const [rel, content] of Object.entries(folderFiles)) {
     const filePath = `${itemDir}/${rel}`;
@@ -206,6 +221,9 @@ export async function publishCrew(crew: CrewDefinition, target: GitHubCommitTarg
     createdAt: catalog.items.find((i) => i.id === crew.id)?.createdAt ?? crew.createdAt,
     updatedAt: crew.updatedAt,
   };
+  // Registry envelope (additive): provenance + declared capabilities.
+  // Existing items keep their fields; republishing fills what the manifest can declare.
+  item.source = catalog.items.find((i) => i.id === crew.id)?.source ?? "proagents";
   const items = [...catalog.items.filter((i) => i.id !== crew.id), item].sort((a, b) => a.id.localeCompare(b.id));
   const updated: MarketplaceCatalog = { schemaVersion: 1, updatedAt: new Date().toISOString(), items };
   await putRemoteFile(target, CATALOG_PATH, JSON.stringify(updated, null, 2) + "\n", catalogFile.sha, `crew: update catalog index for ${crew.id}`);

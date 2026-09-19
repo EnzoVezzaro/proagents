@@ -80,14 +80,14 @@ describe("validateProfileDraft (PROFILE-DRAFT-VAL)", () => {
     expect(validateProfileDraft(p).join(" ")).toContain('Tool "shell" is both required and forbidden');
   });
 
-  it("PROFILE-DRAFT-VAL-005: a slug that already exists in the marketplace is blocked (PA038)", () => {
+  it("PROFILE-DRAFT-VAL-005: a slug that already exists in the registry is blocked (PA038)", () => {
     const p = emptyProfile();
     p.profile.name = "Security Engineer";
     p.profile.slug = "security-engineer";
     p.identity.title = "Security Engineer";
     p.expertise = ["e"];
     const taken = new Set(["security-engineer"]);
-    expect(validateProfileDraft(p, taken).join(" ")).toContain("already exists in the marketplace");
+    expect(validateProfileDraft(p, taken).join(" ")).toContain("already exists in the registry");
     expect(validateProfileDraft(p, new Set())).toEqual([]);
   });
 

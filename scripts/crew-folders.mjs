@@ -15,7 +15,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const CREWS = ".marketplace/crews";
+const CREWS = "registry/crews";
 
 async function loadCore() {
   try {

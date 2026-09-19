@@ -149,7 +149,7 @@ describe("profile compilation (ADAPT-COMPILE)", () => {
     const root = await makeRepo({ "AGENTS.md": "# App\n" });
     const [entry] = await resolveProfiles(["security-engineer"]);
     if (!entry) throw new Error("profile not found");
-    // Ship a knowledge reference + file with the profile, like marketplace items do.
+    // Ship a knowledge reference + file with the profile, like registry items do.
     // The fixture file lands beside the shipped manifest (its source dir), so it
     // must be removed afterwards — tests never leave residue in profiles/.
     entry.manifest.knowledge = ["knowledge/brief.md"];

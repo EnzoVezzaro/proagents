@@ -10,7 +10,7 @@ import { CrewError } from "../../src/crew/types.js";
 import type { CrewDefinition } from "../../src/crew/types.js";
 
 /**
- * CREW-* — tests for the crew/marketplace subsystem. All offline.
+ * CREW-* — tests for the crew/registry subsystem. All offline.
  */
 
 const CLI = path.resolve("dist/cli/index.js");
@@ -189,9 +189,9 @@ describe("crew registry (CREW-REGISTRY)", () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), "crew-registry-"));
     try {
       expect(await readCatalogLocal(root)).toEqual(emptyCatalog());
-      fs.mkdirSync(path.join(root, ".marketplace"), { recursive: true });
+      fs.mkdirSync(path.join(root, "registry"), { recursive: true });
       fs.writeFileSync(
-        path.join(root, ".marketplace", "catalog.json"),
+        path.join(root, "registry", "catalog.json"),
         JSON.stringify({ schemaVersion: 1, updatedAt: "2026-09-15T00:00:00.000Z", items: [] }),
       );
       const catalog = await readCatalogLocal(root);
@@ -204,8 +204,8 @@ describe("crew registry (CREW-REGISTRY)", () => {
   it("CREW-REGISTRY-002: invalid catalog JSON raises CREW_REGISTRATION_ERROR", async () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), "crew-registry-bad-"));
     try {
-      fs.mkdirSync(path.join(root, ".marketplace"), { recursive: true });
-      fs.writeFileSync(path.join(root, ".marketplace", "catalog.json"), "{ nope");
+      fs.mkdirSync(path.join(root, "registry"), { recursive: true });
+      fs.writeFileSync(path.join(root, "registry", "catalog.json"), "{ nope");
       try {
         await readCatalogLocal(root);
         expect.unreachable();
@@ -248,7 +248,7 @@ afterAll(() => {
 
 describe("crew CLI (CREW-CLI)", () => {
   it("CREW-CLI-001: validate accepts a shipped catalog crew folder", () => {
-    const file = path.resolve(".marketplace", "crews", "incidere-incident-response");
+    const file = path.resolve("registry", "crews", "incidere-incident-response");
     const { stdout } = cli(["crew", "validate", file, "--json"]);
     const parsed = JSON.parse(stdout);
     expect(parsed.status).toBe("ok");
@@ -268,7 +268,7 @@ describe("crew CLI (CREW-CLI)", () => {
   });
 
   it("CREW-CLI-003: install from a local crew folder writes the full layout", () => {
-    const file = path.resolve(".marketplace", "crews", "test-healer");
+    const file = path.resolve("registry", "crews", "test-healer");
     const { stdout } = cli(["crew", "install", file, "--json"]);
     const parsed = JSON.parse(stdout);
     expect(parsed.installed.crewId).toBe("test-healer");
@@ -276,7 +276,7 @@ describe("crew CLI (CREW-CLI)", () => {
   });
 
   it("CREW-CLI-004: dry-run prints the plan without writing", () => {
-    const file = path.resolve(".marketplace", "crews", "pr-review-gate");
+    const file = path.resolve("registry", "crews", "pr-review-gate");
     const { stdout } = cli(["crew", "install", file, "--dry-run", "--json"]);
     const parsed = JSON.parse(stdout);
     expect(parsed.dryRun).toBe(true);
@@ -290,7 +290,7 @@ describe("crew CLI (CREW-CLI)", () => {
     // Builder output is inline: hydrate the shipped folder item and write it
     // as a flat definition, exactly what the SPA builder exports.
     const { loadCrewFile } = await import("../../src/crew/hydrate.js");
-    const crew = await loadCrewFile(path.resolve(".marketplace", "crews", "test-healer", "crew.json"));
+    const crew = await loadCrewFile(path.resolve("registry", "crews", "test-healer", "crew.json"));
     fs.writeFileSync(crewFile, JSON.stringify(crew));
     const { stdout } = cli(["crew", "build", crewFile, "--json"]);
     const parsed = JSON.parse(stdout);
@@ -309,7 +309,7 @@ describe("crew CLI (CREW-CLI)", () => {
     ]);
     const parsed = JSON.parse(stdout);
     expect(parsed.status).toBe("ok");
-    const dir = path.join(root, ".marketplace", "crews", "role-order-crew");
+    const dir = path.join(root, ".proagent", "crews", "role-order-crew");
     const first = JSON.parse(fs.readFileSync(path.join(dir, "members", "01-database-engineer.json"), "utf8")) as { role: string };
     const second = JSON.parse(fs.readFileSync(path.join(dir, "members", "02-backend-engineer.json"), "utf8")) as { role: string };
     const third = JSON.parse(fs.readFileSync(path.join(dir, "members", "03-qa-engineer.json"), "utf8")) as { role: string };
@@ -321,8 +321,8 @@ describe("crew CLI (CREW-CLI)", () => {
   });
 
   it("CREW-CLI-005: all shipped catalog crew folders validate", () => {
-    const crewsDir = path.resolve(".marketplace", "crews");
-    const catalog = JSON.parse(fs.readFileSync(path.resolve(".marketplace", "catalog.json"), "utf8")) as {
+    const crewsDir = path.resolve("registry", "crews");
+    const catalog = JSON.parse(fs.readFileSync(path.resolve("registry", "catalog.json"), "utf8")) as {
       items: Array<{ id: string; kind: string }>;
     };
     const crewKinds = new Set(catalog.items.filter((i) => i.kind !== "profile").map((i) => i.id));
@@ -397,8 +397,8 @@ describe("crew subagent standards (CREW-STANDARD)", () => {
   it("CREW-STANDARD-006: shipped crews pass every subagent-standard check", () => {
     // Every catalog crew must be exemplary: manifest id matches the folder,
     // graph connects, permissions follow the subagent standards.
-    const crewsDir = path.resolve(".marketplace", "crews");
-    const catalog = JSON.parse(fs.readFileSync(path.resolve(".marketplace", "catalog.json"), "utf8")) as {
+    const crewsDir = path.resolve("registry", "crews");
+    const catalog = JSON.parse(fs.readFileSync(path.resolve("registry", "catalog.json"), "utf8")) as {
       items: Array<{ id: string; kind: string }>;
     };
     for (const item of catalog.items.filter((i) => i.kind !== "profile")) {
@@ -424,7 +424,7 @@ describe("CREW-CATALOG — shipped crews as a dataset", () => {
   }
 
   const catalog = JSON.parse(
-    fs.readFileSync(path.resolve(".marketplace", "catalog.json"), "utf8"),
+    fs.readFileSync(path.resolve("registry", "catalog.json"), "utf8"),
   ) as { items: CatalogEntry[] };
   const crewItems = catalog.items.filter((i) => i.kind !== "profile");
   const profileIds = new Set(catalog.items.filter((i) => i.kind === "profile").map((i) => i.id));
@@ -434,7 +434,7 @@ describe("CREW-CATALOG — shipped crews as a dataset", () => {
     const { loadCrewFile } = await import("../../src/crew/hydrate.js");
     const { crewProblems, crewWarnings } = await import("../../src/crew/validate.js");
     for (const item of crewItems) {
-      const crew = await loadCrewFile(path.resolve(".marketplace", "crews", item.id, "crew.json"));
+      const crew = await loadCrewFile(path.resolve("registry", "crews", item.id, "crew.json"));
       expect(crew.id).toBe(item.id);
       expect(crew.version).toBe(item.version);
       expect(crewProblems(crew)).toEqual([]);
@@ -445,10 +445,10 @@ describe("CREW-CATALOG — shipped crews as a dataset", () => {
   it("CREW-CATALOG-002: every worker's profile binding resolves to a real catalog profile", async () => {
     const { loadCrewFile } = await import("../../src/crew/hydrate.js");
     for (const item of crewItems) {
-      const crew = await loadCrewFile(path.resolve(".marketplace", "crews", item.id, "crew.json"));
+      const crew = await loadCrewFile(path.resolve("registry", "crews", item.id, "crew.json"));
       for (const w of crew.workers) {
         if (!w.profile) continue;
-        // Crews may only bind profiles that exist in the marketplace — a
+        // Crews may only bind profiles that exist in the registry — a
         // dangling slug would fail every install with a resolver error.
         expect(profileIds.has(w.profile)).toBe(true);
       }
@@ -458,7 +458,7 @@ describe("CREW-CATALOG — shipped crews as a dataset", () => {
   it("CREW-CATALOG-003: catalog index metadata stays consistent with the crew manifests", async () => {
     const { loadCrewFile } = await import("../../src/crew/hydrate.js");
     for (const item of crewItems) {
-      const crew = await loadCrewFile(path.resolve(".marketplace", "crews", item.id, "crew.json"));
+      const crew = await loadCrewFile(path.resolve("registry", "crews", item.id, "crew.json"));
       expect(item.name).toBe(crew.name);
       expect(item.author).toBe(crew.author);
       expect(item.description).toBe(crew.description);

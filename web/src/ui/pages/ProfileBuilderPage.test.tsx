@@ -51,7 +51,7 @@ describe("ProfileBuilderPage walkthrough (PROFILE-BUILDER-WALK)", () => {
     fireEvent.change(nameInput, { target: { value: "Data Platform Engineer" } });
     const slugInput = screen.getByPlaceholderText("security-engineer");
     fireEvent.change(slugInput, { target: { value: "data-platform-engineer" } });
-    const desc = screen.getByPlaceholderText("Shown in the marketplace catalog");
+    const desc = screen.getByPlaceholderText("Shown in the registry catalog");
     fireEvent.change(desc, { target: { value: "Owns the data platform." } });
     const author = screen.getByPlaceholderText("your-github-handle");
     fireEvent.change(author, { target: { value: "octocat" } });

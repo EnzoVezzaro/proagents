@@ -8,7 +8,7 @@ import type { GitHubCommitTarget } from "../crew/registry.js";
 import { CrewError } from "../crew/types.js";
 
 /**
- * Profile marketplace publishing — mirrors the crew pipeline (Git-as-database:
+ * Profile registry publishing — mirrors the crew pipeline (Git-as-database:
  * profiles/<id>/profile.json + catalog.json, committed through the GitHub Contents API).
  *
  * A profile "item file" is the ProfileManifest itself (same shape as
@@ -16,9 +16,9 @@ import { CrewError } from "../crew/types.js";
  */
 
 /** Directory the profile items live in (relative to repo root). */
-export const MARKETPLACE_ITEMS_DIR = ".marketplace/profiles";
+export const REGISTRY_PROFILES_DIR = "registry/profiles";
 /** Path of the catalog index (relative to repo root). */
-export const CATALOG_PATH = ".marketplace/catalog.json";
+export const CATALOG_PATH = "registry/catalog.json";
 
 /**
  * Deterministic validation problems for a profile manifest (for CI gating).
@@ -55,7 +55,7 @@ function indexFields(manifest: ProfileManifest): {
 }
 
 /**
- * Publish a profile to the Git-backed marketplace catalog: writes the full
+ * Publish a profile to the Git-backed registry catalog: writes the full
  * manifest to profiles/<slug>/profile.json and upserts the lightweight index
  * entry with kind: "profile". Two commits, both reviewable in Git history.
  */
@@ -68,12 +68,12 @@ export async function publishProfile(manifest: ProfileManifest, target: GitHubCo
   const { slug, title, version, description, author, tags } = indexFields(manifest);
 
   // 1. Upsert the full manifest (standardized folder layout).
-  const itemPath = `.marketplace/profiles/${slug}/profile.json`;
+  const itemPath = `registry/profiles/${slug}/profile.json`;
   const itemFile = await getRemoteFile(target, itemPath);
   await putRemoteFile(target, itemPath, JSON.stringify(manifest, null, 2) + "\n", itemFile.sha, `profile: publish ${slug}@${version}`);
 
   // 2. Update the catalog index.
-  const catalogPath = ".marketplace/catalog.json";
+  const catalogPath = "registry/catalog.json";
   const catalogFile = await getRemoteFile(target, catalogPath);
   let catalog: { schemaVersion: 1; updatedAt: string; items: Array<Record<string, unknown>> };
   try {
@@ -82,7 +82,9 @@ export async function publishProfile(manifest: ProfileManifest, target: GitHubCo
   } catch {
     catalog = { schemaVersion: 1, updatedAt: new Date(0).toISOString(), items: [] };
   }
-  const existing = catalog.items.find((i) => i.id === slug) as { downloads?: number; createdAt?: string } | undefined;
+  const existing = catalog.items.find((i) => i.id === slug) as
+    | { downloads?: number; createdAt?: string; source?: string; compatibility?: string[] }
+    | undefined;
   const item = {
     id: slug,
     name: title,
@@ -94,6 +96,9 @@ export async function publishProfile(manifest: ProfileManifest, target: GitHubCo
     downloads: existing?.downloads ?? 0,
     createdAt: existing?.createdAt ?? new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    // Registry envelope (additive): provenance + compatibility metadata.
+    source: existing?.source ?? "proagents",
+    compatibility: existing?.compatibility,
   };
   const items = [...catalog.items.filter((i) => i.id !== slug), item].sort((a, b) => String(a.id).localeCompare(String(b.id)));
   const updated = { schemaVersion: 1 as const, updatedAt: new Date().toISOString(), items };
@@ -102,15 +107,15 @@ export async function publishProfile(manifest: ProfileManifest, target: GitHubCo
   return { itemPath, catalogPath };
 }
 
-/** Read the local marketplace item (for tests/CLI dev), hydrating paths. */
+/** Read the local registry item (for tests/CLI dev), hydrating paths. */
 export async function readProfileItemLocal(root: string, slug: string): Promise<ProfileManifest> {
-  const folder = path.join(root, MARKETPLACE_ITEMS_DIR, slug, "profile.json");
+  const folder = path.join(root, REGISTRY_PROFILES_DIR, slug, "profile.json");
   try {
     return await loadProfileFile(folder);
   } catch {
     // fall through to the legacy flat layout
   }
-  const file = path.join(root, MARKETPLACE_ITEMS_DIR, `${slug}.json`);
+  const file = path.join(root, REGISTRY_PROFILES_DIR, `${slug}.json`);
   try {
     return await loadProfileFile(file);
   } catch {

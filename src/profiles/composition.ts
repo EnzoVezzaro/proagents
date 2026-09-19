@@ -3,6 +3,7 @@ import type {
   ProfileConflict,
   ProfileManifest,
 } from "./types.js";
+import { mapToCapabilities } from "../registry/capabilities.js";
 
 /**
  * Composition engine — merge one or more professional profiles into a single
@@ -143,10 +144,15 @@ export function composeProfiles(manifests: ProfileManifest[]): {
     }
   }
 
-  // PA025 — capability gap: verification names a concrete capability (tests,
-  // build, security-scan, …) that none of the required tools provide. Prose
-  // outcomes ("CI green on the release commit") are not capability names —
-  // they are executed by the agent within the session and never warn here.
+  // PA025 — capability gap: verification names a concrete capability that
+  // none of the required tools provide. Two satisfiability paths, ORed:
+  //   1. capability model (registry mapper): the verification keyword maps to
+  //      a taxonomy capability ("tests" → testing) and some required tool
+  //      implies that capability;
+  //   2. legacy keyword table below (lint/build/typecheck/… have no taxonomy
+  //      capability but map to known tool keywords).
+  // Prose outcomes ("CI green on the release commit") are not capability
+  // names — they are executed by the agent within the session and never warn.
   const toolKeys = new Set(effective.tools.required.map(conceptualKey));
   const verificationSatisfiers: Record<string, string[]> = {
     tests: ["test-runner", "tests", "shell"],
@@ -156,11 +162,22 @@ export function composeProfiles(manifests: ProfileManifest[]): {
     typecheck: ["typechecker", "typecheck", "shell"],
     "runtime-validation": ["runtime", "shell"],
   };
+  /** Verification keyword → taxonomy capability (registry capability model). */
+  const verificationNeeds: Record<string, string> = {
+    tests: "testing",
+    test: "testing",
+    "security-scan": "security-review",
+  };
+  const impliesCapability = (tool: string, capability: string): boolean =>
+    mapToCapabilities({ tools: [tool], mcp: [], packages: [], expertise: [] }).includes(capability);
   for (const req of effective.verification.required) {
-    const satisfiers = verificationSatisfiers[conceptualKey(req)];
-    if (!satisfiers) continue; // prose outcome, not a tool capability
-    const satisfiable = satisfiers.some((s) => toolKeys.has(s));
-    if (!satisfiable) {
+    const key = conceptualKey(req);
+    const need = verificationNeeds[key];
+    const satisfiers = verificationSatisfiers[key];
+    if (!need && !satisfiers) continue; // prose outcome, not a tool capability
+    const viaLegacy = satisfiers?.some((s) => toolKeys.has(s)) ?? false;
+    const viaCapability = need !== undefined && effective.tools.required.some((t) => impliesCapability(t, need));
+    if (!viaLegacy && !viaCapability) {
       conflicts.push({
         code: "PA025",
         severity: "warning",

@@ -80,10 +80,10 @@ proagent build --json      # writes .agents/skills/<agent>/{SKILL.md, agent.json
 `build --json` reports the runtime capability gaps it found — surface them to the user
 rather than silently degrading.
 
-## Marketplace operations
+## Registry operations
 
-The marketplace is Git-backed: the catalog repo's `.marketplace/profiles/` and
-`.marketplace/crews/` folders are the listings (indexed by `catalog.json`). Agents
+The registry is Git-backed: the catalog repo's `registry/profiles/` and
+`registry/crews/` folders are the listings (indexed by `catalog.json`). Agents
 can drive the full submit loop without a terminal UI:
 
 ```bash
@@ -103,5 +103,5 @@ Submission etiquette mirrors the CLI contract: **validate before submitting**
 (`profile validate` / `crew validate` must pass), prefer `submit` over `publish`, and
 never bypass a `PA022`/`PA023` composition block — report it. Catalog writes are
 gated: proposals become GitHub issues that CI validates, and a maintainer `/publish`
-comment commits them. See the [marketplace guide](/guide/marketplace) for the review
+comment commits them. See the [registry guide](/guide/registry) for the review
 flow, and the [JSON interface](/cli/json) for exact response shapes.

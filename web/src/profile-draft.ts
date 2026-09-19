@@ -43,8 +43,8 @@ export function validateProfileDraft(p: ProfileManifest, takenSlugs?: ReadonlySe
   for (const [i, sk] of (p.skills ?? []).entries()) {
     if (sk.includes(":") && !REGISTRY_REF.test(sk)) problems.push(`skills[${i}] "${sk}" looks like a registry ref but is not npm:/github: (PA040).`);
   }
-  // Marketplace collision — a slug that already exists cannot be published.
-  if (takenSlugs?.has(p.profile.slug)) problems.push(`Slug "${p.profile.slug}" already exists in the marketplace — pick another (PA038).`);
+  // Registry collision — a slug that already exists cannot be published.
+  if (takenSlugs?.has(p.profile.slug)) problems.push(`Slug "${p.profile.slug}" already exists in the registry — pick another (PA038).`);
   return problems;
 }
 

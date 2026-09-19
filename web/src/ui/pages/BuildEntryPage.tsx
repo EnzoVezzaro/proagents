@@ -13,7 +13,7 @@ import type { CrewDefinition } from "../../types.js";
  *   2. Build it custom     → jump straight into an empty builder.
  *
  * Both paths end in the same place: a CrewDefinition JSON the CLI installs,
- * plus a one-click publish (which files a marketplace proposal issue).
+ * plus a one-click publish (which files a registry proposal issue).
  */
 
 const pathCard: React.CSSProperties = {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Client-only mount point for the React marketplace island (web/src/ui).
+// Client-only mount point for the React Studio island (web/src/ui).
 // React and Vue can't share a component tree, so this wrapper mounts the
 // React root imperatively on a plain div. The island is loaded lazily: the
 // initial VitePress payload stays doc-sized and the React bundle only loads
@@ -36,7 +36,7 @@ onBeforeUnmount(() => {
     <div ref="host" class="pa-app-host" />
     <div v-show="!ready" class="pa-app-loading" aria-live="polite">
       <span class="pa-app-loading-dot" aria-hidden="true" />
-      Loading the marketplace…
+      Loading the Studio…
     </div>
   </div>
 </template>

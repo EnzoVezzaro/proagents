@@ -98,9 +98,9 @@ Skills entries **reference** real skill collections (e.g. `github:obra/superpowe
 `github:anthropics/skills`) with per-repo install commands — skills are composed,
 never duplicated into the profile.
 
-All profiles are marketplace items: `.marketplace/profiles/<slug>/profile.json` is the
+All profiles are registry items: `registry/profiles/<slug>/profile.json` is the
 single source of truth (the npm package ships this folder, so offline equip works).
-Crews live alongside them in `.marketplace/crews/<id>/`.
+Crews live alongside them in `registry/crews/<id>/`.
 
 ## Built-in profiles
 
@@ -120,10 +120,10 @@ Crews live alongside them in `.marketplace/crews/<id>/`.
 | `accessibility-engineer` | WCAG, assistive technology |
 | `systems-architect` | Boundaries, contracts, failure modes |
 
-## Marketplace profiles
+## Registry profiles
 
-Beyond the built-ins, the Git-backed marketplace carries community profiles —
-browse them on the site's marketplace page, or with `proagent list`. Equip
+Beyond the built-ins, the Git-backed registry carries community profiles —
+browse them on the site's Studio page, or with `proagent list`. Equip
 works identically on both origins (missing slugs are fetched from the
 catalog automatically):
 
@@ -274,22 +274,22 @@ report the offending profiles and a suggestion.
 
 ## Local and community profiles
 
-There is no separate local folder — the marketplace is the only source. To work on a
-profile locally, check out or create it under `.marketplace/profiles/` in your repo:
+There is no separate local folder — the registry is the only source. To work on a
+profile locally, check out or create it under `registry/profiles/` in your repo:
 
 ```bash
-mkdir -p .marketplace/profiles/my-profession
-$EDITOR .marketplace/profiles/my-profession/profile.json
+mkdir -p registry/profiles/my-profession
+$EDITOR registry/profiles/my-profession/profile.json
 proagent list          # your checkout wins over the packaged snapshot
 proagent equip my-profession
 ```
 
-A repo's `.marketplace/profiles` checkout **is** the marketplace: it wins over the packaged
+A repo's `registry/profiles` checkout **is** the registry: it wins over the packaged
 snapshot shipped with the npm package (same slug → checkout version), and packaged items
 fill gaps for slugs the checkout does not have. Publishing is then just a PR with your
 item folder — the same files you tested locally.
 
-Or install a profile from the Git-backed marketplace catalog — the same resolver the CLI
+Or install a profile from the Git-backed registry catalog — the same resolver the CLI
 uses for built-ins, with catalog items filling gaps only:
 
 ```bash
@@ -298,13 +298,13 @@ proagent profile install <id>            # resolve + validate + equip
 ```
 
 `proagent equip <id>` is the same pipeline with a shorter name. To contribute a profile,
-see [Adding a listing to the catalog](/guide/marketplace#adding-a-listing-to-the-catalog).
+see [Adding a listing to the catalog](/guide/registry#adding-a-listing-to-the-catalog).
 
 ## From professional agents to specialized agent systems
 
 Profiles also feed larger systems: a crew's workers can each carry their own professional
 profile, skills, tools, permissions, context and verification, with handoffs passing
-named artifacts. See the [marketplace guide](/guide/marketplace) for crews — bundles of
+named artifacts. See the [registry guide](/guide/registry) for crews — bundles of
 specialized workers wired together by a handoff graph — and the
 [question engine](/guide/question-engine) for deriving a new system when no profile fits.
 

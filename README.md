@@ -36,7 +36,7 @@ Existing Harness
 Professional Agent
 ```
 
-`npm i -g proagent` · [Documentation](https://enzovezzaro.github.io/proagents/) · [Marketplace](https://enzovezzaro.github.io/proagents/) · MIT
+`npm i -g proagent` · [Documentation](https://enzovezzaro.github.io/proagents/) · [Registry](https://enzovezzaro.github.io/proagents/) · MIT
 
 [![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-%E2%9D%A4-db61a2?logo=githubsponsors\&logoColor=white)](https://github.com/sponsors/EnzoVezzaro)
 
@@ -310,9 +310,9 @@ verification:
 
 The schema is provider-agnostic and independent of any particular coding-agent harness.
 The loader hydrates path entries to content at read time, so equip, compile, crews and
-the marketplace SPA all see the same plain manifest.
+the Studio SPA all see the same plain manifest.
 
-Profiles live in one place — the marketplace catalog (`.marketplace/profiles/<slug>/`),
+Profiles live in one place — the registry catalog (`registry/profiles/<slug>/`),
 which ships with the npm package and is updated through PRs. A repo's own checkout of
 that folder wins over the packaged snapshot; there is no separate local profiles folder.
 
@@ -848,7 +848,7 @@ Profiles must never silently mutate in destructive ways.
 
 ---
 
-## Marketplace & Crews
+## Registry & Crews
 
 ProAgents can distribute ready-made professional profiles and specialized multi-agent systems.
 
@@ -874,9 +874,9 @@ MCP
 Context
 ```
 
-The marketplace is therefore an ecosystem for distributing reusable professional capabilities and complete agent systems.
+The registry is therefore an ecosystem for distributing reusable professional capabilities and complete agent systems.
 
-It is also the single source of profiles: the catalog lives in `.marketplace/`
+It is also the single source of profiles: the catalog lives in `registry/`
 (profiles in `profiles/<slug>/`, crews in `crews/<id>/`, plus a `catalog.json` index),
 the npm package ships it for offline use, and contributions land through PRs to the
 same files.
@@ -995,7 +995,7 @@ npm test
 
 npm run typecheck
 
-# site (marketplace + docs in one dev server)
+# site (Studio + docs in one dev server)
 npm run dev        # everything: core watcher + the merged VitePress site (SPA + docs) on :5173
 
 # docs alone (the app mounts inside them)
@@ -1019,12 +1019,12 @@ npm run site:build
 │   └── output/          # terminal rendering
 │
 ├── .agents/              # ProAgents Agent Skill + generated skills
-├── .marketplace/         # THE source of truth: Git-backed catalog of profiles & crews
+├── registry/             # THE source of truth: Git-backed catalog of profiles & crews
 │                         #   (shipped with the npm package so offline equip works)
-├── web/                  # marketplace app source (mounted as a client-only
-│   │                     #   island on the /marketplace page)
+├── web/                  # Studio app source (mounted as a client-only
+│   │                     #   island on the /studio page)
 ├── docs/                 # the site — one VitePress project: home at the
-│   │                     #   root, marketplace island under /marketplace,
+│   │                     #   root, Studio island under /studio,
 │   │                     #   docs pages under guide/ cli/ context/
 ├── scripts/              # site:build assembly + unified dev runner
 └── tests/                # unit, integration, e2e

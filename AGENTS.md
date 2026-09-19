@@ -30,11 +30,11 @@ not a prompt generator.
    boundaries and validation rules, not prose. Profile rules compile into enforcement
    where the harness supports it; where it does not, the limitation is reported.
    (Site note: the app (`web/src`) and the docs (`docs/`) are ONE VitePress
-   project — the app mounts as a client-only island on /marketplace; one
+   project — the Studio app mounts as a client-only island on /studio; one
    package.json, one lockfile, one test runner; `scripts/assemble-site.mjs`
    is the single source of the Pages artifact layout.)
-7. **Canonical profiles are portable.** The marketplace (`.marketplace/profiles/` +
-   `.marketplace/crews/`) is the
+7. **Canonical profiles are portable.** The registry (`registry/profiles/` +
+   `registry/crews/`) is the
    single source of profiles — the npm package ships it, and the profile schema never
    references a specific harness; only `src/adapters/` knows how to compile per target.
    Manifests use the folder standard: every section entry is a path into the item's

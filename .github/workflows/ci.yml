@@ -46,15 +46,17 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Build the site (docs + marketplace island + assembly)
+      - name: Build the site (docs + Studio island + assembly)
         run: npm run site:build
       - name: Artifact sanity checks
         run: |
           test -f site/index.html
+          test -f site/studio.html
           test -f site/marketplace.html
           test -f site/404.html
           test -f site/app/index.html
           test -f site/guide/what-is-proagents.html
-          test -f site/.marketplace/catalog.json
-          grep -q "pa-mp-head" site/marketplace.html || (echo 'marketplace page header missing' && exit 1)
+          test -f site/registry/catalog.json
+          grep -q "pa-mp-head" site/studio.html || (echo 'studio page header missing' && exit 1)
+          grep -q "studio" site/marketplace.html || (echo 'marketplace redirect missing' && exit 1)
           grep -rq "pa-app" site/assets/ || (echo 'island code missing from the bundle' && exit 1)

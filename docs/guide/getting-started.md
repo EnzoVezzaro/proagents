@@ -80,7 +80,7 @@ tools:    { required: [filesystem, shell, git] }
 verification: { required: [tests, security-scan] }
 ```
 
-Drop your own under `.marketplace/profiles/<slug>/` in your repo — a checkout copy wins over
+Drop your own under `registry/profiles/<slug>/` in your repo — a checkout copy wins over
 the packaged snapshot for the same slug.
 
 ## The interview path: build a specialized agent
@@ -134,9 +134,26 @@ proagent status            # human view
 proagent inspect --json    # full state + architecture + runtime (for agents)
 ```
 
+## Or: resolve a whole environment
+
+For a project that needs several professions at once, declare the environment as a spec —
+capabilities, not implementations — and let the registry resolve it:
+
+```bash
+proagent build --kind spec   # draft proagents.yaml from an interview session (optional)
+proagent resolve             # capability → implementation graph
+proagent lock                # persist proagents.lock (reproducible, checksummed)
+proagent setup               # equip/install everything for your harness
+proagent setup --harness codex   # same environment, another adapter
+```
+
+In the browser, [Studio → Build](/studio) walks the same flow and exports the
+`proagents.yaml`. Full reference: [Registry → Projects](/guide/registry).
+
 ## Next steps
 
 - [Professional profiles](/guide/profiles) — schema, composition, validation codes
 - [The question engine](/guide/question-engine) — how derivation and confidence work
+- [Registry](/guide/registry) — projects, sources, publishing
 - [JSON interface](/cli/json) — the machine contract
-- [Marketplace](/guide/marketplace) — ready-made profiles and crews
+- [Registry](/guide/registry) — ready-made profiles and crews

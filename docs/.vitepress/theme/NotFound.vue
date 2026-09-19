@@ -20,10 +20,10 @@ onMounted(() => {
     <p class="pa-404-code">404</p>
     <h1>Page not found</h1>
     <p class="pa-404-copy">
-      The page you asked for does not exist — but the marketplace and the docs do.
+      The page you asked for does not exist — but the registry and the docs do.
     </p>
     <div class="pa-404-actions">
-      <a class="pa-404-cta" href="/proagents/marketplace">Open the marketplace</a>
+      <a class="pa-404-cta" href="/proagents/studio">Open the Studio</a>
       <a class="pa-404-alt" href="/proagents/guide/getting-started">Read the docs</a>
     </div>
   </div>

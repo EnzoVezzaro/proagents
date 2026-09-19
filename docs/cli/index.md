@@ -21,6 +21,26 @@ proagent <command> [options]
 
 Full details: [Professional profiles](/guide/profiles).
 
+### Registry (unified artifact model)
+
+One artifact model for every kind: `profile · crew · agent · workflow · capability · skill · tool · mcp · prompt · hook · adapter · policy · template · extension`. Loaders for profile/crew/agent land first; other kinds are schema-complete (metadata only).
+
+| Command | Purpose |
+|---|---|
+| `search "<query>" [--type <kind>]` | Federated search: native catalog + allowed sources (skills.sh, npm, MCP registry, GitHub) |
+| `info <kind:id>` | Inspect one catalog artifact (metadata + content when a loader exists) |
+| `install <kind:id>` | Install an artifact — delegates to equip (profiles) / crew install (crews) |
+| `remove <kind:id>` | Remove an installed artifact from this repo |
+| `update` | Re-resolve a stale `proagents.lock` |
+| `list --kind <k>` | List catalog items by kind (bare `list` stays the profile listing) |
+| `resolve` | Capability → implementation graph for `proagents.yaml` (`--select c=kind:id` pins a choice) |
+| `lock` | Persist the resolution as `proagents.lock` (checksummed, no timestamps) |
+| `compose <kind:id>…` | Validate a cross-kind composition (PA02x conflicts surface here) |
+| `setup [--harness <id>] [--dry-run]` | `proagents.yaml` → resolve → validate → equip/install — the end-to-end pipeline |
+| `validate --spec` | End-to-end PA5xx validation of spec (+ lock when present) |
+
+Full details: [Registry guide](/guide/registry).
+
 ### Agent building (progressive interview)
 
 | Command | Purpose |
@@ -38,6 +58,7 @@ Full details: [Professional profiles](/guide/profiles).
 | `inspect` | Dump full session state (for agents/humans) |
 | `improve` | Show or configure self-improvement |
 | `benchmark` | Benchmark generated agent systems (see below) |
+| `build --kind spec` | Emit a `proagents.yaml` draft from the session's staged tooling |
 
 ## Global options
 
@@ -76,25 +97,25 @@ Full details: [Professional profiles](/guide/profiles).
 
 All support `--json`.
 
-## Marketplace groups
+## Registry groups
 
-The Git-backed marketplace has two command groups — one per item kind. Both
-resolve a local checkout first (`.marketplace/profiles/`, `.marketplace/crews/`),
+The Git-backed registry has two command groups — one per item kind. Both
+resolve a local checkout first (`registry/profiles/`, `registry/crews/`),
 then fall back to the remote catalog (`--repo owner/name --ref branch --token <gh-token>`).
 
 ### crew
 
 | Command | Purpose |
 |---|---|
-| `crew list` | List marketplace crews in the catalog |
+| `crew list` | List registry crews in the catalog |
 | `crew show <id>` | Print a crew definition (workers, permissions, MCP) |
 | `crew validate <crew.json\|dir>` | Hydrate + validate a crew manifest (folder standard or inline); enforces PA043–PA048 |
 | `crew install <id>` | Install a crew into the current repo (`.agents/crews/<id>/` + `.mcp.json`) |
 | `crew install <id> --dry-run` | Show the install plan without writing |
 | `crew build <crew.json>` | Install from a local manifest (builder output or folder-standard `crew.json`) |
-| `crew create <profile…>` | Compose existing profiles into a custom crew folder in `.marketplace/crews/` (every member binds a profile) |
+| `crew create <profile…>` | Compose existing profiles into a custom crew folder in `registry/crews/` (every member binds a profile) |
 | `crew publish <file>` | Direct catalog commit (contents:write) |
-| `crew submit <file>` | File a marketplace proposal issue (recommended) |
+| `crew submit <file>` | File a registry proposal issue (recommended) |
 
 `crew create` flags: `--name`, `--id`, `--description`, `--role <member-role>`
 (one per member, in argument order). `publish`/`submit` accept both
@@ -105,12 +126,12 @@ before validation.
 
 | Command | Purpose |
 |---|---|
-| `profile list` | List marketplace profiles in the catalog |
+| `profile list` | List registry profiles in the catalog |
 | `profile show <id>` | Print a profile manifest (hydrated) |
 | `profile install <id>` | Resolve + validate + equip from the catalog (same as `equip`) |
 | `profile validate <file.json>` | Validate a profile manifest (hydrates path-format sections) |
 | `profile publish <file.json>` | Direct catalog commit (contents:write) |
-| `profile submit <file.json>` | File a marketplace proposal issue (recommended) |
+| `profile submit <file.json>` | File a registry proposal issue (recommended) |
 
 Shortcuts: `proagent equip` = `profile install`, `proagent list` = `profile list`.
 

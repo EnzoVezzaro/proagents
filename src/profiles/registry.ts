@@ -13,9 +13,9 @@ import { isPathEntry, validateProfile } from "./validation.js";
 
 /**
  * Profile registry — deterministic loading and discovery of Professional
- * Agent Profiles. Marketplace-only: the Git-backed `.marketplace/profiles/`
+ * Agent Profiles. Registry-native: the Git-backed `registry/profiles/`
  * folders are the single source (shipped with the npm package and
- * overridable by a local checkout); crews/agents are marketplace items of
+ * overridable by a local checkout); crews/agents are registry items of
  * their own kinds.
  *
  * Manifests come in two shapes, both loaded into a plain ProfileManifest:
@@ -28,23 +28,29 @@ import { isPathEntry, validateProfile } from "./validation.js";
  */
 
 /**
- * Profiles shipped with the npm package are the packaged marketplace items.
- * `dist/profiles/registry.js` → `<pkgroot>/.marketplace/profiles`.
+ * Profiles shipped with the npm package are the packaged registry items.
+ * `dist/profiles/registry.js` → `<pkgroot>/registry/profiles`.
  */
 const BUILTIN_DIR = path.resolve(
   path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1")),
-  "../../.marketplace/profiles",
+  "../../registry/profiles",
 );
 
-/** Local checkout of the Git-backed marketplace (profile slice). */
-export const MARKETPLACE_ITEMS_DIR = ".marketplace/profiles";
-/** Back-compat alias for the profile slice of the marketplace. */
-export const MARKETPLACE_PROFILES_DIR = MARKETPLACE_ITEMS_DIR;
+/** Local checkout of the Git-backed registry (profile slice). */
+export const REGISTRY_PROFILES_DIR = "registry/profiles";
+
+/**
+ * Consumer-repo local profiles (.proagent/profiles) — where `build --kind
+ * profile` and `profile create` write custom items. Searched FIRST by
+ * listProfiles so a repo's own creations win over both the registry
+ * checkout and the packaged snapshot.
+ */
+export const LOCAL_PROFILES_DIR = ".proagent/profiles";
 
 export interface ProfileEntry {
   manifest: ProfileManifest;
-  /** Where this profile came from: the packaged snapshot or a marketplace checkout. */
-  origin: "builtin" | "marketplace";
+  /** Where this profile came from: packaged, a registry checkout, or this repo's local .proagent dir. */
+  origin: "builtin" | "marketplace" | "local";
   /** Absolute directory containing the manifest (section/knowledge refs resolve against it). */
   dir: string;
 }
@@ -284,13 +290,13 @@ async function listManifestCandidates(dir: string): Promise<string[]> {
 
 /**
  * List all discoverable profiles. Sources, in precedence order per slug
- * The marketplace is the single source of truth. A repo's own
- * ./.marketplace/profiles checkout IS the marketplace (it is what the repo
+ * The registry checkout is the single source of truth. A repo's own
+ * ./registry/profiles checkout IS the registry (it is what the repo
  * manages via PRs), so it wins; the packaged snapshot shipped with the npm
  * package fills gaps only:
- *   1. marketplace — a ./.marketplace/profiles checkout in the current repo
+ *   1. registry — a ./registry/profiles checkout in the current repo
  *      (skipped when it is the same directory as the packaged source)
- *   2. builtin — the packaged .marketplace/profiles shipped with the package
+ *   2. builtin — the packaged registry/profiles shipped with the package
  * Deterministic ordering by slug. No network: remote items are fetched
  * explicitly (see fetchProfileManifest), never during discovery.
  */
@@ -300,7 +306,19 @@ export async function listProfiles(root: string = process.cwd()): Promise<Profil
     bySlug.set(entry.manifest.profile.slug, entry);
   };
 
-  const localDir = path.resolve(path.join(root, MARKETPLACE_ITEMS_DIR));
+  // Consumer-repo local dir first (.proagent/profiles) — a repo's own
+  // creations win over everything else.
+  const proagentDir = path.resolve(path.join(root, LOCAL_PROFILES_DIR));
+  for (const file of await listManifestCandidates(proagentDir)) {
+    try {
+      const manifest = await loadProfileFile(file);
+      put({ manifest, origin: "local", dir: path.dirname(file) });
+    } catch {
+      // Local files that are not profiles (crews, agents) are ignored.
+    }
+  }
+
+  const localDir = path.resolve(path.join(root, REGISTRY_PROFILES_DIR));
   if (localDir !== path.resolve(BUILTIN_DIR)) {
     for (const file of await listManifestCandidates(localDir)) {
       try {
@@ -343,7 +361,7 @@ export async function resolveProfiles(slugs: string[], root: string = process.cw
 }
 
 /**
- * Fetch a profile manifest from the remote Git-backed marketplace catalog
+ * Fetch a profile manifest from the remote Git-backed registry catalog
  * and hydrate it over HTTP: folder layout first (profiles/<id>/profile.json,
  * every section path fetched from profiles/<id>/…), then the legacy flat
  * layout (profiles/<id>.json, inline — nothing to hydrate). Mirrors fetchRaw
@@ -351,7 +369,7 @@ export async function resolveProfiles(slugs: string[], root: string = process.cw
  * makes GitHub raw answer 404 even for public files.
  */
 export async function fetchProfileManifest(id: string, repo: string, ref: string, token?: string): Promise<ProfileManifest> {
-  const base = `https://raw.githubusercontent.com/${repo}/${ref}/${MARKETPLACE_ITEMS_DIR}`;
+  const base = `https://raw.githubusercontent.com/${repo}/${ref}/${REGISTRY_PROFILES_DIR}`;
   const headers = token ? { authorization: `Bearer ${token}` } : {};
   const get = async (url: string): Promise<string | undefined> => {
     let res = await fetch(url, { headers });
@@ -365,13 +383,13 @@ export async function fetchProfileManifest(id: string, repo: string, ref: string
   if (rawManifest === undefined) {
     // Legacy flat layout (inline manifest — no hydration needed).
     const raw = await get(`${base}/${id}.json`);
-    if (raw === undefined) throw new Error(`profile not found in marketplace: ${id}`);
+    if (raw === undefined) throw new Error(`profile not found in registry: ${id}`);
     const json: unknown = JSON.parse(raw);
-    if (!isValidProfile(json)) throw new Error(`marketplace item "${id}" is not a profile manifest`);
+    if (!isValidProfile(json)) throw new Error(`registry item "${id}" is not a profile manifest`);
     return hydrateProfileManifest(json);
   }
   const json: unknown = JSON.parse(rawManifest);
-  if (!isValidProfile(json)) throw new Error(`marketplace item "${id}" is not a profile manifest`);
+  if (!isValidProfile(json)) throw new Error(`registry item "${id}" is not a profile manifest`);
   const dirUrl = `${base}/${id}`;
   const readFile = async (rel: string): Promise<string | undefined> => {
     if (rel.includes("..") || rel.startsWith("/")) return undefined;

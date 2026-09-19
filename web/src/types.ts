@@ -1,4 +1,4 @@
-/** Marketplace SPA types — mirror src/crew/types.ts and src/profiles/types.ts (kept in sync manually). */
+/** Studio SPA types — mirror src/crew/types.ts and src/profiles/types.ts (kept in sync manually). */
 
 /** Mirror of src/profiles/types.ts ProfileMcpServer. */
 export interface ProfileMcpServer {
@@ -182,6 +182,29 @@ export interface CrewDefinitionSource {
   updatedAt?: string;
 }
 
+/** Every artifact kind the registry models (mirror of src/crew/types.ts ArtifactKind). */
+export type ArtifactKind =
+  | "profile"
+  | "crew"
+  | "agent"
+  | "workflow"
+  | "capability"
+  | "skill"
+  | "tool"
+  | "mcp"
+  | "prompt"
+  | "hook"
+  | "adapter"
+  | "policy"
+  | "template"
+  | "extension";
+
+/** Abstract abilities an artifact provides or needs (mirror of ArtifactRequires). */
+export interface ArtifactRequires {
+  capabilities?: string[];
+  artifacts?: string[];
+}
+
 export interface MarketplaceItem {
   id: string;
   name: string;
@@ -189,16 +212,62 @@ export interface MarketplaceItem {
   description: string;
   author: string;
   tags: string[];
-  kind: "profile" | "crew" | "agent";
+  kind: ArtifactKind;
   downloads: number;
   createdAt: string;
   updatedAt: string;
+  provides?: string[];
+  requires?: ArtifactRequires;
+  compatibility?: string[];
+  source?: string;
 }
 
 export interface MarketplaceCatalog {
   schemaVersion: 1;
   updatedAt: string;
   items: MarketplaceItem[];
+}
+
+// ---------------------------------------------------------------------------
+// Project spec (proagents.yaml) — mirror of src/registry/types.ts (PA5xx)
+// ---------------------------------------------------------------------------
+
+/** Schema literal of proagents.yaml (mirror of SPEC_SCHEMA). */
+export const SPEC_SCHEMA = "proagents/v1" as const;
+
+/** Environment sections of the spec (mirror of SpecEnvironment). */
+export interface SpecEnvironment {
+  profiles?: string[];
+  crews?: string[];
+  agents?: string[];
+  workflows?: string[];
+  capabilities?: string[];
+  skills?: string[];
+  tools?: string[];
+  mcp?: string[];
+}
+
+/** The human-authored portable environment spec (mirror of SpecDocument). */
+export interface SpecDocument {
+  schema: typeof SPEC_SCHEMA;
+  project: { name: string };
+  environment: SpecEnvironment;
+  policies?: {
+    filesystem?: { "workspace-only"?: boolean };
+    network?: { allowed?: string[] };
+  };
+  harness?: {
+    mode?: "compatible";
+    compatibility?: string[];
+  };
+}
+
+/** A client-side validation finding (mirror of SpecFinding; PA5xx codes). */
+export interface SpecFinding {
+  code: "PA501" | "PA502" | "PA505";
+  severity: "error" | "warning";
+  message: string;
+  suggestion?: string;
 }
 
 export function emptyCrew(author: string): CrewDefinition {

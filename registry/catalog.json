@@ -18,7 +18,21 @@
       "kind": "profile",
       "downloads": 0,
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "updatedAt": "1970-01-01T00:00:00.000Z"
+      "updatedAt": "1970-01-01T00:00:00.000Z",
+      "provides": [
+        "accessibility",
+        "frontend-development",
+        "browser-automation"
+      ],
+      "source": "proagents",
+      "compatibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "cursor",
+        "gemini-cli",
+        "generic-cli"
+      ]
     },
     {
       "id": "api-designer",
@@ -34,7 +48,20 @@
       "kind": "profile",
       "downloads": 0,
       "createdAt": "2026-09-16T05:06:25.298Z",
-      "updatedAt": "2026-09-17T23:30:46.428Z"
+      "updatedAt": "2026-09-17T23:30:46.428Z",
+      "provides": [
+        "api-design",
+        "code-review"
+      ],
+      "source": "proagents",
+      "compatibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "cursor",
+        "gemini-cli",
+        "generic-cli"
+      ]
     },
     {
       "id": "backend-engineer",
@@ -51,7 +78,21 @@
       "kind": "profile",
       "downloads": 0,
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "updatedAt": "1970-01-01T00:00:00.000Z"
+      "updatedAt": "1970-01-01T00:00:00.000Z",
+      "provides": [
+        "backend-development",
+        "database-access",
+        "api-design"
+      ],
+      "source": "proagents",
+      "compatibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "cursor",
+        "gemini-cli",
+        "generic-cli"
+      ]
     },
     {
       "id": "code-reviewer",
@@ -67,7 +108,20 @@
       "kind": "profile",
       "downloads": 0,
       "createdAt": "2026-09-16T05:06:25.298Z",
-      "updatedAt": "2026-09-17T23:30:46.429Z"
+      "updatedAt": "2026-09-17T23:30:46.429Z",
+      "provides": [
+        "code-review",
+        "security-review"
+      ],
+      "source": "proagents",
+      "compatibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "cursor",
+        "gemini-cli",
+        "generic-cli"
+      ]
     },
     {
       "id": "data-engineer",
@@ -83,7 +137,20 @@
       "kind": "profile",
       "downloads": 0,
       "createdAt": "2026-09-16T05:06:25.298Z",
-      "updatedAt": "2026-09-17T23:30:46.429Z"
+      "updatedAt": "2026-09-17T23:30:46.429Z",
+      "provides": [
+        "data-pipelines",
+        "database-access"
+      ],
+      "source": "proagents",
+      "compatibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "cursor",
+        "gemini-cli",
+        "generic-cli"
+      ]
     },
     {
       "id": "data-platform-crew",
@@ -102,7 +169,22 @@
       "kind": "crew",
       "downloads": 0,
       "createdAt": "2026-09-18T00:00:00.000Z",
-      "updatedAt": "2026-09-18T00:00:00.000Z"
+      "updatedAt": "2026-09-18T00:00:00.000Z",
+      "provides": [
+        "data-pipelines",
+        "database-access",
+        "backend-development",
+        "testing"
+      ],
+      "source": "proagents",
+      "compatibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "cursor",
+        "gemini-cli",
+        "generic-cli"
+      ]
     },
     {
       "id": "database-engineer",
@@ -119,7 +201,20 @@
       "kind": "profile",
       "downloads": 0,
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "updatedAt": "1970-01-01T00:00:00.000Z"
+      "updatedAt": "1970-01-01T00:00:00.000Z",
+      "provides": [
+        "database-access",
+        "backend-development"
+      ],
+      "source": "proagents",
+      "compatibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "cursor",
+        "gemini-cli",
+        "generic-cli"
+      ]
     },
     {
       "id": "developer-experience-engineer",
@@ -135,7 +230,21 @@
       "kind": "profile",
       "downloads": 0,
       "createdAt": "2026-09-16T05:06:25.298Z",
-      "updatedAt": "2026-09-17T23:30:46.429Z"
+      "updatedAt": "2026-09-17T23:30:46.429Z",
+      "provides": [
+        "ci-cd",
+        "documentation",
+        "planning"
+      ],
+      "source": "proagents",
+      "compatibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "cursor",
+        "gemini-cli",
+        "generic-cli"
+      ]
     },
     {
       "id": "devops-engineer",
@@ -152,7 +261,21 @@
       "kind": "profile",
       "downloads": 0,
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "updatedAt": "1970-01-01T00:00:00.000Z"
+      "updatedAt": "1970-01-01T00:00:00.000Z",
+      "provides": [
+        "ci-cd",
+        "containerization",
+        "cloud-deploy"
+      ],
+      "source": "proagents",
+      "compatibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "cursor",
+        "gemini-cli",
+        "generic-cli"
+      ]
     },
     {
       "id": "feature-delivery-squad",
@@ -171,7 +294,23 @@
       "kind": "crew",
       "downloads": 0,
       "createdAt": "2026-09-18T00:00:00.000Z",
-      "updatedAt": "2026-09-18T00:00:00.000Z"
+      "updatedAt": "2026-09-18T00:00:00.000Z",
+      "provides": [
+        "api-design",
+        "frontend-development",
+        "backend-development",
+        "testing",
+        "code-review"
+      ],
+      "source": "proagents",
+      "compatibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "cursor",
+        "gemini-cli",
+        "generic-cli"
+      ]
     },
     {
       "id": "frontend-engineer",
@@ -188,7 +327,21 @@
       "kind": "profile",
       "downloads": 0,
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "updatedAt": "1970-01-01T00:00:00.000Z"
+      "updatedAt": "1970-01-01T00:00:00.000Z",
+      "provides": [
+        "frontend-development",
+        "accessibility",
+        "browser-automation"
+      ],
+      "source": "proagents",
+      "compatibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "cursor",
+        "gemini-cli",
+        "generic-cli"
+      ]
     },
     {
       "id": "incidere-incident-response",
@@ -206,7 +359,21 @@
       "kind": "crew",
       "downloads": 0,
       "createdAt": "2026-09-15T00:00:00.000Z",
-      "updatedAt": "2026-09-15T00:00:00.000Z"
+      "updatedAt": "2026-09-15T00:00:00.000Z",
+      "provides": [
+        "incident-response",
+        "observability",
+        "communication"
+      ],
+      "source": "proagents",
+      "compatibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "cursor",
+        "gemini-cli",
+        "generic-cli"
+      ]
     },
     {
       "id": "legacy-modernizer",
@@ -222,7 +389,20 @@
       "kind": "profile",
       "downloads": 0,
       "createdAt": "2026-09-16T05:06:25.298Z",
-      "updatedAt": "2026-09-17T23:30:46.429Z"
+      "updatedAt": "2026-09-17T23:30:46.429Z",
+      "provides": [
+        "code-review",
+        "testing"
+      ],
+      "source": "proagents",
+      "compatibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "cursor",
+        "gemini-cli",
+        "generic-cli"
+      ]
     },
     {
       "id": "ml-engineer",
@@ -238,7 +418,20 @@
       "kind": "profile",
       "downloads": 0,
       "createdAt": "2026-09-16T05:06:25.298Z",
-      "updatedAt": "2026-09-17T23:30:46.429Z"
+      "updatedAt": "2026-09-17T23:30:46.429Z",
+      "provides": [
+        "ml-training",
+        "data-pipelines"
+      ],
+      "source": "proagents",
+      "compatibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "cursor",
+        "gemini-cli",
+        "generic-cli"
+      ]
     },
     {
       "id": "mobile-engineer",
@@ -255,7 +448,20 @@
       "kind": "profile",
       "downloads": 0,
       "createdAt": "2026-09-16T05:06:25.298Z",
-      "updatedAt": "2026-09-17T23:30:46.429Z"
+      "updatedAt": "2026-09-17T23:30:46.429Z",
+      "provides": [
+        "frontend-development",
+        "testing"
+      ],
+      "source": "proagents",
+      "compatibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "cursor",
+        "gemini-cli",
+        "generic-cli"
+      ]
     },
     {
       "id": "performance-engineer",
@@ -272,7 +478,20 @@
       "kind": "profile",
       "downloads": 0,
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "updatedAt": "1970-01-01T00:00:00.000Z"
+      "updatedAt": "1970-01-01T00:00:00.000Z",
+      "provides": [
+        "performance",
+        "browser-automation"
+      ],
+      "source": "proagents",
+      "compatibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "cursor",
+        "gemini-cli",
+        "generic-cli"
+      ]
     },
     {
       "id": "platform-engineer",
@@ -288,7 +507,21 @@
       "kind": "profile",
       "downloads": 0,
       "createdAt": "2026-09-16T05:06:25.298Z",
-      "updatedAt": "2026-09-17T23:30:46.429Z"
+      "updatedAt": "2026-09-17T23:30:46.429Z",
+      "provides": [
+        "ci-cd",
+        "containerization",
+        "cloud-deploy"
+      ],
+      "source": "proagents",
+      "compatibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "cursor",
+        "gemini-cli",
+        "generic-cli"
+      ]
     },
     {
       "id": "pr-review-gate",
@@ -305,7 +538,20 @@
       "kind": "crew",
       "downloads": 0,
       "createdAt": "2026-09-15T00:00:00.000Z",
-      "updatedAt": "2026-09-15T00:00:00.000Z"
+      "updatedAt": "2026-09-15T00:00:00.000Z",
+      "provides": [
+        "code-review",
+        "security-review"
+      ],
+      "source": "proagents",
+      "compatibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "cursor",
+        "gemini-cli",
+        "generic-cli"
+      ]
     },
     {
       "id": "principal-engineer",
@@ -322,7 +568,20 @@
       "kind": "profile",
       "downloads": 0,
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "updatedAt": "1970-01-01T00:00:00.000Z"
+      "updatedAt": "1970-01-01T00:00:00.000Z",
+      "provides": [
+        "architecture",
+        "code-review"
+      ],
+      "source": "proagents",
+      "compatibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "cursor",
+        "gemini-cli",
+        "generic-cli"
+      ]
     },
     {
       "id": "privacy-engineer",
@@ -339,7 +598,20 @@
       "kind": "profile",
       "downloads": 0,
       "createdAt": "2026-09-17T00:00:00.000Z",
-      "updatedAt": "2026-09-17T23:30:46.430Z"
+      "updatedAt": "2026-09-17T23:30:46.430Z",
+      "provides": [
+        "privacy",
+        "security-review"
+      ],
+      "source": "proagents",
+      "compatibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "cursor",
+        "gemini-cli",
+        "generic-cli"
+      ]
     },
     {
       "id": "qa-engineer",
@@ -356,7 +628,20 @@
       "kind": "profile",
       "downloads": 0,
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "updatedAt": "1970-01-01T00:00:00.000Z"
+      "updatedAt": "1970-01-01T00:00:00.000Z",
+      "provides": [
+        "testing",
+        "code-review"
+      ],
+      "source": "proagents",
+      "compatibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "cursor",
+        "gemini-cli",
+        "generic-cli"
+      ]
     },
     {
       "id": "release-engineer",
@@ -373,7 +658,20 @@
       "kind": "profile",
       "downloads": 0,
       "createdAt": "2026-09-17T00:00:00.000Z",
-      "updatedAt": "2026-09-17T23:30:46.430Z"
+      "updatedAt": "2026-09-17T23:30:46.430Z",
+      "provides": [
+        "ci-cd",
+        "cloud-deploy"
+      ],
+      "source": "proagents",
+      "compatibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "cursor",
+        "gemini-cli",
+        "generic-cli"
+      ]
     },
     {
       "id": "release-train-crew",
@@ -392,7 +690,21 @@
       "kind": "crew",
       "downloads": 0,
       "createdAt": "2026-09-18T00:00:00.000Z",
-      "updatedAt": "2026-09-18T00:00:00.000Z"
+      "updatedAt": "2026-09-18T00:00:00.000Z",
+      "provides": [
+        "ci-cd",
+        "cloud-deploy",
+        "observability"
+      ],
+      "source": "proagents",
+      "compatibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "cursor",
+        "gemini-cli",
+        "generic-cli"
+      ]
     },
     {
       "id": "security-audit-crew",
@@ -411,7 +723,21 @@
       "kind": "crew",
       "downloads": 0,
       "createdAt": "2026-09-18T00:00:00.000Z",
-      "updatedAt": "2026-09-18T00:00:00.000Z"
+      "updatedAt": "2026-09-18T00:00:00.000Z",
+      "provides": [
+        "security-review",
+        "threat-modeling",
+        "privacy"
+      ],
+      "source": "proagents",
+      "compatibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "cursor",
+        "gemini-cli",
+        "generic-cli"
+      ]
     },
     {
       "id": "security-engineer",
@@ -428,7 +754,21 @@
       "kind": "profile",
       "downloads": 0,
       "createdAt": "2026-09-15T00:00:00.000Z",
-      "updatedAt": "2026-09-17T23:30:46.430Z"
+      "updatedAt": "2026-09-17T23:30:46.430Z",
+      "provides": [
+        "security-review",
+        "threat-modeling",
+        "code-review"
+      ],
+      "source": "proagents",
+      "compatibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "cursor",
+        "gemini-cli",
+        "generic-cli"
+      ]
     },
     {
       "id": "senior-engineer",
@@ -444,7 +784,21 @@
       "kind": "profile",
       "downloads": 0,
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "updatedAt": "1970-01-01T00:00:00.000Z"
+      "updatedAt": "1970-01-01T00:00:00.000Z",
+      "provides": [
+        "code-review",
+        "testing",
+        "source-control"
+      ],
+      "source": "proagents",
+      "compatibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "cursor",
+        "gemini-cli",
+        "generic-cli"
+      ]
     },
     {
       "id": "sre",
@@ -461,7 +815,21 @@
       "kind": "profile",
       "downloads": 0,
       "createdAt": "2026-09-15T00:00:00.000Z",
-      "updatedAt": "2026-09-17T23:30:46.430Z"
+      "updatedAt": "2026-09-17T23:30:46.430Z",
+      "provides": [
+        "observability",
+        "incident-response",
+        "ci-cd"
+      ],
+      "source": "proagents",
+      "compatibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "cursor",
+        "gemini-cli",
+        "generic-cli"
+      ]
     },
     {
       "id": "staff-engineer",
@@ -478,7 +846,21 @@
       "kind": "profile",
       "downloads": 0,
       "createdAt": "2026-09-15T00:00:00.000Z",
-      "updatedAt": "2026-09-17T23:30:46.431Z"
+      "updatedAt": "2026-09-17T23:30:46.431Z",
+      "provides": [
+        "architecture",
+        "code-review",
+        "planning"
+      ],
+      "source": "proagents",
+      "compatibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "cursor",
+        "gemini-cli",
+        "generic-cli"
+      ]
     },
     {
       "id": "systems-architect",
@@ -495,7 +877,20 @@
       "kind": "profile",
       "downloads": 0,
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "updatedAt": "1970-01-01T00:00:00.000Z"
+      "updatedAt": "1970-01-01T00:00:00.000Z",
+      "provides": [
+        "architecture",
+        "planning"
+      ],
+      "source": "proagents",
+      "compatibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "cursor",
+        "gemini-cli",
+        "generic-cli"
+      ]
     },
     {
       "id": "technical-writer",
@@ -511,7 +906,19 @@
       "kind": "profile",
       "downloads": 0,
       "createdAt": "2026-09-16T05:06:25.298Z",
-      "updatedAt": "2026-09-17T23:30:46.431Z"
+      "updatedAt": "2026-09-17T23:30:46.431Z",
+      "provides": [
+        "documentation"
+      ],
+      "source": "proagents",
+      "compatibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "cursor",
+        "gemini-cli",
+        "generic-cli"
+      ]
     },
     {
       "id": "test-automator",
@@ -527,7 +934,22 @@
       "kind": "profile",
       "downloads": 0,
       "createdAt": "2026-09-16T05:06:25.298Z",
-      "updatedAt": "2026-09-17T23:30:46.431Z"
+      "updatedAt": "2026-09-17T23:30:46.431Z",
+      "provides": [
+        "testing",
+        "frontend-testing",
+        "api-testing",
+        "ci-cd"
+      ],
+      "source": "proagents",
+      "compatibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "cursor",
+        "gemini-cli",
+        "generic-cli"
+      ]
     },
     {
       "id": "test-healer",
@@ -544,7 +966,20 @@
       "kind": "agent",
       "downloads": 0,
       "createdAt": "2026-09-15T00:00:00.000Z",
-      "updatedAt": "2026-09-15T00:00:00.000Z"
+      "updatedAt": "2026-09-15T00:00:00.000Z",
+      "provides": [
+        "testing",
+        "code-review"
+      ],
+      "source": "proagents",
+      "compatibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "cursor",
+        "gemini-cli",
+        "generic-cli"
+      ]
     },
     {
       "id": "web-quality-crew",
@@ -563,7 +998,22 @@
       "kind": "crew",
       "downloads": 0,
       "createdAt": "2026-09-18T00:00:00.000Z",
-      "updatedAt": "2026-09-18T00:00:00.000Z"
+      "updatedAt": "2026-09-18T00:00:00.000Z",
+      "provides": [
+        "performance",
+        "accessibility",
+        "frontend-development",
+        "testing"
+      ],
+      "source": "proagents",
+      "compatibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "cursor",
+        "gemini-cli",
+        "generic-cli"
+      ]
     }
   ]
 }

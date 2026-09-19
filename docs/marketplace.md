@@ -2,18 +2,27 @@
 layout: page
 sidebar: false
 outline: false
+head:
+  - - meta
+    - http-equiv: refresh
+      content: "0; url=/proagents/studio"
 ---
+
+<script>
+  // The app moved from /marketplace to /studio (Registry/Studio rebrand).
+  // Meta-refresh above for no-JS; this keeps hash routes working too.
+  if (typeof window !== "undefined") {
+    var dest = "/proagents/studio";
+    var hash = window.location.hash;
+    window.location.replace(dest + (hash || ""));
+  }
+</script>
 
 <div class="pa-mp-head">
   <div class="pa-mp-intro">
-    <h1 class="pa-mp-title">Marketplace</h1>
+    <h1 class="pa-mp-title">Moved</h1>
     <p class="pa-mp-lede">
-      Browse, preview and equip professional profiles and crews — everything below runs entirely in your browser.
+      The marketplace is now the <a href="/proagents/studio">ProAgents Studio</a>.
     </p>
   </div>
-  <div id="pa-mp-actions" class="pa-mp-actions" aria-label="Marketplace actions"></div>
 </div>
-
-<ClientOnly>
-  <AppIsland />
-</ClientOnly>

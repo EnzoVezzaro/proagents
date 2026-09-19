@@ -108,7 +108,7 @@ export function BuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
   };
 
   /**
-   * Publish = file a marketplace proposal issue on the catalog repo. The
+   * Publish = file a registry proposal issue on the catalog repo. The
    * repository's CI validates the embedded JSON instantly; a maintainer merge
    * comment (`/publish`) commits it to the catalog and Pages serves it.
    */
@@ -120,12 +120,12 @@ export function BuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
       setPublishState("Sign in with GitHub in Settings to publish — publishing files a proposal issue on the catalog repo.");
       return;
     }
-    setPublishState("Filing marketplace proposal…");
+    setPublishState("Filing registry proposal…");
     try {
       const { createIssue } = await import("../../github.js");
       const repo = (import.meta.env.VITE_MARKET_REPO as string | undefined) ?? "EnzoVezzaro/proagents";
       const res = await createIssue(settings.githubToken, repo, issueTitle(crew), issueBody(crew), ["crew-proposal"]);
-      setPublishState(`✓ Proposal filed: ${res.html_url}\nCI validates it within seconds. A maintainer merges it with /publish and it appears in the marketplace.`);
+      setPublishState(`✓ Proposal filed: ${res.html_url}\nCI validates it within seconds. A maintainer merges it with /publish and it appears in the registry.`);
     } catch (err) {
       const msg = (err as Error).message;
       setPublishState(
@@ -219,7 +219,7 @@ function WorkersTab(props: {
   const { crew, update, updateWorker } = props;
 
   // Load the catalog once so workers can pick a profession (profile spec)
-  // from the marketplace. Profiles are the atoms; workers reference them.
+  // from the registry. Profiles are the atoms; workers reference them.
   const [catalog, setCatalog] = React.useState<MarketplaceCatalog | null>(null);
   React.useEffect(() => {
     let cancelled = false;
@@ -241,7 +241,7 @@ function WorkersTab(props: {
     <div style={{ display: "grid", gap: 14 }}>
       <p style={{ color: "var(--cream-dim)", fontSize: 13, lineHeight: 1.6, margin: 0 }}>
         A worker is a role in the pipeline plus a <strong>profession</strong>. Pick a profile spec
-        from the marketplace (or type a built-in slug like <code>security-engineer</code>) and the
+        from the registry (or type a built-in slug like <code>security-engineer</code>) and the
         profession's expertise, methods, rules and verification are wired in at install time —
         no hand-crafted agent config needed.
       </p>
@@ -298,7 +298,7 @@ function WorkersTab(props: {
             style={field}
             value={w.profile ?? ""}
             onChange={(e) => updateWorker(w.id, { profile: slugify(e.target.value) || undefined })}
-            placeholder="or type a profile slug — marketplace (security-engineer)"
+            placeholder="or type a profile slug — registry (security-engineer)"
           />
           {w.profile && (
             <p style={{ color: "var(--warn)", fontSize: 12, margin: "8px 0 0" }}>
@@ -531,16 +531,16 @@ function ShipTab(props: {
       </Card>
 
       <Card>
-        <label style={label}>2 · Share it on the marketplace</label>
+        <label style={label}>2 · Share it on the registry</label>
         <p style={{ color: "var(--cream-dim)", fontSize: 13, lineHeight: 1.6, margin: "4px 0 12px" }}>
           Everything published here is <strong style={{ color: "var(--ok)", textDecoration: "none" }}>free and MIT-licensed</strong>.
           Publishing files a <strong>proposal issue</strong> on the ProAgents repo — CI validates
           your crew automatically, and a maintainer merge (<code>/publish</code>) puts it in the
-          marketplace. Nothing goes live without a human review.
+          registry. Nothing goes live without a human review.
         </p>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           {/* Disabled until GitHub sign-in — same gate as the profile builder. */}
-          <button onClick={publish} disabled={!signedIn} title={signedIn ? undefined : "Sign in with GitHub first"} style={signedIn ? btn : { ...btn, opacity: 0.5, cursor: "not-allowed" }}>File marketplace proposal</button>
+          <button onClick={publish} disabled={!signedIn} title={signedIn ? undefined : "Sign in with GitHub first"} style={signedIn ? btn : { ...btn, opacity: 0.5, cursor: "not-allowed" }}>File registry proposal</button>
           <button onClick={() => copy(issueBody(crew), "json")} style={btnGhost}>{copied === "json" ? "✓ Copied proposal" : "Copy proposal markdown"}</button>
           <button onClick={() => navigate("catalog")} style={btnGhost}>Back to catalog</button>
         </div>

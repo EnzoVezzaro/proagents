@@ -1,5 +1,5 @@
 /**
- * GitHub integration for the marketplace SPA.
+ * GitHub integration for the Studio SPA.
  *
  * Auth: OAuth Device Flow with the ProAgents GitHub App's Client ID.
  * Device flow is designed for input-limited clients and — importantly for a
@@ -159,7 +159,7 @@ function authHeaders(token: string): Record<string, string> {
     authorization: `Bearer ${token}`,
     accept: "application/vnd.github+json",
     "x-github-api-version": "2022-11-28",
-    "user-agent": "proagents-marketplace",
+    "user-agent": "proagents-registry",
   };
 }
 
@@ -234,7 +234,7 @@ export async function putRepoFile(
   }
 }
 
-/** Create an issue on a repository (used for marketplace proposals). */
+/** Create an issue on a repository (used for registry proposals). */
 export async function createIssue(token: string, repo: string, title: string, body: string, labels: string[]): Promise<{ number: number; html_url: string }> {
   const res = await fetch(`https://api.github.com/repos/${repo}/issues`, {
     method: "POST",
@@ -258,18 +258,18 @@ export async function listRepoTree(token: string, repo: string, ref?: string): P
 }
 
 // ---------------------------------------------------------------------------
-// Marketplace publishing — a PR, not a direct commit.
+// Registry publishing — a PR, not a direct commit.
 //
-// The marketplace is a Git repository; publishing means getting the profile
+// The registry is a Git repository; publishing means getting the profile
 // JSON INTO that repository, and the reviewable path is a pull request:
 // branch → commit profiles/<slug>/profile.json + catalog.json → open PR.
 // CI validates the PR; maintainers merge to publish.
 // ---------------------------------------------------------------------------
 
-/** True when the marketplace already has an item with this slug. */
+/** True when the registry already has an item with this slug. */
 export async function slugExistsInMarketplace(repo: string, slug: string): Promise<boolean> {
-  const res = await fetch(`https://api.github.com/repos/${repo}/contents/.marketplace/profiles/${encodeURIComponent(slug)}.json`, {
-    headers: { accept: "application/vnd.github+json", "user-agent": "proagents-marketplace" },
+  const res = await fetch(`https://api.github.com/repos/${repo}/contents/registry/profiles/${encodeURIComponent(slug)}.json`, {
+    headers: { accept: "application/vnd.github+json", "user-agent": "proagents-registry" },
   });
   if (res.status === 404) return false;
   if (res.ok) return true;
@@ -283,7 +283,7 @@ export interface CreatePrResult {
 }
 
 /**
- * Publish a profile by opening a PR against the marketplace repo:
+ * Publish a profile by opening a PR against the registry repo:
  * creates a branch, commits the item + catalog index, opens the PR.
  * Falls back to a fork when the token has no push access to the repo.
  */
@@ -335,18 +335,18 @@ export async function publishProfileAsPr(
     }
     if (headRepo !== repo) {
       // Cross-repo PRs commit to the fork; putRepoFile handles fork paths too.
-      await putRepoFile(token, headRepo, `.marketplace/profiles/${slug}/profile.json`, itemJson, `profile: publish ${slug}`, null, branch);
-      await putRepoFile(token, headRepo, ".marketplace/catalog.json", catalogJson, `profile: update catalog index for ${slug}`, null, branch);
+      await putRepoFile(token, headRepo, `registry/profiles/${slug}/profile.json`, itemJson, `profile: publish ${slug}`, null, branch);
+      await putRepoFile(token, headRepo, "registry/catalog.json", catalogJson, `profile: update catalog index for ${slug}`, null, branch);
     } else {
-      await putRepoFile(token, repo, `.marketplace/profiles/${slug}/profile.json`, itemJson, `profile: publish ${slug}`, null, branch);
-      await putRepoFile(token, repo, ".marketplace/catalog.json", catalogJson, `profile: update catalog index for ${slug}`, null, branch);
+      await putRepoFile(token, repo, `registry/profiles/${slug}/profile.json`, itemJson, `profile: publish ${slug}`, null, branch);
+      await putRepoFile(token, repo, "registry/catalog.json", catalogJson, `profile: update catalog index for ${slug}`, null, branch);
     }
   } else {
     // Retry: update the existing branch files.
-    const item = await getRepoFile(token, repo, `.marketplace/profiles/${slug}/profile.json`, branch);
-    await putRepoFile(token, repo, `.marketplace/profiles/${slug}/profile.json`, itemJson, `profile: update ${slug}`, item?.sha ?? null, branch);
-    const cat = await getRepoFile(token, repo, ".marketplace/catalog.json", branch);
-    await putRepoFile(token, repo, ".marketplace/catalog.json", catalogJson, `profile: update catalog index for ${slug}`, cat?.sha ?? null, branch);
+    const item = await getRepoFile(token, repo, `registry/profiles/${slug}/profile.json`, branch);
+    await putRepoFile(token, repo, `registry/profiles/${slug}/profile.json`, itemJson, `profile: update ${slug}`, item?.sha ?? null, branch);
+    const cat = await getRepoFile(token, repo, "registry/catalog.json", branch);
+    await putRepoFile(token, repo, "registry/catalog.json", catalogJson, `profile: update catalog index for ${slug}`, cat?.sha ?? null, branch);
   }
 
   // Open the PR (idempotent-ish: reuse the existing PR when present).
@@ -365,9 +365,9 @@ export async function publishProfileAsPr(
       head: branch,
       base: base.default_branch,
       body: [
-        `Automated profile proposal via the [ProAgents marketplace builder](https://enzovezzaro.github.io/proagents/).`,
+        `Automated profile proposal via the [ProAgents Studio builder](https://enzovezzaro.github.io/proagents/).`,
         ``,
-        `Adds \`.marketplace/profiles/${slug}/profile.json\` + catalog index entry. The deterministic validator runs on this PR.`,
+        `Adds \`registry/profiles/${slug}/profile.json\` + catalog index entry. The deterministic validator runs on this PR.`,
         `Maintainers: verify the profession is sound, then merge to publish.`,
       ].join("\n"),
     }),

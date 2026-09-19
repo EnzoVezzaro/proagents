@@ -26,6 +26,8 @@ export interface AppSettings {
   githubRefreshExpiresAt: number;
 }
 
+// Key deliberately keeps the pre-rename "marketplace" token: changing the
+// localStorage key would silently wipe every returning user's saved settings.
 const KEY = "proagents-marketplace-settings-v1";
 
 export const DEFAULT_SETTINGS: AppSettings = {

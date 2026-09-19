@@ -1,5 +1,5 @@
 name: 🧩 Crew proposal
-description: Propose a new crew or agent for the ProAgents marketplace
+description: Propose a new crew or agent for the ProAgents registry
 title: "[crew-proposal] <crew-id> v<version>"
 labels: ["crew-proposal", "triage"]
 body:
@@ -7,8 +7,8 @@ body:
     attributes:
       value: |
         Thanks for proposing a crew! **The easiest way to fill this in** is the
-        [marketplace builder](https://enzovezzaro.github.io/proagents/) —
-        *Build a crew → File marketplace proposal* creates this issue with everything
+        [Studio builder](https://enzovezzaro.github.io/proagents/) —
+        *Build a crew → File registry proposal* creates this issue with everything
         pre-filled, and CI validates it within seconds.
 
         You can also paste a crew JSON below by hand (e.g. from

@@ -6,6 +6,7 @@ import { DashboardPage } from "./pages/DashboardPage.js";
 import { BuildEntryPage } from "./pages/BuildEntryPage.js";
 import { BuilderPage } from "./pages/BuilderPage.js";
 import { ProfileBuilderPage } from "./pages/ProfileBuilderPage.js";
+import { ProjectBuilderPage } from "./pages/ProjectBuilderPage.js";
 import { PreviewPage } from "./pages/PreviewPage.js";
 import { SettingsModal } from "./SettingsModal.js";
 import { loadSettings, saveSettings, githubTokenNeedsRefresh, githubRefreshExpired, type AppSettings } from "../settings.js";
@@ -19,15 +20,15 @@ export interface AppCtx {
 }
 
 /**
- * The marketplace app runs as a client-only island inside VitePress: VitePress
+ * The Studio app (registry frontend) runs as a client-only island inside VitePress: VitePress
  * owns the document chrome (navbar, dark mode), this shell owns the app
  * surface below it. Routing is hash-based — VitePress owns real URLs — so
  * the app works under any base path and never fights the host router.
  */
 export function AppIsland(): React.JSX.Element {
-  const [route, setRoute] = useState(() => window.location.hash.replace(/^#\/?/, "") || "catalog");
+  const [route, setRoute] = useState(() => window.location.hash.replace(/^#\/?/, "") || "build-environment");
   useEffect(() => {
-    const onHash = () => setRoute(window.location.hash.replace(/^#\/?/, "") || "catalog");
+    const onHash = () => setRoute(window.location.hash.replace(/^#\/?/, "") || "build-environment");
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
@@ -118,7 +119,7 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
   const openSettings = useCallback(() => setSettingsOpen(true), []);
   const ctx: AppCtx = { settings, navigate, user };
 
-  // Header actions: the /marketplace page reserves a slot in its static header
+  // Header actions: the /studio page reserves a slot in its static header
   // row (#pa-mp-actions) — the chips portal into it so title, lede and actions
   // share one row. On any other surface (deep-linked hash routes, tests) the
   // slot is absent and the chips fall back to a local row below the navbar.
@@ -151,14 +152,21 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
     page = <PreviewPage id={decodeURIComponent(route.slice("preview/".length))} ctx={ctx} />;
   } else if (route === "dashboard") {
     page = <DashboardPage ctx={ctx} user={user} onOpenSettings={openSettings} />;
+  } else if (route === "build-environment") {
+    // BUILD — the primary Studio experience (NEW_CHANGES.md §10).
+    page = <ProjectBuilderPage ctx={ctx} />;
   } else if (route === "build") {
     page = <BuildEntryPage ctx={ctx} navigate={navigate} />;
   } else if (route === "builder") {
     page = <BuilderPage ctx={ctx} />;
   } else if (route === "build-profile") {
     page = <ProfileBuilderPage ctx={ctx} />;
-  } else {
+  } else if (route === "discover") {
+    // DISCOVER — secondary; the catalog gains "Use in Project" actions.
     page = <CatalogPage ctx={ctx} />;
+  } else {
+    // Legacy default (was the catalog) and unknown routes → Build primary.
+    page = <ProjectBuilderPage ctx={ctx} />;
   }
 
   return (
@@ -171,7 +179,7 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
       }}
     >
       {/* Account actions — portaled into the page header's reserved slot on
-          /marketplace (one row: title left, actions right), local row
+          /studio (one row: title left, actions right), local row
           elsewhere. */}
       {actionsSlot ? (
         createPortal(actionChips, actionsSlot, "pa-mp-actions")
@@ -191,7 +199,7 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
       )}
 
       <main style={{ padding: "32px 0 24px" }}>{page}</main>
-      {/* No island footer: the island only renders on /marketplace, which is
+      {/* No island footer: the island only renders on /studio, which is
           a VitePress page and carries the theme's VPFooter — no duplication. */}
       {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} user={user} />}
     </div>

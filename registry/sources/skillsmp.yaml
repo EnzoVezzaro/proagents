@@ -1,0 +1,31 @@
+# ProAgents Registry — federated source declarations
+#
+# A source is DATA, not code (NEW_CHANGES.md): these files declare where the
+# registry discovers artifacts, which operations each source supports, and
+# whether policy allows querying it. Adapters are selected by id in
+# src/registry/source-adapters.ts; unknown adapters degrade to a surfaced
+# note, never a crash. Schema: proagents/registry-source/v1.
+#
+# Provenance mapping: artifacts found via skills.sh carry source id
+# "skillsmp" (the marketplace that indexes skills.sh), npm → "npm",
+# the MCP registry → "mcp", GitHub → "github".
+
+schema: proagents/registry-source/v1
+
+id: skillsmp
+
+name: SkillsMP
+
+type: marketplace
+
+capabilities:
+  search: true
+  metadata: true
+  resolve: false
+  install: true
+
+artifact_types:
+  - skill
+
+policy:
+  allowed: true

@@ -13,7 +13,7 @@ import type { ProfileManifest } from "../profiles/types.js";
  * Resolve a worker's profession manifest by slug. Optional: crews without
  * profiles install exactly as before. The resolver is injected so the core
  * stays deterministic and provider-agnostic (the CLI wires it to the
- * profile registry / marketplace; tests pass stubs).
+ * profile registry; tests pass stubs).
  */
 export type ProfileResolver = (slug: string) => Promise<ProfileManifest | null>;
 
@@ -62,7 +62,7 @@ export function profileSections(manifest: ProfileManifest): string[] {
  *   .mcp.json                                    MCP servers merged (never clobbered)
  *
  * The installed crew is runnable by any agent runtime that reads .agents/
- * skills and .mcp.json — the marketplace's "pull the crew into my repo" flow.
+ * skills and .mcp.json — the registry's "pull the crew into my repo" flow.
  */
 
 export function crewSkillMarkdown(crew: CrewDefinition): string {
@@ -296,7 +296,7 @@ export async function installCrew(
         throw new CrewError(
           "CREW_INSTALL_ERROR",
           `worker "${w.id}" references profile "${slug}" which could not be resolved ` +
-            `(equip it first: proagent equip ${slug}, or reference a built-in/marketplace profile)`,
+            `(equip it first: proagent equip ${slug}, or reference a built-in/registry profile)`,
         );
       }
       profiles.set(w.id, manifest);

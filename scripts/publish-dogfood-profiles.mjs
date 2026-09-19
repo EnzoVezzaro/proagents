@@ -2,8 +2,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 const SRC = "/tmp/profiles";
-const ITEMS = path.resolve(".marketplace/profiles");
-const CATALOG = path.resolve(".marketplace/catalog.json");
+const ITEMS = path.resolve("registry/profiles");
+const CATALOG = path.resolve("registry/catalog.json");
 
 // Reader-facing one-liners for the catalog (derived from each profile's summary).
 const DESCRIPTIONS = {

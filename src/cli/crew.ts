@@ -4,7 +4,7 @@ import type { CrewDefinition } from "../crew/types.js";
 import { CrewError } from "../crew/types.js";
 import { crewProblems, crewWarnings } from "../crew/validate.js";
 import { installCrew, planInstall, mergeMcpConfig, crewSkillMarkdown } from "../crew/install.js";
-import { readCatalogRemote, fetchCrewDefinition, publishCrew } from "../crew/registry.js";
+import { readCatalogRemote, fetchCrewDefinition, publishCrew, LOCAL_CREWS_DIR } from "../crew/registry.js";
 import { loadCrewFile } from "../crew/hydrate.js";
 import type { GitHubCommitTarget } from "../crew/registry.js";
 import { jsonOut } from "./json.js";
@@ -13,7 +13,7 @@ import { listProfiles, fetchProfileManifest } from "../profiles/registry.js";
 import type { ProfileManifest } from "../profiles/types.js";
 
 /**
- * Profile resolver for crew installs: local checkout + packaged marketplace
+ * Profile resolver for crew installs: local checkout + packaged registry
  * first, then the remote catalog (same precedence as equip). Returns null so
  * installCrew can raise a precise, actionable error.
  */
@@ -135,7 +135,7 @@ async function crewBuild(file: string | undefined, flags: Record<string, string 
  * `proagent crew create <profile-slug>…` — compose existing profiles into a
  * custom crew. Generates only the crew-specific artifacts (mission, members,
  * coordination, tasks, workflows, handoffs, rules, verification, tools) in
- * .marketplace/crews/<id>/; profiles are referenced, never copied. Members
+ * registry/crews/<id>/; profiles are referenced, never copied. Members
  * carry explicit permission models (read-only by default); the pipeline is a
  * simple chain in argument order with a named-artifact handoff per edge.
  */
@@ -158,7 +158,7 @@ async function crewCreate(
     const manifest = await resolve(slug);
     if (!manifest) {
       fail(
-        `cannot resolve profile "${slug}" — equip it, place it in .marketplace/profiles/, or check the spelling\n` +
+        `cannot resolve profile "${slug}" — equip it, place it in registry/profiles/, or check the spelling\n` +
           `  (available: proagent profile list)`,
       );
     }
@@ -255,7 +255,9 @@ async function crewCreate(
   }
 
   const { writeCrewFolder } = await import("../crew/hydrate.js");
-  const dir = path.join(process.cwd(), ".marketplace", "crews", id);
+  // Custom scaffolds belong to the consumer repo's local dir (.proagent/crews);
+  // registry/ is the canonical source of the proagents catalog only.
+  const dir = path.join(process.cwd(), LOCAL_CREWS_DIR, id);
   const written = await writeCrewFolder(crew, dir);
 
   if (json) return jsonOut({ status: "ok", crewId: id, version: crew.version, dir, files: written });
@@ -265,7 +267,7 @@ async function crewCreate(
   console.log("Next:");
   console.log(`  proagent crew validate ${dir}        # gate before publishing`);
   console.log(`  proagent crew build ${dir}/crew.json # install into this repo`);
-  console.log(`  proagent crew submit ${dir}/crew.json # propose it to the marketplace`);
+  console.log(`  proagent crew submit ${dir}/crew.json # propose it to the registry`);
 }
 
 function slugifyCrewName(name: string): string {
@@ -288,7 +290,7 @@ Usage:
   proagent crew <subcommand> [options]
 
 Subcommands:
-  list                      List marketplace crews (Git-backed catalog)
+  list                      List registry crews (Git-backed catalog)
     --repo owner/name       Catalog repository (default ${DEFAULT_REPO})
     --ref branch            Catalog branch (default main)
     --token <gh-token>      Token for private catalogs (or GITHUB_TOKEN env)
@@ -305,7 +307,7 @@ Subcommands:
                             the crew folder (crew.json + mission/ + members/ +
                             coordination/ + tasks/ + handoffs/ + rules/ +
                             verification/ + tools/) in the current repo's
-                            .marketplace/crews/. Every member binds a profile —
+                            registry/crews/. Every member binds a profile —
                             the crew never duplicates profession content.
     --name <Crew Name>      Crew name (default: derived from the slugs)
     --id <crew-slug>        Crew id (default: derived from the name)
@@ -315,8 +317,8 @@ Subcommands:
   publish <crew.json>       Commit a crew to the catalog (folder-standard layout:
                             crew.json + members/ + mission/ + … + mcp/)
     --repo / --ref / --token (required token with contents:write)
-  submit <crew.json>        File a marketplace proposal issue (recommended)
-    --repo owner/name       Target repo (default: the marketplace repo)
+  submit <crew.json>        File a registry proposal issue (recommended)
+    --repo owner/name       Target repo (default: the registry repo)
     --token <gh-token>      Or GITHUB_TOKEN; needs issues:write
 
 The one-liner: install a crew and everything it needs into the repo you run:
@@ -341,9 +343,15 @@ async function resolveCrew(idOrFile: string, flags: Record<string, string | bool
   } catch {
     // fall through
   }
-  // Local marketplace checkout: crews/<id>/crew.json (folder standard).
+  // Consumer repo's local dir (.proagent/crews/<id>/crew.json).
   try {
-    return await loadCrewFile(path.join(process.cwd(), ".marketplace", "crews", idOrFile, "crew.json"));
+    return await loadCrewFile(path.join(process.cwd(), LOCAL_CREWS_DIR, idOrFile, "crew.json"));
+  } catch {
+    // fall through
+  }
+  // Local registry checkout: crews/<id>/crew.json (folder standard).
+  try {
+    return await loadCrewFile(path.join(process.cwd(), "registry", "crews", idOrFile, "crew.json"));
   } catch {
     // fall through to remote
   }
@@ -357,10 +365,10 @@ async function crewList(flags: Record<string, string | boolean>, json: boolean):
   if (json) return jsonOut({ status: "ok", repo, ref, catalog });
   const crews = catalog.items.filter((i) => i.kind !== "profile");
   if (crews.length === 0) {
-    console.log("Marketplace catalog is empty.");
+    console.log("Registry catalog is empty.");
     return;
   }
-  console.log(`Marketplace crews (${repo}@${ref}):`);
+  console.log(`Registry crews (${repo}@${ref}):`);
   for (const item of crews) {
     console.log(`  • ${item.id.padEnd(34)} ${item.kind.padEnd(5)} v${item.version.padEnd(8)} ${item.description.slice(0, 54)}`);
   }
@@ -478,7 +486,7 @@ async function crewPublish(file: string | undefined, flags: Record<string, strin
 }
 
 /**
- * Submit a crew to the marketplace by filing a proposal issue. CI validates
+ * Submit a crew to the registry by filing a proposal issue. CI validates
  * it instantly; a maintainer `/publish` commits it to the catalog. This is
  * the recommended path — direct `publish` bypasses review.
  */
@@ -508,7 +516,7 @@ async function crewSubmit(file: string | undefined, flags: Record<string, string
     (w) => `- **${w.name}** (\`${w.id}\`, ${w.role}) — reads: ${w.receivesFrom.join(", ") || "—"} → emits: ${w.emits.join(", ") || "—"} · write: ${w.permissions.write} · prod: ${w.permissions.production} · secrets: ${w.permissions.secrets}`,
   );
   const body = [
-    `## Marketplace proposal: ${crew.name}`,
+    `## Registry proposal: ${crew.name}`,
     "",
     crew.description,
     "",
@@ -526,7 +534,7 @@ async function crewSubmit(file: string | undefined, flags: Record<string, string
     "",
     "---",
     "",
-    "Maintainers: CI validates this proposal automatically. If the check is green and the design is sound, comment `/publish` to commit it to the marketplace catalog.",
+    "Maintainers: CI validates this proposal automatically. If the check is green and the design is sound, comment `/publish` to commit it to the registry catalog.",
   ].join("\n");
 
   const res = await fetch(`https://api.github.com/repos/${repo}/issues`, {
@@ -550,5 +558,5 @@ async function crewSubmit(file: string | undefined, flags: Record<string, string
   const issue = (await res.json()) as { number: number; html_url: string };
   if (json) return jsonOut({ status: "ok", crewId: crew.id, version: crew.version, repo, issue: issue.number, url: issue.html_url });
   console.log(`✓ Proposal filed: ${issue.html_url}`);
-  console.log("  CI validates it within seconds; a maintainer /publish commits it to the marketplace.");
+  console.log("  CI validates it within seconds; a maintainer /publish commits it to the registry.");
 }

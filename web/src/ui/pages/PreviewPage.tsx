@@ -15,7 +15,7 @@ function itemUrl(id: string): string {
 
 /**
  * Preview an agent on your repo: pick a repo (after GitHub login), pick an
- * agent from the marketplace, run it with the provider/model from settings,
+ * agent from the registry, run it with the provider/model from settings,
  * then optionally install the crew's files straight into the repo.
  */
 export function PreviewPage(props: { id?: string; ctx: AppCtx }): React.JSX.Element {

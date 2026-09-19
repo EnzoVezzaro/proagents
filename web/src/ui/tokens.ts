@@ -1,7 +1,7 @@
 import React from "react";
 
 /**
- * Design tokens — the marketplace SPA's craft floor. Everything interactive
+ * Design tokens — the Studio SPA's craft floor. Everything interactive
  * gets: keyboard focus rings, hover/active feedback, transition curves, and
  * a consistent type ramp.
  *

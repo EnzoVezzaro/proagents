@@ -1,6 +1,6 @@
-## Marketplace
+## Registry
 
-> **Spec status.** This document is the marketplace product specification: it describes
+> **Spec status.** This document is the registry product specification: it describes
 > the target experience. Parts of it ship today — profile and crew listings in the
 > Git-backed catalog, `profile install` / `crew install`, validated composition,
 > issue-based publishing with CI validation, the profile compiler and runtime adapters —
@@ -9,7 +9,7 @@
 > Every section below carries a status marker: **Ships today**, **Partially shipped**, or
 > **Specified, not yet shipped** — so the spec cannot silently drift from the product.
 
-The marketplace is not an agent, and it does not build agents. It is a **repository of
+The registry is not an agent, and it does not build agents. It is a **repository of
 specs**: profile specs (professions) and crew specs (teams of workers wired by a handoff
 graph). Execution needs a harness — Claude Code, Codex, whatever coding agent you run —
 and the `proagent` CLI is the courier that fetches a spec from here (or reads it locally)
@@ -21,7 +21,7 @@ professionally in a specific domain.
 
 ### Build a complete professional spec
 
-A marketplace profile can be assembled from multiple sources:
+A registry profile can be assembled from multiple sources:
 
 ```text
                     PROFESSIONAL AGENT
@@ -61,11 +61,11 @@ Profiles can pull and compose resources from:
 * **Tools** — required CLIs, APIs, MCP tools and external services
 * **Verification** — tests, validators, benchmarks, policies and acceptance criteria
 
-The marketplace should **not merely store references**. It should understand the resources being assembled and produce a coherent professional profile.
+The registry should **not merely store references**. It should understand the resources being assembled and produce a coherent professional profile.
 
 ---
 
-## Marketplace Builder UX
+## Studio Builder UX
 
 > **Partially shipped.** The SPA ships a guided **profile builder** walkthrough —
 > identity → expertise & rules → tools & MCP (with live health checks and registry
@@ -139,7 +139,7 @@ Should the agent be able to execute security
 scanners automatically, or only recommend them?
 ```
 
-The marketplace therefore becomes an **agent construction environment**, not a static package directory.
+The registry therefore becomes an **agent construction environment**, not a static package directory.
 
 ---
 
@@ -258,7 +258,7 @@ Profile policy:
 
 **"Connected" should mean tested**, not merely configured.
 
-A marketplace profile should never claim an MCP integration works without actually testing the connection when testing is possible.
+A registry profile should never claim an MCP integration works without actually testing the connection when testing is possible.
 
 ---
 
@@ -370,7 +370,7 @@ Validation should detect:
 > deterministic benchmark system (`proagent benchmark`). The full connect → test →
 > benchmark environment below is roadmap.
 
-The marketplace should provide a **profile test environment**.
+The registry should provide a **profile test environment**.
 
 ```text
 Build Profile
@@ -422,7 +422,7 @@ The result is a **professional-agent package**, not a prompt.
 
 A professional profile is provider-agnostic.
 
-The marketplace compiles the profile for the selected coding-agent runtime:
+The registry compiles the profile for the selected coding-agent runtime:
 
 ```text
                  Professional Profile
@@ -444,9 +444,9 @@ Unsupported capabilities must be reported rather than silently approximated.
 
 ---
 
-## Marketplace Packages
+## Registry Packages
 
-A marketplace listing represents a **complete professional agent profile** or a reusable component.
+A registry listing represents a **complete professional agent profile** or a reusable component.
 
 ### Full Profile
 
@@ -499,7 +499,7 @@ as their profession, profile specs and crew specs feed each other.
 
 ---
 
-## Marketplace Installation
+## Registry Installation
 
 > **Ships today** — `proagent profile install <id>` (and the `proagent equip` shortcut)
 > resolves a profile from the catalog, validates it, composes it if several are given,
@@ -572,7 +572,7 @@ Choose:
 >    commits it.
 > 2. **Pull request** — the SPA's "Publish via pull request" (GitHub sign-in required)
 >    creates a branch, commits `items/<slug>.json` + `catalog.json`, and opens a PR;
->    `.github/workflows/marketplace-pr.yml` validates every changed item and the index
+>    `.github/workflows/registry-pr.yml` validates every changed item and the index
 >    consistency; a maintainer merge publishes. Fork-based PRs are supported for
 >    contributors without push access.
 >
@@ -581,7 +581,7 @@ Choose:
 > provenance manifests are specified below.
 >
 > **Remote vs local equip:** `npx proagent equip <slug>` resolves built-ins → local
-> `./profiles/` → the marketplace catalog. A profile only works remotely once it is
+> `./profiles/` → the registry catalog. A profile only works remotely once it is
 > merged into the catalog repo — until then, use the downloaded JSON locally.
 
 Publishing should package the **entire professional profile**, including its dependency graph and provenance.
@@ -621,13 +621,13 @@ Dependencies
 Compatibility
 ```
 
-The marketplace should make the resulting profile inspectable and reproducible.
+The registry should make the resulting profile inspectable and reproducible.
 
 ---
 
-## Marketplace Philosophy
+## Registry Philosophy
 
-The marketplace is therefore not:
+The registry is therefore not:
 
 > "Download this SKILL.md."
 

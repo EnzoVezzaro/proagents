@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve, sep } from "node:path";
 
 /**
- * Dev-only: serve the git-backed catalog (repo .marketplace/) at the same
+ * Dev-only: serve the git-backed catalog (repo registry/) at the same
  * URLs production uses. In production `scripts/assemble-site.mjs` copies the
  * files into the artifact; in dev there is no assembly step, so Vite's
  * history fallback would otherwise answer these requests with index.html.
@@ -16,9 +16,9 @@ function catalogDevServer() {
     // loader chokes on. The logic is 15 lines and dev-only.
     configureServer(server: any) {
       server.middlewares.use((req: any, res: any, next: () => void) => {
-        const m = (req.url ?? "").split("?")[0].match(/^\/proagents\/\.marketplace\/(.+)$/);
+        const m = (req.url ?? "").split("?")[0].match(/^\/proagents\/\registry\/(.+)$/);
         if (!m) return next();
-        const root = resolve(process.cwd(), ".marketplace");
+        const root = resolve(process.cwd(), "registry");
         const file = resolve(root, decodeURIComponent(m[1]));
         if (!file.startsWith(root + sep) || !existsSync(file)) {
           res.statusCode = 404;
@@ -66,7 +66,7 @@ export default defineConfig({
         },
       },
     },
-    // The marketplace island (web/src/ui) is React JSX imported from the Vue
+    // The Studio island (web/src/ui) is React JSX imported from the Vue
     // theme. VitePress's esbuild config transforms .tsx with the classic JSX
     // factory by default, which would emit bare React.createElement calls
     // without React in scope; the island's pages import React explicitly, so
@@ -85,7 +85,7 @@ export default defineConfig({
     siteTitle: false,
     nav: [
       { text: "Docs", link: "/guide/what-is-proagents", activeMatch: "/guide/" },
-      { text: "Marketplace", link: "/marketplace", activeMatch: "/marketplace" },
+      { text: "Registry", link: "/studio", activeMatch: "/studio" },
       { text: "CLI", link: "/cli/", activeMatch: "/cli/" },
       {
         text: "Context",
@@ -134,9 +134,9 @@ export default defineConfig({
           ],
         },
         {
-          text: "Marketplace",
+          text: "Registry",
           items: [
-            { text: "Marketplace & crews", link: "/guide/marketplace" },
+            { text: "Registry & crews", link: "/guide/registry" },
           ],
         },
       ],

@@ -1,5 +1,5 @@
 /**
- * CORS proxy for the ProAgents marketplace's GitHub device-flow login.
+ * CORS proxy for the ProAgents Studio's GitHub device-flow login.
  *
  * `github.com/login/*` sends no CORS headers, so the browser SPA cannot call
  * it directly ("Failed to fetch"). `api.github.com` DOES allow CORS and is

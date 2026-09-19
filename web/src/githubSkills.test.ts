@@ -10,7 +10,7 @@ import {
 } from "./githubSkills.js";
 
 /**
- * GH-SKILLS — parsing/discovery for the marketplace "paste a repo URL" flow.
+ * GH-SKILLS — parsing/discovery for the registry "paste a repo URL" flow.
  * Pins the exact user scenario: wesleyegberto/software-engineering-skills.
  */
 

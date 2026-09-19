@@ -64,11 +64,11 @@ export function DashboardPage(props: { ctx: AppCtx; user: { login: string } | nu
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, margin: "24px 0" }}>
         <a href="#/builder" style={{ background: "var(--grad)", color: "#ffffff", borderRadius: 14, padding: 24, textDecoration: "none", boxShadow: "0 8px 28px rgba(0, 72, 228, 0.35)" }}>
           <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.01em" }}>Build your crew</div>
-          <p style={{ margin: "8px 0 0", fontSize: 13, lineHeight: 1.5, color: "rgba(255,255,255,0.88)" }}>Assemble workers, permissions, MCP servers and context — then publish to the marketplace or export the JSON.</p>
+          <p style={{ margin: "8px 0 0", fontSize: 13, lineHeight: 1.5, color: "rgba(255,255,255,0.88)" }}>Assemble workers, permissions, MCP servers and context — then publish to the registry or export the JSON.</p>
         </a>
         <a href="#/preview" style={{ background: "var(--ink-2)", border: "1px solid var(--line)", color: "var(--cream)", borderRadius: 14, padding: 24, textDecoration: "none" }}>
           <div style={{ fontSize: 20, fontWeight: 800 }}>Preview on a repo</div>
-          <p style={{ margin: "8px 0 0", fontSize: 13, color: "var(--cream-dim)", lineHeight: 1.5 }}>Run any marketplace crew against one of your repositories with your own provider/model.</p>
+          <p style={{ margin: "8px 0 0", fontSize: 13, color: "var(--cream-dim)", lineHeight: 1.5 }}>Run any registry crew against one of your repositories with your own provider/model.</p>
         </a>
         <button onClick={props.onOpenSettings} style={{ background: "var(--ink-2)", border: "1px solid var(--line)", color: "var(--cream)", borderRadius: 14, padding: 24, textAlign: "left", cursor: "pointer" }}>
           <div style={{ fontSize: 20, fontWeight: 800 }}>Settings</div>
@@ -79,7 +79,7 @@ export function DashboardPage(props: { ctx: AppCtx; user: { login: string } | nu
       <h2 style={{ fontSize: 18 }}>Your published crews</h2>
       {error && <ErrorNote message={error} />}
       {mine.length === 0 ? (
-        <EmptyState title="Nothing published yet" body="Build a crew in the GUI, then publish it — the marketplace is a Git-backed catalog in the open repo, so publishing is a commit anyone can audit." />
+        <EmptyState title="Nothing published yet" body="Build a crew in the GUI, then publish it — the registry is a Git-backed catalog in the open repo, so publishing is a commit anyone can audit." />
       ) : (
         <div style={{ display: "grid", gap: 10 }}>
           {mine.map((c) => (

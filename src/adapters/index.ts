@@ -36,6 +36,9 @@ export type HarnessId =
   | "opencode"
   | "cursor"
   | "gemini-cli"
+  | "copilot"
+  | "openclaude"
+  | "freebuff"
   | "generic-cli";
 
 export interface HarnessCapabilities {
@@ -129,6 +132,35 @@ export const HARNESS_SPECS: Array<{
     capabilities: { ...CAPS.instructions },
     layout: ["GEMINI.md", ".gemini/settings.json"],
     env: ["GEMINI_API_KEY", "GEMINI_CLI"],
+  },
+  {
+    id: "copilot",
+    name: "GitHub Copilot",
+    // Copilot reads .github/copilot-instructions.md (always-on),
+    // .github/instructions/*.instructions.md, AGENTS.md, and the shared
+    // .agents/skills convention; no native hook/policy enforcement.
+    capabilities: { ...CAPS.instructions },
+    layout: [".github/copilot-instructions.md", ".github/instructions", "AGENTS.md"],
+    env: ["GITHUB_COPILOT_CLI", "COPILOT_AGENT"],
+  },
+  {
+    id: "openclaude",
+    name: "OpenClaude",
+    // OpenClaude is Claude-compatible in workflow but keeps its own project
+    // config (.openclaude/) and does not read .claude/ — skills live in
+    // .openclaude/skills, instructions in AGENTS.md.
+    capabilities: { ...CAPS.instructions },
+    layout: [".openclaude", ".openclaude.json", "AGENTS.md"],
+    env: ["OPENCLAUDE"],
+  },
+  {
+    id: "freebuff",
+    name: "Freebuff",
+    // Convention-compatible harness: AGENTS.md instructions, shared agent
+    // skills, MCP. No known native policy enforcement surface.
+    capabilities: { projectInstructions: true, skills: true, ruleEnforcement: "none", mcp: true, shell: true, git: true },
+    layout: [".freebuff", "freebuff.json", "AGENTS.md"],
+    env: ["FREEBUFF"],
   },
 ];
 
@@ -236,6 +268,15 @@ function hashMarker(profile: EffectiveProfile): string {
     .update(profile.rules.join("\n"))
     .digest("hex")
     .slice(0, 12);
+}
+
+/**
+ * Skills directory per harness. Most harnesses share the agent-skills
+ * convention (.agents/skills); OpenClaude keeps its own tree and does not
+ * read .claude/ or .agents/.
+ */
+function skillsDirFor(target: HarnessId): string {
+  return target === "openclaude" ? path.join(".openclaude", "skills") : path.join(".agents", "skills");
 }
 
 /** Skill-style SKILL.md for harnesses with a skills directory. */
@@ -358,7 +399,7 @@ export async function compileForHarness(
   // is preserved beside the compiled skill so the portable profile stays
   // inspectable in the target repo.
   if (caps.skills) {
-    const dir = path.join(".agents", "skills", profile.slugs.join("-"));
+    const dir = path.join(skillsDirFor(target.id), profile.slugs.join("-"));
     await fs.mkdir(path.join(root, dir), { recursive: true });
     const skillPath = path.join(dir, "SKILL.md");
     await fs.writeFile(path.join(root, skillPath), profileSkillMarkdown(profile, manifest), "utf8");
@@ -396,7 +437,7 @@ export async function compileForHarness(
   // (skillBodies) install as standalone skills alongside the profile skill.
   if (caps.skills) {
     for (const [name, body] of Object.entries(manifest.skillBodies ?? {})) {
-      const dir = path.join(".agents", "skills", name);
+      const dir = path.join(skillsDirFor(target.id), name);
       await fs.mkdir(path.join(root, dir), { recursive: true });
       const skillPath = path.join(dir, "SKILL.md");
       const md = ["---", `name: ${name}`, `description: ${body.description || name}`, "---", "", body.body.trim(), ""].join("\n");
@@ -410,8 +451,12 @@ export async function compileForHarness(
     const instrFile =
       target.id === "claude-code" ? "CLAUDE.md"
       : target.id === "gemini-cli" ? "GEMINI.md"
+      : target.id === "copilot" ? path.join(".github", "copilot-instructions.md")
       : "AGENTS.md";
     const abs = path.join(root, instrFile);
+    // Nested instructions files (.github/copilot-instructions.md) need their
+    // parent dir created; root-level files are no-ops here.
+    await fs.mkdir(path.dirname(abs), { recursive: true });
     let existing = "";
     try {
       existing = await fs.readFile(abs, "utf8");
@@ -535,4 +580,29 @@ export async function compileForHarness(
   );
 
   return { target: target.id, files, limitations };
+}
+
+/**
+ * Compile a profile for EVERY known harness (plus generic-cli), not just the
+ * detected one — a repo equipped this way is ready for any coding agent that
+ * opens it. Detection still decides which files ALREADY exist get treated as
+ * the primary; this writes the full matrix. Deterministic order = spec order.
+ */
+export async function compileForAllHarnesses(
+  profile: EffectiveProfile,
+  manifest: ProfileManifest,
+  root: string = process.cwd(),
+  opts: { knowledgeDirs?: string[] } = {},
+): Promise<CompileResult[]> {
+  const results: CompileResult[] = [];
+  for (const spec of HARNESS_SPECS) {
+    const signal: HarnessSignal = {
+      id: spec.id,
+      name: spec.name,
+      capabilities: { ...spec.capabilities },
+      evidence: ["--all-targets"],
+    };
+    results.push(await compileForHarness(profile, manifest, signal, root, opts));
+  }
+  return results;
 }

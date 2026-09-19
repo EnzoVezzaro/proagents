@@ -1,7 +1,7 @@
 import type { CrewDefinition } from "./types.js";
 
 /**
- * Preview: run a marketplace crew against a selected repo, on the fly, with
+ * Preview: run a registry crew against a selected repo, on the fly, with
  * the user's provider/model. The model receives the crew's contracts plus a
  * tree of the target repo — enough to reason about fit, without shipping the
  * repo's contents anywhere but the user's chosen provider.

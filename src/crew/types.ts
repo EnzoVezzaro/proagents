@@ -3,7 +3,7 @@
  *
  * A CREW is a publishable bundle of specialized workers: per-worker skill,
  * permission model, tool allowlist, MCP servers and context frameworks,
- * plus the handoff graph that connects them. Crews are the marketplace unit:
+ * plus the handoff graph that connects them. Crews are registry units:
  * build here (GUI or CLI), publish to the Git-backed catalog, install anywhere
  * with one command (`proagent crew install <id>`).
  */
@@ -82,7 +82,7 @@ export interface CrewWorker {
   description: string;
   /**
    * Optional profession: the slug of a Professional Profile this worker
-   * operates as (marketplace or built-in). When set, expertise, methods,
+   * operates as (registry or built-in). When set, expertise, methods,
    * rules and verification come from the profile and per-worker hand
    * configuration (permissions, instructions) becomes optional — the crew
    * builder composes professions instead of crafting every field.
@@ -106,9 +106,9 @@ export interface CrewHandoff {
   artifact: string;
 }
 
-/** A complete crew definition — the marketplace unit. */
+/** A complete crew definition — the registry unit. */
 export interface CrewDefinition {
-  /** Marketplace id, e.g. "incidere-incident-response". Stable, slug-like. */
+  /** Registry id, e.g. "incidere-incident-response". Stable, slug-like. */
   id: string;
   name: string;
   version: string; // semver
@@ -167,7 +167,7 @@ export type CrewWorkerSource = Omit<CrewWorker, "instructions"> & {
  * inherits trust implicitly.
  */
 export interface CrewMemberSource {
-  /** Profile slug this member operates as (marketplace or built-in). */
+  /** Profile slug this member operates as (registry or built-in). */
   profile: string;
   /** Pipeline role inside the crew, e.g. "schema-owner". */
   role: string;
@@ -246,14 +246,52 @@ export interface CrewDefinitionSource {
 // Catalog (Git-backed database)
 // ---------------------------------------------------------------------------
 
-/** The Git-as-database catalog file. Lives at .marketplace/catalog.json. */
+/** The Git-as-database catalog file. Lives at registry/catalog.json. */
 export interface MarketplaceCatalog {
   schemaVersion: 1;
   updatedAt: string;
   items: MarketplaceItem[];
 }
 
-/** Lightweight catalog entry (full definition lives in crews/<id>/crew.json). */
+/**
+ * Every artifact kind the registry models. Schema-complete from day one
+ * (NEW_CHANGES.md artifact model); loaders/installers land per kind as
+ * content arrives — unknown kinds are indexed and listed, and `info`
+ * reports "no loader yet" rather than failing.
+ */
+export type ArtifactKind =
+  | "profile"
+  | "crew"
+  | "agent"
+  | "workflow"
+  | "capability"
+  | "skill"
+  | "tool"
+  | "mcp"
+  | "prompt"
+  | "hook"
+  | "adapter"
+  | "policy"
+  | "template"
+  | "extension";
+
+/** Abstract abilities an artifact provides or needs (capability model). */
+export interface ArtifactRequires {
+  /** Capability ids the artifact needs at runtime. */
+  capabilities?: string[];
+  /** Other artifacts, as `kind:id` references. */
+  artifacts?: string[];
+}
+
+/**
+ * Lightweight catalog entry (full definition lives in crews/<id>/crew.json).
+ * Historical name kept for compatibility (crew/registry.ts, web mirrors);
+ * the catalog IS the registry catalog — see NEW_CHANGES.md terminology.
+ *
+ * Additive schema (NEW_CHANGES.md): `kind` widens to ArtifactKind, and
+ * `provides` / `requires` / `compatibility` / `source` are optional. Old
+ * readers ignore the new fields; new readers tolerate their absence.
+ */
 export interface MarketplaceItem {
   id: string;
   name: string;
@@ -261,10 +299,19 @@ export interface MarketplaceItem {
   description: string;
   author: string;
   tags: string[];
-  kind: "profile" | "crew" | "agent";
+  /** Legacy writers emit "profile" | "crew" | "agent"; the schema accepts all kinds. */
+  kind: ArtifactKind;
   downloads: number;
   createdAt: string;
   updatedAt: string;
+  /** Capability ids this artifact satisfies (capability resolution input). */
+  provides?: string[];
+  /** What the artifact needs: capabilities and/or `kind:id` artifact refs. */
+  requires?: ArtifactRequires;
+  /** Harness ids this artifact is known to compile for (informational). */
+  compatibility?: string[];
+  /** Provenance: "proagents" (native) or a federated source id (sources/*.yaml). */
+  source?: string;
 }
 
 // ---------------------------------------------------------------------------

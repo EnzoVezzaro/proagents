@@ -1,15 +1,15 @@
-name: Marketplace PR validation
+name: Registry PR validation
 
-# Publishing path #2: pull requests. The SPA's "Publish via pull request"
+# Publishing path #2: pull requests. The Studio's "Publish via pull request"
 # flow and manual contributions both land as PRs touching
-# .marketplace/profiles/** or .marketplace/crews/** (+ catalog.json). Every
+# registry/profiles/** or registry/crews/** (+ catalog.json). Every
 # changed item is run through the same deterministic validators the CLI and
-# SPA use; the catalog index must stay consistent with the item files.
+# Studio use; the catalog index must stay consistent with the item files.
 
 on:
   pull_request:
     paths:
-      - ".marketplace/**"
+      - "registry/**"
 
 permissions:
   contents: read
@@ -20,7 +20,7 @@ permissions:
   pull-requests: write
 
 concurrency:
-  group: marketplace-pr-${{ github.ref }}
+  group: registry-pr-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -38,10 +38,10 @@ jobs:
 
       - run: npm ci && npm run build
 
-      - name: List changed marketplace items
+      - name: List changed registry items
         id: changed
         run: |
-          git diff --name-only --diff-filter=ACM "origin/${{ github.base_ref }}...HEAD" -- '.marketplace/profiles/*/profile.json' '.marketplace/crews/*/crew.json' > /tmp/items.txt || true
+          git diff --name-only --diff-filter=ACM "origin/${{ github.base_ref }}...HEAD" -- 'registry/profiles/*/profile.json' 'registry/crews/*/crew.json' > /tmp/items.txt || true
           echo "count=$(wc -l < /tmp/items.txt | tr -d ' ')" >> "$GITHUB_OUTPUT"
           echo "files<<FILES_EOF" >> "$GITHUB_OUTPUT"
           cat /tmp/items.txt >> "$GITHUB_OUTPUT"
@@ -68,7 +68,7 @@ jobs:
               import { crewProblems } from './dist/crew/validate.js';
               import { loadCrewFile } from './dist/crew/hydrate.js';
               import { asCrewSource } from './dist/crew/hydrate.js';
-              import { profileProblems } from './dist/profiles/marketplace.js';
+              import { profileProblems } from './dist/profiles/publish.js';
               const f = '$f';
               const kind = '$kind';
               let problems = [];
@@ -87,7 +87,7 @@ jobs:
                   source: JSON.parse(fs.readFileSync(f, 'utf8')),
                 });
               } else {
-                problems = ['unrecognized marketplace item shape'];
+                problems = ['unrecognized registry item shape'];
               }
               if (problems.length > 0) {
                 for (const p of problems) console.error(f + ': ' + p);
@@ -103,14 +103,14 @@ jobs:
         run: |
           node --input-type=module <<'NODE'
             import fs from "node:fs";
-            const catalog = JSON.parse(fs.readFileSync(".marketplace/catalog.json", "utf8"));
+            const catalog = JSON.parse(fs.readFileSync("registry/catalog.json", "utf8"));
             const indexIds = new Set(catalog.items.map((i) => i.id));
             const problems = [];
             const changed = fs.readFileSync("/tmp/items.txt", "utf8").split("\n").filter(Boolean);
             for (const f of changed) {
               const item = JSON.parse(fs.readFileSync(f, "utf8"));
               const id = item.profile?.slug ?? item.crew?.id ?? item.id;
-              const rel = f.replace(".marketplace/profiles/", "").replace(".marketplace/crews/", "");
+              const rel = f.replace("registry/profiles/", "").replace("registry/crews/", "");
               const expectedName = rel.endsWith("/profile.json")
                 ? rel.replace(/\/profile\.json$/, "")
                 : rel.endsWith("/crew.json")
@@ -138,10 +138,10 @@ jobs:
             const s = count === '1' ? '' : 's';
             const L = [];
             if (valid) {
-              L.push(`✅ **${count} marketplace item${s} pass the deterministic validator(s).**`);
+              L.push(`✅ **${count} registry item${s} pass the deterministic validator(s).**`);
               L.push('', 'Maintainers: verify the design, then merge to publish.');
             } else {
-              L.push('❌ **Marketplace validation failed** — see the "Validate changed items" step for the exact PA03x/CREW problems.');
+              L.push('❌ **Registry validation failed** — see the "Validate changed items" step for the exact PA03x/CREW problems.');
               L.push('', 'Push a fix commit to this branch to re-run automatically.');
             }
             await github.rest.issues.createComment({

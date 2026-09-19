@@ -14,8 +14,8 @@ hero:
       text: What is ProAgents?
       link: /guide/what-is-proagents
     - theme: alt
-      text: Browse the marketplace
-      link: /marketplace
+      text: Open the Studio
+      link: /studio
 
 features:
   - title: Professional Agent Profiles

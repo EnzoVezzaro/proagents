@@ -7,8 +7,8 @@ import path from "node:path";
  *
  * Convention (mirrors .env.example) — the project is fully open source, so
  * only identity/publishing credentials live here; there are no payment
- * secrets (donations run through GitHub Sponsors / Ko-fi links):
- *   - `PROAGENT_MARKET_REPO`  → marketplace catalog repository
+ * secrets (donations run through GitHub Sponsors / Ko-fi links): *   - `PROAGENT_REGISTRY_REPO` → registry catalog repository
+ *     (deprecated alias: `PROAGENT_MARKET_REPO`, still honored)
  *   - `GITHUB_TOKEN`          → contents:write token for publishing
  *   - `GITHUB_APP_CLIENT_ID`  → device-flow client id (public)
  *
@@ -24,12 +24,14 @@ export interface EnvConfig {
 
 /** Which names the loader recognizes (and .env.example documents). */
 const KNOWN_KEYS = [
-  "PROAGENT_MARKET_REPO",
+  "PROAGENT_REGISTRY_REPO",
+  "PROAGENT_MARKET_REPO", // deprecated alias of PROAGENT_REGISTRY_REPO
   "GITHUB_TOKEN",
   "GH_TOKEN",
   "GITHUB_APP_CLIENT_ID",
   "VITE_GITHUB_APP_CLIENT_ID",
-  "VITE_MARKET_REPO",
+  "VITE_REGISTRY_REPO",
+  "VITE_MARKET_REPO", // deprecated alias of VITE_REGISTRY_REPO
 ] as const;
 
 const SECRET_SUFFIXES = ["SECRET", "TOKEN", "KEY"];
@@ -115,7 +117,13 @@ export function loadDotEnv(dir: string = process.cwd()): void {
 /** Resolve the documented config from the (post-load) environment. */
 export function getEnvConfig(): EnvConfig {
   return {
-    marketRepo: process.env.PROAGENT_MARKET_REPO || process.env.VITE_MARKET_REPO || undefined,
+    // New name wins; the pre-rename MARKET names keep working (additive contract).
+    marketRepo:
+      process.env.PROAGENT_REGISTRY_REPO ||
+      process.env.PROAGENT_MARKET_REPO ||
+      process.env.VITE_REGISTRY_REPO ||
+      process.env.VITE_MARKET_REPO ||
+      undefined,
     githubToken: process.env.GITHUB_TOKEN || process.env.GH_TOKEN || undefined,
     githubAppClientId: process.env.GITHUB_APP_CLIENT_ID || process.env.VITE_GITHUB_APP_CLIENT_ID || undefined,
   };

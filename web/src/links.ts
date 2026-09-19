@@ -1,5 +1,5 @@
 /**
- * Cross-surface links for the marketplace app — which lives INSIDE the
+ * Cross-surface links for the Studio app — which lives INSIDE the
  * VitePress site as a client-only island. "Docs" is no longer another origin:
  * the app navigates between app routes and doc pages with plain relative
  * hrefs resolved against the shared base (/proagents/ in production, the

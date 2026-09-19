@@ -1,6 +1,6 @@
-# Marketplace: the spec repository
+# Registry: the spec repository
 
-The marketplace is a **repository of specs, not agents**: profile specs (professions) and
+The registry is a **repository of specs, not agents**: profile specs (professions) and
 crew specs (teams of workers wired by a handoff graph). A harness — Claude Code, Codex,
 whatever coding agent you run — does the executing. The proagent CLI is the courier: it
 pulls a spec from here and hands it to your harness as native artifacts.
@@ -17,9 +17,9 @@ repo, and any item pulls into your repository with one command.
 
 | Piece | Where | What it is |
 |---|---|---|
-| Marketplace app | [`/proagents/`](https://enzovezzaro.github.io/proagents/) | Static SPA (React + Vite) deployed to GitHub Pages — runs entirely in your browser |
-| Catalog | `.marketplace/catalog.json` + `.marketplace/profiles/` + `.marketplace/crews/` | **Git-as-database**: the repo itself is the data layer; every listing is a reviewable JSON file, and Pages serves reads |
-| CLI | `proagent equip <slug>` · `proagent crew …` | the courier: pulls a spec (profile or crew) and hands it to your harness |
+| Studio app | [`/proagents/studio`](https://enzovezzaro.github.io/proagents/studio) | Static SPA (React + Vite) deployed to GitHub Pages — runs entirely in your browser |
+| Catalog | `registry/catalog.json` + `registry/profiles/` + `registry/crews/` + `registry/capabilities/` | **Git-as-database**: the repo itself is the data layer; every listing is a reviewable JSON file, and Pages serves reads |
+| CLI | `proagent equip <slug>` · `proagent setup` · `proagent search …` | the courier: pulls a spec (profile or crew) — or resolves a whole environment — and hands it to your harness |
 | Installer | `.agents/skills/<profile>/` + instructions block · `.agents/crews/<id>/` + `.mcp.json` | the on-disk layout any agent runtime can execute |
 
 ## Install a profile (the one-liner)
@@ -50,16 +50,16 @@ proagent compile security-engineer --target codex # explicit harness
 
 ### Remote vs local equip
 
-`npx proagent equip <slug>` resolves in order: your repo's `.marketplace/profiles/` checkout →
+`npx proagent equip <slug>` resolves in order: your repo's `registry/profiles/` checkout →
 the packaged snapshot shipped with the npm package → the remote catalog (fetched from the
 catalog repo). Consequence: a profile you just built **works locally immediately** (drop
-the item folder in `.marketplace/profiles/`), but the same one-liner only works remotely for
+the item folder in `registry/profiles/`), but the same one-liner only works remotely for
 other people **after the profile is merged into the catalog repo** — which is exactly what
 publishing does.
 
 ### The `profile` command group
 
-Everything the marketplace offers for profiles is also available as explicit
+Everything the registry offers for profiles is also available as explicit
 subcommands — mirroring the `crew` group:
 
 ```bash
@@ -81,7 +81,7 @@ Crews follow the same folder standard as profiles — the manifest is an index,
 the folders are the source:
 
 ```
-.marketplace/crews/<crew-id>/
+registry/crews/<crew-id>/
 ├── crew.json                          # the index: version, crew metadata, section paths
 ├── mission/01-mission.md              # why the team exists
 ├── members/NN-<member-id>.json        # profile bindings (CrewMemberSource)
@@ -144,14 +144,80 @@ proagent crew install <id> --dry-run        # see the plan, write nothing
 proagent crew install <id> --repo owner/name --ref dev   # another catalog
 ```
 
+## Projects: `proagents.yaml` → `setup`
+
+Beyond single artifacts, the registry resolves **whole environments**. A project spec —
+`proagents.yaml` at the repo root — declares what the project needs as *capabilities*
+(abstract abilities like `browser-automation`), never as implementation-specific refs.
+The registry resolves where those capabilities come from: native catalog first, then
+allowed federated sources (skills.sh, npm, the MCP registry, GitHub — declared in
+`registry/sources/*.yaml`, data not code).
+
+```yaml
+# proagents.yaml — the human-authored source of truth
+schema: proagents/v1
+project:
+  name: my-saas
+environment:
+  profiles: [frontend-developer, backend-developer, qa]
+  crews: [feature-delivery-squad]
+  capabilities: [browser-automation, database-access, source-control]
+policies:
+  filesystem:
+    workspace-only: true
+  network:
+    allowed: [github.com]
+harness:
+  compatibility: [codex, opencode]   # mode: compatible — never a pin
+```
+
+The pipeline (analogous to `package.json` + `package-lock.json`):
+
+```bash
+proagent resolve                 # capability → implementation graph (PA502/503/504)
+proagent lock                    # persist proagents.lock (checksummed, no timestamps)
+proagent validate --spec         # end-to-end PA5xx check of spec + lock
+proagent setup                   # spec → resolve → validate → equip/install
+proagent setup --harness codex   # same environment, different adapter
+proagent setup --dry-run         # the plan, nothing written
+```
+
+`setup` chains the layers you already know: compose the spec's profiles (PA02x), compile
+for the target harness, install crews (with the `.mcp.json` merge), and report what the
+target could not enforce as **limitations** — markdown is not enforcement, and the report
+is honest about it. A blocked setup writes nothing.
+
+Validation codes — the PA5xx series (full table in [CLI → JSON interface](/cli/json)):
+
+| Code | Meaning |
+|---|---|
+| `PA501` | invalid proagents.yaml schema |
+| `PA502` | unsatisfiable capability (no implementation on any allowed source) |
+| `PA503` | ambiguous capability, no selection (pass `--select c=kind:id`) |
+| `PA504` | circular artifact dependency |
+| `PA505` | artifact vs `harness.compatibility` mismatch |
+| `PA510` | lock stale (spec changed after `lock`) |
+| `PA511` | lock checksum mismatch / unverified |
+
+In Studio, **Build an environment** (the primary experience) walks intent → capabilities →
+artifacts → policies → export and downloads the same `proagents.yaml`. Discover is the
+secondary surface; its **Use in Project** action imports any catalog item into the builder.
+
 ## The web app
 
-### Catalog & detail
+### Build an environment (primary)
+The Studio opens on **Build**: describe what you are building, pick the capabilities the
+environment needs, add catalog artifacts that provide them, set policies, and export a
+portable `proagents.yaml` (the [Projects](#projects-proagents-yaml-→-setup) flow above).
+Every step validates client-side (PA501/PA502/PA505) with the full PA5xx set left to
+`proagent resolve` — federated search is a CLI strength.
+
+### Catalog & detail (discover)
 Browse **profiles**, crews and single agents, filter by tag, and open any item for detail:
 profiles show expertise, methods, rules and verification with the one-line equip command;
 crews show the full worker table with **permission badges**
-(write/production/secrets/approval gates/MCP). Everything is free and MIT-licensed —
-every item installs directly.
+(write/production/secrets/approval gates/MCP). **Use in Project** imports any item into
+the environment builder. Everything is free and MIT-licensed — every item installs directly.
 
 ### Build a profile (the guided walkthrough)
 `Build a profile` opens a five-step walkthrough — each step shows its own completion state
@@ -192,15 +258,15 @@ Either way you end with a **CrewDefinition JSON** that:
 
 - installs locally: download it, run `proagent crew build ./crew.json --file <id>.json` in
   any repo (skills, agent contracts, merged `.mcp.json`), or
-- publishes to the marketplace by **filing a proposal issue** (next section).
+- publishes to the registry by **filing a proposal issue** (next section).
 
 ### Publishing = a PR or a proposal issue — never a silent direct commit
-Marketplace submissions are gated by CI on two paths:
+Registry submissions are gated by CI on two paths:
 
 1. **Pull request (recommended — used by the profile builder's *Ship* tab).** Sign in with
    GitHub, press **Publish via pull request**: the app creates a branch
    (`proagent-profile/<slug>`), commits `profiles/<slug>/profile.json` + the catalog index, and opens
-   a PR. The `Marketplace PR validation` workflow validates every changed item with the
+   a PR. The `Registry PR validation` workflow validates every changed item with the
    same deterministic validator and checks index consistency. Contributors without push
    access are supported automatically (the branch lands on a fork). A maintainer merge
    publishes.
@@ -266,14 +332,14 @@ App's settings.
 ## Donations
 
 ProAgents is **fully open source** — there is nothing to buy. Every crew and agent in the
-marketplace is free and MIT-licensed, and the project itself has no paid tier. If the tool
+registry is free and MIT-licensed, and the project itself has no paid tier. If the tool
 saves you time, support development through the donation channels:
 
 - **GitHub Sponsors** — <https://github.com/sponsors/EnzoVezzaro> (the Donate button in
-  the marketplace header and the Sponsor button on the repo)
+  the Studio header and the Sponsor button on the repo)
 - **Ko-fi** — <https://ko-fi.com/enzojuniorvezzaro>
 
-Both are wired into `.github/FUNDING.yml`, the README, the docs footer and the marketplace
+Both are wired into `.github/FUNDING.yml`, the README, the docs footer and the Studio
 app. There are no payment processors in the codebase: no Stripe, no keys, no checkout.
 
 ## Environment & secrets (.env)

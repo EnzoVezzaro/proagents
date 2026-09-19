@@ -1,0 +1,19 @@
+schema: proagents/registry-source/v1
+
+id: mcp
+
+name: MCP Registry
+
+type: registry
+
+capabilities:
+  search: true
+  metadata: true
+  resolve: false
+  install: false
+
+artifact_types:
+  - mcp
+
+policy:
+  allowed: true

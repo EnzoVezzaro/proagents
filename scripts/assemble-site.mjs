@@ -30,7 +30,7 @@ function mustExist(dir, label) {
 
 mustExist(DOCS_DIST, "docs build output");
 mustExist(join(DOCS_DIST, "index.html"), "home page (docs/index.md)");
-mustExist(join(DOCS_DIST, "marketplace.html"), "marketplace island page (docs/marketplace.md)");
+mustExist(join(DOCS_DIST, "studio.html"), "Studio island page (docs/studio.md)");
 mustExist(join(DOCS_DIST, "404.html"), "branded 404 (docs/public/404.html)");
 mustExist(join(DOCS_DIST, "app/index.html"), "/app/ shim (docs/public/app/index.html)");
 
@@ -39,18 +39,20 @@ mkdirSync(SITE, { recursive: true });
 
 // The whole VitePress output IS the site:
 //   index.html      → hero + features
-//   marketplace.html→ the marketplace island page
+//   studio.html     → the Studio island page
 //   guide/ cli/ …   → the docs pages
 //   404.html        → branded catch-all + stale-URL redirects (from public/)
-//   app/            → old-URL redirect shim → /marketplace (from public/)
+//   app/            → old-URL redirect shim → /studio (from public/)
 //   assets/         → one bundle (docs + app code together)
 cpSync(DOCS_DIST, SITE, { recursive: true });
 
-// Git-backed catalog data → served at /proagents/.marketplace/*.
+// Git-backed catalog data → served at /proagents/registry/*.
 // Items may carry subdirectories (knowledge references), so copy recursively.
-mkdirSync(join(SITE, ".marketplace"), { recursive: true });
-cpSync(".marketplace/catalog.json", join(SITE, ".marketplace/catalog.json"));
-cpSync(".marketplace/profiles", join(SITE, ".marketplace/profiles"), { recursive: true });
-cpSync(".marketplace/crews", join(SITE, ".marketplace/crews"), { recursive: true });
+// capabilities/index.json feeds the Studio Build mode's capability picker.
+mkdirSync(join(SITE, "registry"), { recursive: true });
+cpSync("registry/catalog.json", join(SITE, "registry/catalog.json"));
+cpSync("registry/profiles", join(SITE, "registry/profiles"), { recursive: true });
+cpSync("registry/crews", join(SITE, "registry/crews"), { recursive: true });
+cpSync("registry/capabilities", join(SITE, "registry/capabilities"), { recursive: true });
 
-console.log(`assemble-site: wrote ${resolve(SITE)} (VitePress site + marketplace page + catalog)`);
+console.log(`assemble-site: wrote ${resolve(SITE)} (VitePress site + Studio page + catalog)`);

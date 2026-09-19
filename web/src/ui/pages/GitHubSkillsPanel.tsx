@@ -10,9 +10,9 @@ import {
 } from "../../githubSkills.js";
 
 /**
- * Marketplace panel for installing skills from any GitHub repo that ships
+ * Studio panel for installing skills from any GitHub repo that ships
  * agent skills (a nested-SKILL.md collection). Entered by pasting a repo URL
- * into the marketplace search (Enter). Everything runs client-side against
+ * into the registry search (Enter). Everything runs client-side against
  * api.github.com / raw.githubusercontent.com — no backend, no sign-in.
  */
 
@@ -124,7 +124,7 @@ export function GitHubSkillsPanel(props: { input: string; onDone: () => void }):
           {state.message}
           <br />
           <span style={{ color: "var(--cream-dim)", fontSize: 12 }}>
-            Not every repo ships skills this way — the marketplace catalog lists curated, reviewable specs you can equip directly.
+            Not every repo ships skills this way — the registry catalog lists curated, reviewable specs you can equip directly.
           </span>
         </p>
       )}
@@ -137,7 +137,7 @@ export function GitHubSkillsPanel(props: { input: string; onDone: () => void }):
             </p>
           )}
           <p style={{ color: "var(--cream-dim)", fontSize: 13, margin: "8px 0 14px" }}>
-            These are community agent skills from the repo (not marketplace-reviewed). Install with the{" "}
+            These are community agent skills from the repo (not registry-reviewed). Install with the{" "}
             <code style={{ color: "var(--cyan)" }}>skills</code> CLI — it copies each skill into{" "}
             <code>.agents/skills/</code> where your harness discovers it.
           </p>

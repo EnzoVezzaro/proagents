@@ -1,6 +1,6 @@
-name: Marketplace proposal pipeline (crews & profiles)
+name: Registry proposal pipeline (crews & profiles)
 
-# Marketplace submissions are GitHub issues, and this workflow is the gate:
+# Registry submissions are GitHub issues, and this workflow is the gate:
 #
 #   1. VALIDATE — every crew-proposal or profile-proposal issue
 #      (opened/edited/reopened) gets its CREW-JSON or PROFILE-JSON block
@@ -95,7 +95,7 @@ jobs:
         run: |
           if node --input-type=module -e "
             import { crewProblems } from './dist/crew/validate.js';
-            import { profileProblems } from './dist/profiles/marketplace.js';
+            import { profileProblems } from './dist/profiles/publish.js';
             import fs from 'node:fs';
             const item = JSON.parse(fs.readFileSync('/tmp/proposal-item.json', 'utf8'));
             const kind = '${{ steps.extract.outputs.itemKind }}';
@@ -124,10 +124,10 @@ jobs:
             const L = [];
             if (!hasJson) {
               L.push('❌ **No proposal JSON found.** The issue body must contain a `' + process.env.JSON_BEGIN + '` … `' + process.env.JSON_END + '` block (crew) or `' + process.env.PROFILE_JSON_BEGIN + '` … `' + process.env.PROFILE_JSON_END + '` block (profile) with a ```json fence.');
-              L.push('', 'The [builder](https://enzovezzaro.github.io/proagents/) generates crew JSON automatically; profile proposals follow `.marketplace/profiles/security-engineer/profile.json`.');
+              L.push('', 'The [builder](https://enzovezzaro.github.io/proagents/) generates crew JSON automatically; profile proposals follow `registry/profiles/security-engineer/profile.json`.');
             } else if (valid) {
               L.push('✅ **`' + id + '` v' + version + ' passes the deterministic ' + kind + ' validator.**');
-              L.push('', 'Next step: a maintainer reviews the design' + (kind === 'profile' ? ' (rules, verification, tools)' : ' (permissions, handoffs, MCP)') + ', then comments **/publish** on this issue to commit it to the marketplace catalog. Nothing goes live without that review.');
+              L.push('', 'Next step: a maintainer reviews the design' + (kind === 'profile' ? ' (rules, verification, tools)' : ' (permissions, handoffs, MCP)') + ', then comments **/publish** on this issue to commit it to the registry catalog. Nothing goes live without that review.');
             } else {
               L.push('❌ **`' + id + '` failed validation**');
               L.push('', '```', problems || 'unknown error — check the workflow log', '```');
@@ -226,7 +226,7 @@ jobs:
         run: |
           if node --input-type=module -e "
             import { crewProblems } from './dist/crew/validate.js';
-            import { profileProblems } from './dist/profiles/marketplace.js';
+            import { profileProblems } from './dist/profiles/publish.js';
             import fs from 'node:fs';
             const item = JSON.parse(fs.readFileSync('/tmp/proposal-item.json', 'utf8'));
             const kind = '${{ steps.extract.outputs.itemKind }}';
@@ -264,7 +264,7 @@ jobs:
         run: |
           node --input-type=module <<'NODE' > /tmp/publish-out.txt
             import { publishCrew } from "./dist/crew/registry.js";
-            import { publishProfile } from "./dist/profiles/marketplace.js";
+            import { publishProfile } from "./dist/profiles/publish.js";
             import fs from "node:fs";
             const item = JSON.parse(fs.readFileSync("/tmp/proposal-item.json", "utf8"));
             const kind = process.env.ITEM_KIND;
@@ -273,7 +273,7 @@ jobs:
               repo: process.env.GITHUB_REPOSITORY,
               branch: "main",
               token: process.env.GITHUB_TOKEN,
-              authorName: "proagents-marketplace-bot",
+              authorName: "proagents-registry-bot",
               authorEmail: "noreply@github.com",
             });
             const id = kind === "profile" ? item.profile.slug + "@" + item.profile.version : item.id + "@" + item.version;
@@ -289,9 +289,9 @@ jobs:
         with:
           script: |
             const L = [
-              '🚀 **Published `' + process.env.PUBLISHED + '` to the marketplace catalog** (via /publish by @' + context.payload.comment.user.login + ').',
+              '🚀 **Published `' + process.env.PUBLISHED + '` to the registry catalog** (via /publish by @' + context.payload.comment.user.login + ').',
               '',
-              'It appears in the [marketplace](https://enzovezzaro.github.io/proagents/) after the next Pages build — usually under a minute. Closing as completed. 🎉',
+              'It appears in the [registry](https://enzovezzaro.github.io/proagents/) after the next Pages build — usually under a minute. Closing as completed. 🎉',
             ];
             await github.rest.issues.createComment({
               owner: context.repo.owner,

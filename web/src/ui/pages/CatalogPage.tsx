@@ -54,7 +54,7 @@ export function CatalogPage(_props: { ctx: AppCtx }): React.JSX.Element {
     return (
       <div>
         <h1>Catalog</h1>
-        <ErrorNote message={`Could not load the marketplace catalog (${error}). If the site was just deployed, wait a minute and reload — otherwise open an issue at github.com/EnzoVezzaro/proagents.`} />
+        <ErrorNote message={`Could not load the registry catalog (${error}). If the site was just deployed, wait a minute and reload — otherwise open an issue at github.com/EnzoVezzaro/proagents.`} />
       </div>
     );
   }
@@ -63,13 +63,14 @@ export function CatalogPage(_props: { ctx: AppCtx }): React.JSX.Element {
     <div>
       <div style={{ display: "flex", alignItems: "baseline", gap: 14, flexWrap: "wrap" }}>
         <h1 style={{ margin: 0, fontSize: 30, letterSpacing: "-0.02em" }}>
-          Professional specs, ready to equip
+          Discover the registry
         </h1>
       </div>
       <p style={{ color: "var(--cream-dim)", fontSize: 14, maxWidth: 640, lineHeight: 1.6, margin: "6px 0 0" }}>
         Profile and crew <strong style={{ color: "var(--cream)", fontWeight: 600 }}>specs</strong> your coding agent
         executes — equip one with <code style={{ color: "var(--cyan)" }}>npx proagent equip &lt;slug&gt;</code>, or
-        compose a crew from professions. Free · MIT · every listing is a reviewable JSON file in the open repo.
+        import it into the <a href="#/build-environment" style={{ color: "var(--cyan)", textDecoration: "none" }}>environment builder</a>.
+        Free · MIT · every listing is a reviewable JSON file in the open repo.
       </p>
 
       <div style={{ display: "flex", gap: 10, margin: "22px 0 6px", flexWrap: "wrap", alignItems: "center" }}>
@@ -83,7 +84,7 @@ export function CatalogPage(_props: { ctx: AppCtx }): React.JSX.Element {
             if (e.key === "Enter" && looksLikeRepoRef(query)) setImportRepo(query);
           }}
           placeholder="Search profiles, crews, tags — or paste a GitHub skills repo URL"
-          aria-label="Search the marketplace or paste a GitHub skills repo URL"
+          aria-label="Search the registry or paste a GitHub skills repo URL"
           style={{
             flex: 1,
             minWidth: 240,
@@ -153,7 +154,34 @@ export function CatalogPage(_props: { ctx: AppCtx }): React.JSX.Element {
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 16 }}>
           {items.map((item) => (
-            <ItemCard key={item.id} item={item} />
+            <div key={item.id} style={{ display: "grid", gap: 8 }}>
+              <ItemCard item={item} />
+              <button
+                onClick={() => {
+                  // "Use in Project" (NEW_CHANGES.md §10): a marketplace artifact
+                  // is imported into the builder, not bought. The pick is passed
+                  // through sessionStorage (same channel the crew draft uses).
+                  try {
+                    sessionStorage.setItem("proagents-project-picks", JSON.stringify([`${item.kind}:${item.id}`]));
+                  } catch {
+                    /* storage full/disabled — the pick is lost, page still works */
+                  }
+                  window.location.hash = "#/build-environment";
+                }}
+                style={{
+                  background: "transparent",
+                  color: "var(--cyan)",
+                  border: "1px solid var(--line)",
+                  borderRadius: 10,
+                  padding: "8px 12px",
+                  fontSize: 12.5,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                Use in Project →
+              </button>
+            </div>
           ))}
         </div>
       )}

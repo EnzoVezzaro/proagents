@@ -5,7 +5,7 @@ import path from "node:path";
 import { listProfiles, resolveProfiles, validateAllProfiles } from "../../src/profiles/registry.js";
 import { composeProfiles } from "../../src/profiles/composition.js";
 import { validateProfile } from "../../src/profiles/validation.js";
-import { profileProblems } from "../../src/profiles/marketplace.js";
+import { profileProblems } from "../../src/profiles/publish.js";
 import type { ProfileManifest } from "../../src/profiles/types.js";
 
 /**
@@ -55,20 +55,20 @@ describe("profile registry (PROFILES-REG)", () => {
     await expect(resolveProfiles(["no-such-profile"])).rejects.toThrow(/unknown profile/);
   });
 
-  it("PROFILES-REG-004: a marketplace checkout wins over the packaged snapshot", async () => {
+  it("PROFILES-REG-004: a registry checkout wins over the packaged snapshot", async () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), "profiles-reg-"));
     try {
       // A checkout copy of a packaged slug wins (it is what the repo manages).
       const checkoutCopy = manifest("senior-engineer");
-      await fs.mkdir(path.join(root, ".marketplace", "profiles", "senior-engineer"), { recursive: true });
+      await fs.mkdir(path.join(root, "registry", "profiles", "senior-engineer"), { recursive: true });
       await fs.writeFile(
-        path.join(root, ".marketplace", "profiles", "senior-engineer", "profile.json"),
+        path.join(root, "registry", "profiles", "senior-engineer", "profile.json"),
         JSON.stringify(checkoutCopy),
       );
-      // A marketplace-only profile must appear from the checkout.
-      await fs.mkdir(path.join(root, ".marketplace", "profiles", "marketplace-only"), { recursive: true });
+      // A registry-only profile must appear from the checkout.
+      await fs.mkdir(path.join(root, "registry", "profiles", "marketplace-only"), { recursive: true });
       await fs.writeFile(
-        path.join(root, ".marketplace", "profiles", "marketplace-only", "profile.json"),
+        path.join(root, "registry", "profiles", "marketplace-only", "profile.json"),
         JSON.stringify(manifest("marketplace-only")),
       );
       const entries = await listProfiles(root);
@@ -109,7 +109,7 @@ describe("profile validation (PROFILES-VAL)", () => {
     expect(report.findings.map((f) => f.code)).toContain("PA030");
   });
 
-  it("PROFILES-VAL-007: profileProblems gates marketplace publishing (CI contract)", async () => {
+  it("PROFILES-VAL-007: profileProblems gates registry publishing (CI contract)", async () => {
     const entries = await listProfiles();
     const good = entries.find((e) => e.manifest.profile.slug === "security-engineer");
     expect(profileProblems(good!.manifest)).toEqual([]);
@@ -187,19 +187,19 @@ describe("profile validation (PROFILES-VAL)", () => {
   });
 });
 
-describe("shipped marketplace catalog (PROFILES-CATALOG)", () => {
+describe("shipped registry catalog (PROFILES-CATALOG)", () => {
   it("PROFILES-CATALOG-001: every kind:\"profile\" catalog item passes the profile validator", async () => {
     // The catalog is data, not code — a bad manifest can be committed without
     // any type error. Gate the shipped items here so CI catches it.
-    const catalog = JSON.parse(await fs.readFile(path.resolve(".marketplace", "catalog.json"), "utf8")) as {
+    const catalog = JSON.parse(await fs.readFile(path.resolve("registry", "catalog.json"), "utf8")) as {
       items: Array<{ id: string; kind: string }>;
     };
     const profileIds = catalog.items.filter((i) => i.kind === "profile").map((i) => i.id);
     expect(profileIds.length).toBeGreaterThanOrEqual(13);
     for (const id of profileIds) {
       // Folder layout (profiles/<id>/profile.json) with flat legacy fallback.
-      const folderPath = path.resolve(".marketplace", "profiles", id, "profile.json");
-      const flatPath = path.resolve(".marketplace", "profiles", `${id}.json`);
+      const folderPath = path.resolve("registry", "profiles", id, "profile.json");
+      const flatPath = path.resolve("registry", "profiles", `${id}.json`);
       const filePath = await fs
         .access(folderPath)
         .then(() => folderPath)
@@ -213,7 +213,7 @@ describe("shipped marketplace catalog (PROFILES-CATALOG)", () => {
   });
 
   it("PROFILES-CATALOG-002: every catalog index entry has the identity fields the SPA renders", async () => {
-    const catalog = JSON.parse(await fs.readFile(path.resolve(".marketplace", "catalog.json"), "utf8")) as {
+    const catalog = JSON.parse(await fs.readFile(path.resolve("registry", "catalog.json"), "utf8")) as {
       items: Array<{ id: string; name?: string; version?: string; description?: string; author?: string; tags?: string[]; kind: string }>;
     };
     expect(catalog.items.length).toBeGreaterThan(0);
@@ -274,7 +274,7 @@ describe("profile composition (PROFILES-COMP)", () => {
   });
 
   it("PROFILES-COMP-007: PA025 never fires on prose outcomes — only named capabilities", () => {
-    // Prose verification (what marketplace profiles ship) is agent-executed
+    // Prose verification (what registry profiles ship) is agent-executed
     // within the session and cannot be matched to tools — no warning.
     const prose = manifest("prose-profile", {
       tools: { required: ["filesystem"] },

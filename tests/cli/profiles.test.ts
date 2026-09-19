@@ -98,9 +98,9 @@ describe("profile CLI (PROFILES-CLI)", () => {
   it("PROFILES-CLI-006: equip blocks with non-zero exit on a conflicting composition", async () => {
     const root = await makeRepo({});
     try {
-      // Two marketplace profiles with contradictory rules → composition must block.
-      await fs.mkdir(path.join(root, ".marketplace", "profiles", "conflict-a"), { recursive: true });
-      await fs.mkdir(path.join(root, ".marketplace", "profiles", "conflict-b"), { recursive: true });
+      // Two registry profiles with contradictory rules → composition must block.
+      await fs.mkdir(path.join(root, "registry", "profiles", "conflict-a"), { recursive: true });
+      await fs.mkdir(path.join(root, "registry", "profiles", "conflict-b"), { recursive: true });
       const base = {
         version: "1.0.0",
         profile: { name: "A", slug: "conflict-a" },
@@ -110,11 +110,11 @@ describe("profile CLI (PROFILES-CLI)", () => {
         verification: { required: ["tests"] },
       };
       await fs.writeFile(
-        path.join(root, ".marketplace", "profiles", "conflict-a", "profile.json"),
+        path.join(root, "registry", "profiles", "conflict-a", "profile.json"),
         JSON.stringify({ ...base, rules: ["never deploy on friday"] }),
       );
       await fs.writeFile(
-        path.join(root, ".marketplace", "profiles", "conflict-b", "profile.json"),
+        path.join(root, "registry", "profiles", "conflict-b", "profile.json"),
         JSON.stringify({ ...base, profile: { name: "B", slug: "conflict-b" }, rules: ["deploy on friday"] }),
       );
       let failed = false;
@@ -198,7 +198,7 @@ describe("profile CLI (PROFILES-CLI)", () => {
   it("PROFILES-CLI-010: profile install <id> equips from a local catalog item", async () => {
     const root = await makeRepo({ "CLAUDE.md": "# x\n" });
     try {
-      await fs.mkdir(path.join(root, ".marketplace", "profiles"), { recursive: true });
+      await fs.mkdir(path.join(root, "registry", "profiles"), { recursive: true });
       const item = {
         version: "1.0.0",
         profile: { name: "Local M", slug: "marketplace-local" },
@@ -207,7 +207,7 @@ describe("profile CLI (PROFILES-CLI)", () => {
         tools: { required: ["filesystem", "shell", "git"] },
         verification: { required: ["tests"] },
       };
-      await fs.writeFile(path.join(root, ".marketplace", "profiles", "marketplace-local.json"), JSON.stringify(item));
+      await fs.writeFile(path.join(root, "registry", "profiles", "marketplace-local.json"), JSON.stringify(item));
       const parsed = JSON.parse(run(root, ["profile", "install", "marketplace-local", "--json"]));
       expect(parsed.status).toBe("ok");
       expect(parsed.profile).toEqual(["marketplace-local"]);
@@ -223,7 +223,7 @@ describe("profile CLI (PROFILES-CLI)", () => {
       const parsed = JSON.parse(run(root, ["profile", "create", "Prompt Engineer", "--json"]));
       expect(parsed.status).toBe("ok");
       expect(parsed.slug).toBe("prompt-engineer");
-      const dir = path.join(root, ".marketplace", "profiles", "prompt-engineer");
+      const dir = path.join(root, ".proagent", "profiles", "prompt-engineer");
       // Folder standard: identity/expertise/tools/verification all present.
       expect(await fs.readFile(path.join(dir, "profile.json"), "utf8")).toContain("\"identity\": \"identity/01-identity.md\"");
       expect(await fs.readFile(path.join(dir, "tools", "requirements.md"), "utf8")).toContain("required:");

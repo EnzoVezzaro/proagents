@@ -468,7 +468,7 @@ describe("session CLI (SESSION-CLI)", () => {
       const parsed = JSON.parse(run(root, ["build", "--kind", "profile", "--json"]));
       expect(parsed.status).toBe("ok");
       expect(parsed.kind).toBe("profile");
-      const dir = path.join(root, ".marketplace", "profiles", parsed.slug);
+      const dir = path.join(root, ".proagent", "profiles", parsed.slug);
       expect(await fs.readFile(path.join(dir, "profile.json"), "utf8")).toContain(parsed.slug);
       // PA-gated: the scaffold passes profileProblems, so equip works now.
       const equip = JSON.parse(run(root, ["equip", parsed.slug, "--json"]));
@@ -486,7 +486,7 @@ describe("session CLI (SESSION-CLI)", () => {
       const parsed = JSON.parse(run(root, ["build", "--kind", "crew", "--json"]));
       expect(parsed.status).toBe("ok");
       expect(parsed.kind).toBe("crew");
-      const dir = path.join(root, ".marketplace", "crews", parsed.crewId);
+      const dir = path.join(root, ".proagent", "crews", parsed.crewId);
       await fs.access(path.join(dir, "crew.json"));
       await fs.access(path.join(dir, "members"));
       // The derived crew passes the PA043–PA048 gate.

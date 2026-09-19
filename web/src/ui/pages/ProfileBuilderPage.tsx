@@ -60,7 +60,7 @@ export function ProfileBuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
     } catch { /* storage unavailable */ }
   }, [profile, step]);
 
-  // Load the marketplace catalog once so slug collisions are caught at typing
+  // Load the registry catalog once so slug collisions are caught at typing
   // time (block a slug that already exists — publishing would collide).
   useEffect(() => {
     let cancelled = false;
@@ -102,10 +102,10 @@ export function ProfileBuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
     setProblems(errs);
     if (errs.length > 0) return;
     if (!settings.githubToken) {
-      setPublishState("Sign in with GitHub in Settings to publish — publishing opens a pull request on the marketplace repo.");
+      setPublishState("Sign in with GitHub in Settings to publish — publishing opens a pull request on the registry repo.");
       return;
     }
-    setPublishState("Opening a publish PR on the marketplace repo…");
+    setPublishState("Opening a publish PR on the registry repo…");
     try {
       const { publishProfileAsPr } = await import("../../github.js");
       const repo = (import.meta.env.VITE_MARKET_REPO as string | undefined) ?? "EnzoVezzaro/proagents";
@@ -126,7 +126,7 @@ export function ProfileBuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
       };
       const catalogJson = JSON.stringify({ schemaVersion: 1, updatedAt: new Date().toISOString(), items: [...existing, entry].sort((a: { id: string }, b: { id: string }) => a.id.localeCompare(b.id)) }, null, 2) + "\n";
       const res = await publishProfileAsPr(settings.githubToken, repo, profile.profile.slug, JSON.stringify(profile, null, 2) + "\n", catalogJson);
-      setPublishState(`✓ Publish PR opened: ${res.url}\nCI validates it; a maintainer merge publishes it to the marketplace. Until then, use the downloaded JSON locally (npx proagent equip).`);
+      setPublishState(`✓ Publish PR opened: ${res.url}\nCI validates it; a maintainer merge publishes it to the registry. Until then, use the downloaded JSON locally (npx proagent equip).`);
     } catch (err) {
       setPublishState(`Publish failed: ${(err as Error).message}\n\nFallback: download the JSON and file a proposal issue instead.`);
     }
@@ -140,12 +140,12 @@ export function ProfileBuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
       setPublishState("Sign in with GitHub in Settings to file a proposal issue.");
       return;
     }
-    setPublishState("Filing marketplace proposal issue…");
+    setPublishState("Filing registry proposal issue…");
     try {
       const { createIssue } = await import("../../github.js");
       const repo = (import.meta.env.VITE_MARKET_REPO as string | undefined) ?? "EnzoVezzaro/proagents";
       const res = await createIssue(settings.githubToken, repo, profileIssueTitle(profile), profileIssueBody(profile), ["profile-proposal"]);
-      setPublishState(`✓ Proposal filed: ${res.html_url}\nCI validates it within seconds. A maintainer merges it with /publish and it appears in the marketplace.`);
+      setPublishState(`✓ Proposal filed: ${res.html_url}\nCI validates it within seconds. A maintainer merges it with /publish and it appears in the registry.`);
     } catch (err) {
       setPublishState(`Proposal failed: ${(err as Error).message}`);
     }
@@ -253,7 +253,7 @@ function IdentityTab(props: { profile: ProfileManifest; update: (p: Partial<Prof
           <input style={field} value={p.slug} onChange={(e) => update({ profile: { ...p, slug: slugify(e.target.value) } })} placeholder="security-engineer" aria-invalid={slugTaken} />
           {slugTaken && (
             <p style={{ color: "var(--danger)", fontSize: 12, margin: "4px 0 0" }}>
-              “{p.slug}” already exists in the marketplace — pick another (PA038).
+              “{p.slug}” already exists in the registry — pick another (PA038).
             </p>
           )}
         </div>
@@ -271,7 +271,7 @@ function IdentityTab(props: { profile: ProfileManifest; update: (p: Partial<Prof
         </div>
         <div>
           <label style={label}>One-line description</label>
-          <input style={field} value={p.description ?? ""} onChange={(e) => update({ profile: { ...p, description: e.target.value } })} placeholder="Shown in the marketplace catalog" />
+          <input style={field} value={p.description ?? ""} onChange={(e) => update({ profile: { ...p, description: e.target.value } })} placeholder="Shown in the registry catalog" />
         </div>
       </div>
       <label style={label}>Identity summary — how should the agent operate?</label>
@@ -544,7 +544,7 @@ function ShipTab(props: {
       <Card>
         <label style={label}>2 · Publish it (so <code>npx proagent equip</code> works for everyone)</label>
         <p style={{ color: "var(--cream-dim)", fontSize: 13, lineHeight: 1.6, margin: "4px 0 12px" }}>
-          Remote equip resolves from the marketplace repo — your profile only works remotely after it is
+          Remote equip resolves from the registry repo — your profile only works remotely after it is
           merged there. Publishing opens a <strong>pull request</strong> adding it to the catalog
           (GitHub sign-in required): CI validates the PR, and a maintainer merge publishes it. MIT-licensed, like everything here.
         </p>

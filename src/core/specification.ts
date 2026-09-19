@@ -9,6 +9,7 @@ import type {
   RuntimeRequirements,
   SelfImprovementPolicy,
 } from "./types.js";
+import { matchProfessions, roleForProfession } from "./profession-index.js";
 
 // ---------------------------------------------------------------------------
 // Role derivation
@@ -326,15 +327,15 @@ function deriveSkills(role: Role, state: KnowledgeState): string[] {
 export function buildAgentSpec(
   state: KnowledgeState,
   role: Role,
-  opts: { scopeNote?: string; factIds?: string[]; questionIds?: string[] } = {},
+  opts: { scopeNote?: string; factIds?: string[]; questionIds?: string[]; profile?: string; purpose?: string; name?: string } = {},
 ): AgentSpec {
-  const name = deriveName(state, role);
+  const name = opts.name ?? deriveName(state, role);
   const answered = state.questions.filter((q) => q.status === "answered");
   return {
     id: name,
     name,
     role,
-    purpose: ROLE_PURPOSE[role],
+    purpose: opts.purpose ?? ROLE_PURPOSE[role],
     scope: opts.scopeNote ?? `Limited to the responsibilities implied by the captured intent: ${state.intent.slice(0, 120)}`,
     responsibilities: answered
       .flatMap((q) => q.answer?.facts ?? [])
@@ -350,6 +351,7 @@ export function buildAgentSpec(
     escalation: deriveEscalation(state),
     validation: deriveValidation(state),
     dependencies: [],
+    ...(opts.profile ? { profile: opts.profile } : {}),
     provenance: {
       sessionId: state.sessionId,
       derivedFromFacts: opts.factIds ?? state.facts.map((f) => f.id),
@@ -497,32 +499,54 @@ export function buildArchitecture(
     };
   }
 
-  // Multi-agent: derive roles from facts, always include review when split.
+  // Multi-agent: the catalog is the matching source. When the intent names   // professions the registry actually ships (by name, slug or tag), the
+  // crew is derived as profile-bound members — the deliverable is the crew
+  // the project needs, not a research team modeling the interview. The
+  // interview process itself is never part of the output.
   const text = state.facts.map((f) => f.statement).join(" ") + " " + state.intent;
   const readOnly = isReadOnlySystem(state);
-  const roles = new Set<Role>();
-  for (const { role, patterns } of ROLE_SIGNALS) {
-    if (patterns.some((p) => p.test(text))) roles.add(role);
-  }
-  if (readOnly) {
-    // A read-only system must not plan agents that produce or execute changes.
-    for (const role of [...roles]) {
-      if (!READ_ONLY_SAFE_ROLES.has(role)) roles.delete(role);
-    }
-  }
-  // Ensure a sensible minimal topology.
-  if (!roles.has("research")) roles.add("research");
-  if (!readOnly && !roles.has("implementation") && (roles.has("research") || roles.has("infrastructure"))) {
-    roles.add("implementation");
-  }
-  if (roles.size >= 2) roles.add("review");
+  const professions = matchProfessions(text, process.cwd());
 
   const agents: AgentSpec[] = [];
-  for (const role of roles) {
-    const spec = buildAgentSpec(state, role, {
-      scopeNote: `Owns only the ${role} responsibilities of: ${state.intent.slice(0, 100)}`,
-    });
-    agents.push(spec);
+  if (professions.length >= 2) {
+    for (const p of professions) {
+      const role = roleForProfession(p) as Role;
+      if (readOnly && !READ_ONLY_SAFE_ROLES.has(role)) continue;
+      agents.push(
+        buildAgentSpec(state, role, {
+          profile: p.slug,
+          name: p.slug,
+          purpose: p.description || ROLE_PURPOSE[role],
+          scopeNote: `Operates as the ${p.name} profession for: ${state.intent.slice(0, 100)}`,
+        }),
+      );
+    }
+  }
+
+  if (agents.length < 2) {
+    // Fall back to the generic role derivation when the catalog cannot
+    // supply at least two matching professions.
+    const roles = new Set<Role>();
+    for (const { role, patterns } of ROLE_SIGNALS) {
+      if (patterns.some((p) => p.test(text))) roles.add(role);
+    }
+    if (readOnly) {
+      for (const role of [...roles]) {
+        if (!READ_ONLY_SAFE_ROLES.has(role)) roles.delete(role);
+      }
+    }
+    if (!roles.has("research")) roles.add("research");
+    if (!readOnly && !roles.has("implementation") && (roles.has("research") || roles.has("infrastructure"))) {
+      roles.add("implementation");
+    }
+    if (roles.size >= 2) roles.add("review");
+    agents.length = 0;
+    for (const role of roles) {
+      const spec = buildAgentSpec(state, role, {
+        scopeNote: `Owns only the ${role} responsibilities of: ${state.intent.slice(0, 100)}`,
+      });
+      agents.push(spec);
+    }
   }
 
   // First agent (or a dedicated one) becomes the coordinator.

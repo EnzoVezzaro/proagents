@@ -5,7 +5,8 @@ import {
   resolveProfiles,
   validateAllProfiles,
 } from "../profiles/registry.js";
-import { publishProfile, profileProblems, MARKETPLACE_ITEMS_DIR } from "../profiles/marketplace.js";
+import { publishProfile, profileProblems, REGISTRY_PROFILES_DIR } from "../profiles/publish.js";
+import { LOCAL_PROFILES_DIR } from "../profiles/registry.js";
 import { composeProfiles } from "../profiles/composition.js";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -30,12 +31,13 @@ Usage:
   proagent list                          List available professional profiles
   proagent inspect <profile>             Inspect a profile (expertise, methods, rules, verification)
   proagent equip <slug> [slug…]          Equip the detected harness with one or more profiles
-    --target <harness>                   Override harness detection (claude-code, codex, opencode, cursor, gemini-cli, generic-cli)
+    --target <harness>                   Override harness detection (claude-code, codex, opencode, cursor, gemini-cli, copilot, openclaude, freebuff, generic-cli)
+    --all-targets                        Write artifacts for EVERY known harness
     --dry-run                            Show the compile plan without writing
   proagent compile <slug> --target <id>  Compile a profile for a specific harness (like equip, explicit)
     --output <dir>                       Output directory override
   proagent validate --profiles           Validate all discoverable profiles
-  proagent profile <sub>                 Marketplace commands: list/show/install/validate/publish/submit
+  proagent profile <sub>                 Registry commands: list/show/install/validate/publish/submit
 
 All commands support --json.
 `);
@@ -166,8 +168,8 @@ export async function runInspectProfile(slug: string, json: boolean): Promise<vo
 }
 
 /**
- * Resolve a slug for equip: registry first (builtin/local/marketplace dir);
- * if unknown, fetch it from the remote Git-backed marketplace catalog.
+ * Resolve a slug for equip: registry first (builtin/local/registry dir);
+ * if unknown, fetch it from the remote Git-backed registry catalog.
  * Returns the resolved manifests plus any remote origins for reporting.
  */
 async function resolveEquipManifests(
@@ -242,7 +244,7 @@ async function equipPipeline(
     if (json) {
       // jsonOut below reports remote origins; nothing to print here.
     } else {
-      console.log(`  fetched from marketplace: ${remote.join(", ")}`);
+      console.log(`  fetched from registry: ${remote.join(", ")}`);
     }
   }
 
@@ -269,6 +271,42 @@ async function equipPipeline(
     if (harness.capabilities.ruleEnforcement !== "native" && effective.rules.length > 0) {
       console.log(`  ⚠ rules fall back to instructions (no native enforcement)`);
     }
+    return;
+  }
+
+  // --all-targets: compile for EVERY known harness, not just the detected
+  // primary — the repo becomes ready for any coding agent that opens it.
+  if (flags["all-targets"] === true) {
+    const { compileForAllHarnesses } = await import("../adapters/index.js");
+    const results = await compileForAllHarnesses(effective, manifests[0]!, root, { knowledgeDirs });
+    const allFiles = results.flatMap((r) => r.files);
+    const allLimits = [...new Set(results.flatMap((r) => r.limitations))];
+    if (json) {
+      return jsonOut({
+        status: "ok",
+        command: explicitCompile ? "compile" : "equip",
+        target: "all",
+        profile: effective.slugs,
+        files: allFiles,
+        limitations: allLimits,
+      });
+    }
+    console.log(`\n✓ Equipped ${effective.identity.title} → all harnesses (${results.length} targets)`);
+    const seen = new Set<string>();
+    for (const f of allFiles) {
+      if (seen.has(f.path)) continue;
+      seen.add(f.path);
+      console.log(`  • ${f.path}  (${f.mechanism})`);
+    }
+    if (conflicts.length > 0) {
+      console.log("\nWarnings:");
+      for (const c of conflicts) console.log(`  ⚠ [${c.code}] ${c.message}`);
+    }
+    if (allLimits.length > 0) {
+      console.log("\nLimitations:");
+      for (const l of allLimits) console.log(`  ⚠ ${l}`);
+    }
+    console.log(`\nVerify: proagent validate --profiles`);
     return;
   }
 
@@ -333,7 +371,7 @@ export async function runValidateProfiles(json: boolean): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
-// `proagent profile <subcommand>` — the MARKETPLACE.md command group
+// `proagent profile <subcommand>` — the REGISTRY.md command group
 // ---------------------------------------------------------------------------
 
 const MARKET_REPO = "EnzoVezzaro/proagents";
@@ -350,19 +388,19 @@ function profileRemoteOpts(flags: Record<string, string | boolean>): { repo: str
 
 function printProfileHelp(): void {
   console.log(`
-proagent profile — marketplace profile commands
+proagent profile — registry profile commands
 
 Usage:
-  proagent profile create <name>           Scaffold a custom profile into .marketplace/profiles/
+  proagent profile create <name>           Scaffold a custom profile into registry/profiles/
     --slug <slug> --description <text>     (folder standard; passes PA03x; equips immediately)
-  proagent profile list                    List marketplace profiles (Git-backed catalog)
+  proagent profile list                    List registry profiles (Git-backed catalog)
     --repo owner/name --ref branch --token <gh-token>
   proagent profile show <id>               Print a profile manifest from the catalog
   proagent profile install <id>            Resolve + validate + equip from the catalog
     --target <harness> --dry-run --repo / --ref / --token
   proagent profile validate <file.json>    Validate a profile manifest file
   proagent profile publish <file.json>     Commit a profile to the catalog (contents:write)
-  proagent profile submit <file.json>      File a marketplace proposal issue (recommended)
+  proagent profile submit <file.json>      File a registry proposal issue (recommended)
 
 The one-liner: install a profile and it is compiled to your harness:
 
@@ -385,13 +423,19 @@ async function resolveProfileItem(idOrFile: string, flags: Record<string, string
       fail(`cannot read profile file: ${(err as Error).message}`);
     }
   }
-  const folder = path.join(process.cwd(), MARKETPLACE_ITEMS_DIR, idOrFile, "profile.json");
+  const folder = path.join(process.cwd(), REGISTRY_PROFILES_DIR, idOrFile, "profile.json");
   try {
     return await loadProfileFile(folder);
   } catch {
+    // fall through to local .proagent / flat / remote
+  }
+  const local = path.join(process.cwd(), LOCAL_PROFILES_DIR, idOrFile, "profile.json");
+  try {
+    return await loadProfileFile(local);
+  } catch {
     // fall through to flat / remote
   }
-  const flat = path.join(process.cwd(), MARKETPLACE_ITEMS_DIR, `${idOrFile}.json`);
+  const flat = path.join(process.cwd(), REGISTRY_PROFILES_DIR, `${idOrFile}.json`);
   try {
     return await loadProfileFile(flat);
   } catch {
@@ -405,7 +449,7 @@ async function resolveProfileItem(idOrFile: string, flags: Record<string, string
 export async function runProfileList(flags: Record<string, string | boolean>, json: boolean): Promise<void> {
   warnIfStandalone("profile list", json);
   const { repo, ref, token } = profileRemoteOpts(flags);
-  const url = `https://raw.githubusercontent.com/${repo}/${ref}/.marketplace/catalog.json`;
+  const url = `https://raw.githubusercontent.com/${repo}/${ref}/registry/catalog.json`;
   // Unauthenticated retry on 404: an invalid token makes GitHub raw answer
   // 404 even for public files (same rationale as fetchRaw in crew/registry).
   let res = await fetch(url, { headers: token ? { authorization: `Bearer ${token}` } : {} });
@@ -417,10 +461,10 @@ export async function runProfileList(flags: Record<string, string | boolean>, js
   const profiles = catalog.items.filter((i) => i.kind === "profile");
   if (json) return jsonOut({ status: "ok", repo, ref, profiles });
   if (profiles.length === 0) {
-    console.log("No profiles in the marketplace catalog yet.");
+    console.log("No profiles in the registry catalog yet.");
     return;
   }
-  console.log(`Marketplace profiles (${repo}@${ref}):`);
+  console.log(`Registry profiles (${repo}@${ref}):`);
   for (const item of profiles) {
     console.log(`  • ${item.id.padEnd(26)} v${item.version.padEnd(8)} ${item.description.slice(0, 58)}`);
   }
@@ -428,7 +472,7 @@ export async function runProfileList(flags: Record<string, string | boolean>, js
 
 /**
  * `proagent profile create <name>` — scaffold a custom profile into the
- * local marketplace checkout (.marketplace/profiles/<slug>/) in the folder
+ * local registry checkout (registry/profiles/<slug>/) in the folder
  * standard, mirroring `crew create` for crews. The scaffold passes the
  * PA03x gates and equips immediately; the operator deepens it in place.
  */
@@ -445,7 +489,9 @@ async function profileCreate(nameArg: string | undefined, flags: Record<string, 
   if (!/^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(slug)) {
     fail(`profile slug "${slug}" must be a lowercase slug (a-z, 0-9, dashes)`);
   }
-  const dir = path.join(process.cwd(), MARKETPLACE_ITEMS_DIR, slug);
+  // Custom scaffolds belong to the consumer repo's local dir (.proagent/profiles);
+  // registry/ is the canonical source of this tool's own catalog only.
+  const dir = path.join(process.cwd(), LOCAL_PROFILES_DIR, slug);
   if (await fs.access(dir).then(() => true, () => false)) {
     fail(`profile folder already exists: ${dir} — pick another --slug or remove it first`);
   }
@@ -502,7 +548,7 @@ async function profileCreate(nameArg: string | undefined, flags: Record<string, 
   console.log(`  proagent profile validate ${dir}/profile.json   # gate (passes now, re-check as you edit)`);
   console.log(`  proagent equip ${slug}                          # equip it immediately — a checkout profile wins over packaged`);
   console.log(`  $EDITOR ${dir}                                  # deepen identity/expertise/rules/verification`);
-  console.log(`  proagent profile submit ${dir}/profile.json     # propose it to the marketplace when ready`);
+  console.log(`  proagent profile submit ${dir}/profile.json     # propose it to the registry when ready`);
 }
 
 /** `proagent profile show <id>` — print the full manifest. */
@@ -596,7 +642,7 @@ async function profileSubmit(file: string | undefined, flags: Record<string, str
   const BEGIN = "<!-- PROFILE-JSON-BEGIN -->";
   const END = "<!-- PROFILE-JSON-END -->";
   const body = [
-    `## Marketplace proposal: ${manifest.identity.title}`,
+    `## Registry proposal: ${manifest.identity.title}`,
     "",
     manifest.profile.description ?? manifest.identity.summary ?? "",
     "",
@@ -618,7 +664,7 @@ async function profileSubmit(file: string | undefined, flags: Record<string, str
     "",
     "---",
     "",
-    "Maintainers: CI validates this proposal automatically. If the check is green and the design is sound, comment `/publish` to commit it to the marketplace catalog.",
+    "Maintainers: CI validates this proposal automatically. If the check is green and the design is sound, comment `/publish` to commit it to the registry catalog.",
   ].join("\n");
 
   const res = await fetch(`https://api.github.com/repos/${repo}/issues`, {
@@ -642,7 +688,7 @@ async function profileSubmit(file: string | undefined, flags: Record<string, str
   const issue = (await res.json()) as { number: number; html_url: string };
   if (json) return jsonOut({ status: "ok", slug: manifest.profile.slug, version: manifest.version, repo, issue: issue.number, url: issue.html_url });
   console.log(`✓ Proposal filed: ${issue.html_url}`);
-  console.log("  CI validates it within seconds; a maintainer /publish commits it to the marketplace.");
+  console.log("  CI validates it within seconds; a maintainer /publish commits it to the registry.");
 }
 
 /** Entry point for `proagent profile <subcommand>`. */
