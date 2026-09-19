@@ -8,8 +8,22 @@ required:
   - git
 optional:
   - profiler
+mcp:
+  - name: playwright
+    transport: stdio
+    command: npx
+    args:
+      - -y
+      - "@playwright/mcp@latest"
+packages:
+  - registry: npm:lighthouse
+    reason: CI-grade performance audits
 ---
 
 **Required:** filesystem, shell, git
 
 **Optional:** profiler
+
+**MCP servers:** playwright
+
+**Packages:** npm:lighthouse

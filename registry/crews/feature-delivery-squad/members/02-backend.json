@@ -15,7 +15,9 @@
     ],
     "approvalGates": []
   },
-  "mcpServers": [],
+  "mcpServers": [
+    "github"
+  ],
   "context": [
     {
       "framework": "filesystem",

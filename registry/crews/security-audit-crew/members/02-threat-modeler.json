@@ -13,7 +13,10 @@
     ],
     "approvalGates": []
   },
-  "mcpServers": [],
+  "mcpServers": [
+    "github",
+    "sequential-thinking"
+  ],
   "context": [
     {
       "framework": "filesystem",

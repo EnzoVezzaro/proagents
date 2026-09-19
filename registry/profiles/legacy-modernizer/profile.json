@@ -37,7 +37,8 @@
   ],
   "skills": [
     "skills/01-obra-superpowers.md",
-    "skills/02-wesleyegberto-software-engineering-skills.md"
+    "skills/02-wesleyegberto-software-engineering-skills.md",
+    "skills/03-agents.md"
   ],
   "policies": [
     "policies/01-strangler-fig-increments-only-big-bang-rewrites-require-expl.md",

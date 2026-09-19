@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.10.0] — 2026-09-19
 
+### Added — real skills and MCP servers for every profile and crew
+
+The shipped registry previously referenced the same three generic skill repos on
+every profile and declared no MCP servers anywhere (8/8 crews empty or github-only).
+All 25 profiles and 8 crews now carry curated, verified tooling (`scripts/enrich-tools.mjs`):
+
+- **Profiles** (+39 skill files, 19 MCP declarations, 3 packages): profession-matched
+  skills from skills.sh — vendor-official packs (hashicorp terraform, vercel-labs react,
+  anthropics frontend-design/webapp-testing, supabase postgres, getsentry security-review,
+  huggingface evals, flutter a11y) plus addyosmani web-quality/agent-skills, wshobson
+  agents, mattpocock tdd. MCP per profession: postgres → database/data/backend,
+  figma+playwright → frontend/a11y, playwright → QA/test, kubernetes → devops/platform/SRE,
+  sequential-thinking → api-designer/architect, github → code-reviewer/release.
+  Packages: lighthouse (frontend, performance), axe-core (accessibility).
+- **Crews** (20 server entries, 27 member bindings): data-platform-crew gains postgres,
+  feature-delivery-squad gains figma/playwright/sequential-thinking, incidere gains
+  kubernetes, security-audit-crew and test-healer (previously empty) gain
+  github/sequential-thinking and playwright/sequential-thinking, web-quality-crew gains
+  playwright. Member `mcpServers` reference crew-level names; install merges them into
+  `.mcp.json` (verified end to end).
+- All MCP transports/npm packages verified against the MCP registry and npm before
+  inclusion; skills attributed to their observed skills.sh repos.
+
 ### Added — the Registry layer: spec → resolve → lock → setup
 
 The unified artifact model from NEW_CHANGES.md is implemented end to end. One artifact

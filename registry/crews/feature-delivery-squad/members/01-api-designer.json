@@ -15,7 +15,8 @@
     "approvalGates": []
   },
   "mcpServers": [
-    "github"
+    "github",
+    "sequential-thinking"
   ],
   "context": [
     {

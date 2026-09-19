@@ -27,7 +27,9 @@
   ],
   "skills": [
     "skills/01-anthropics-skills.md",
-    "skills/02-obra-superpowers.md"
+    "skills/02-obra-superpowers.md",
+    "skills/03-web-quality-skills.md",
+    "skills/04-agent-plugins.md"
   ],
   "rules": [
     "rules/01-never-ship-keyboard-inaccessible-interactions.md",

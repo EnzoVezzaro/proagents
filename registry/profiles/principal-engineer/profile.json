@@ -24,7 +24,8 @@
     "methods/03-blast-radius-assessment.md"
   ],
   "skills": [
-    "skills/01-obra-superpowers.md"
+    "skills/01-obra-superpowers.md",
+    "skills/02-agent-skills.md"
   ],
   "rules": [
     "rules/01-never-modify-production-without-approval.md",

@@ -1,0 +1,8 @@
+---
+title: web-quality-skills
+ref: github:addyosmani/web-quality-skills
+install: npx skills add addyosmani/web-quality-skills --skill accessibility
+skills: accessibility
+---
+
+axe-style a11y checks (54k installs on skills.sh).

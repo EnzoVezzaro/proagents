@@ -27,7 +27,9 @@
   "skills": [
     "skills/01-anthropics-skills.md",
     "skills/02-wesleyegberto-software-engineering-skills.md",
-    "skills/03-obra-superpowers.md"
+    "skills/03-obra-superpowers.md",
+    "skills/04-agent-skills.md",
+    "skills/05-skills.md"
   ],
   "rules": [
     "rules/01-preserve-public-api-compatibility.md",

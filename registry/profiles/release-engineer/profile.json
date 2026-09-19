@@ -43,7 +43,9 @@
     "standards/02-keep-a-changelog.md"
   ],
   "skills": [
-    "skills/01-obra-superpowers.md"
+    "skills/01-obra-superpowers.md",
+    "skills/02-agent-skills.md",
+    "skills/03-skills.md"
   ],
   "policies": [
     "policies/01-no-release-from-a-dirty-tree-or-a-red-build-gates-are-mechan.md",

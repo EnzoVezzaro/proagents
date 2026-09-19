@@ -1,0 +1,8 @@
+---
+title: agent-skills
+ref: github:addyosmani/agent-skills
+install: npx skills add addyosmani/agent-skills --skill observability-and-instrumentation
+skills: observability-and-instrumentation
+---
+
+SLI/SLO instrumentation practice.

@@ -8,8 +8,17 @@ required:
   - git
 optional:
   - database-client
+mcp:
+  - name: postgres
+    transport: stdio
+    command: npx
+    args:
+      - -y
+      - "@henkey/postgres-mcp-server"
 ---
 
 **Required:** filesystem, shell, git
 
 **Optional:** database-client
+
+**MCP servers:** postgres

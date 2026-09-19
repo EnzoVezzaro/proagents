@@ -8,8 +8,25 @@ required:
   - git
 optional:
   - browser
+mcp:
+  - name: figma
+    transport: http
+    url: https://mcp.figma.com/mcp
+  - name: playwright
+    transport: stdio
+    command: npx
+    args:
+      - -y
+      - "@playwright/mcp@latest"
+packages:
+  - registry: npm:axe-core
+    reason: programmatic a11y rule checks in verification
 ---
 
 **Required:** filesystem, shell, git
 
 **Optional:** browser
+
+**MCP servers:** figma, playwright
+
+**Packages:** npm:axe-core

@@ -6,7 +6,26 @@
     "allowedTools": [
       "get_file_contents",
       "list_commits",
+      "search_code",
       "create_pull_request"
+    ]
+  },
+  {
+    "name": "kubernetes",
+    "transport": "stdio",
+    "command": "npx",
+    "args": [
+      "-y",
+      "mcp-server-kubernetes"
+    ]
+  },
+  {
+    "name": "playwright",
+    "transport": "stdio",
+    "command": "npx",
+    "args": [
+      "-y",
+      "@playwright/mcp@latest"
     ]
   }
 ]

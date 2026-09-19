@@ -1,0 +1,8 @@
+---
+title: agent-skills
+ref: github:addyosmani/agent-skills
+install: npx skills add addyosmani/agent-skills --skill ci-cd-and-automation
+skills: ci-cd-and-automation
+---
+
+release pipeline gates.

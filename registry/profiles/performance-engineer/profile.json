@@ -25,7 +25,8 @@
     "methods/03-bottleneck-analysis.md"
   ],
   "skills": [
-    "skills/01-obra-superpowers.md"
+    "skills/01-obra-superpowers.md",
+    "skills/02-web-quality-skills.md"
   ],
   "rules": [
     "rules/01-measure-before-optimizing.md",

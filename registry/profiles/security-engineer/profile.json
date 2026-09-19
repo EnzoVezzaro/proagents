@@ -28,7 +28,9 @@
   ],
   "skills": [
     "skills/01-wesleyegberto-software-engineering-skills.md",
-    "skills/02-obra-superpowers.md"
+    "skills/02-obra-superpowers.md",
+    "skills/03-skills.md",
+    "skills/04-skills.md"
   ],
   "rules": [
     "rules/01-never-expose-secrets-in-logs-errors-or-committed-files.md",

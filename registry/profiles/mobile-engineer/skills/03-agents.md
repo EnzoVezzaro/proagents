@@ -1,0 +1,8 @@
+---
+title: agents
+ref: github:wshobson/agents
+install: npx skills add wshobson/agents --skill mobile-ios-design
+skills: mobile-ios-design, mobile-android-design
+---
+
+platform-conventional mobile UI.

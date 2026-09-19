@@ -15,7 +15,11 @@
     ],
     "approvalGates": []
   },
-  "mcpServers": [],
+  "mcpServers": [
+    "github",
+    "figma",
+    "playwright"
+  ],
   "context": [
     {
       "framework": "filesystem",

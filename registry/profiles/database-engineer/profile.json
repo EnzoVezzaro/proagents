@@ -26,7 +26,9 @@
   ],
   "skills": [
     "skills/01-wesleyegberto-software-engineering-skills.md",
-    "skills/02-obra-superpowers.md"
+    "skills/02-obra-superpowers.md",
+    "skills/03-awesome-copilot.md",
+    "skills/04-agent-skills.md"
   ],
   "rules": [
     "rules/01-never-run-destructive-migrations-without-approval.md",

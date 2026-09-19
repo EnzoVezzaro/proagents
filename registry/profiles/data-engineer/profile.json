@@ -62,7 +62,8 @@
   },
   "skills": [
     "skills/01-wesleyegberto-software-engineering-skills.md",
-    "skills/02-obra-superpowers.md"
+    "skills/02-obra-superpowers.md",
+    "skills/03-awesome-copilot.md"
   ],
   "policies": [
     "policies/01-pii-is-classified-before-collection-and-minimized-at-the-bou.md",

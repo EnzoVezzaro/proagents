@@ -8,8 +8,17 @@ required:
   - git
 optional:
   - browser
+mcp:
+  - name: playwright
+    transport: stdio
+    command: npx
+    args:
+      - -y
+      - "@playwright/mcp@latest"
 ---
 
 **Required:** filesystem, shell, git
 
 **Optional:** browser
+
+**MCP servers:** playwright

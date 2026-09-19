@@ -16,7 +16,10 @@
     ],
     "approvalGates": []
   },
-  "mcpServers": [],
+  "mcpServers": [
+    "playwright",
+    "sequential-thinking"
+  ],
   "context": [
     {
       "framework": "filesystem",

@@ -14,7 +14,10 @@
     ],
     "approvalGates": []
   },
-  "mcpServers": [],
+  "mcpServers": [
+    "postgres",
+    "github"
+  ],
   "context": [
     {
       "framework": "filesystem",

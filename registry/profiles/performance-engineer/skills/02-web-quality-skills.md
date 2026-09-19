@@ -1,0 +1,8 @@
+---
+title: web-quality-skills
+ref: github:addyosmani/web-quality-skills
+install: npx skills add addyosmani/web-quality-skills --skill performance
+skills: performance
+---
+
+Core Web Vitals audit practice (27k+ installs).

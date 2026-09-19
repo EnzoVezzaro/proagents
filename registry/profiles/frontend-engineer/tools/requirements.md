@@ -8,8 +8,25 @@ required:
   - git
 optional:
   - browser
+mcp:
+  - name: figma
+    transport: http
+    url: https://mcp.figma.com/mcp
+  - name: playwright
+    transport: stdio
+    command: npx
+    args:
+      - -y
+      - "@playwright/mcp@latest"
+packages:
+  - registry: npm:lighthouse
+    reason: programmatic perf/SEO audits during verification
 ---
 
 **Required:** filesystem, shell, git
 
 **Optional:** browser
+
+**MCP servers:** figma, playwright
+
+**Packages:** npm:lighthouse

@@ -8,8 +8,17 @@ required:
   - git
 optional:
   - documentation
+mcp:
+  - name: sequential-thinking
+    transport: stdio
+    command: npx
+    args:
+      - -y
+      - "@modelcontextprotocol/server-sequential-thinking"
 ---
 
 **Required:** filesystem, shell, git
 
 **Optional:** documentation
+
+**MCP servers:** sequential-thinking

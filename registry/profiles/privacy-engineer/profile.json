@@ -43,7 +43,8 @@
     "standards/02-ccpa.md"
   ],
   "skills": [
-    "skills/01-obra-superpowers.md"
+    "skills/01-obra-superpowers.md",
+    "skills/02-ai-plugins.md"
   ],
   "policies": [
     "policies/01-data-minimization-collect-only-what-has-a-documented-purpose.md",

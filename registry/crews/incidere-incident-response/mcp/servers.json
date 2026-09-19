@@ -9,5 +9,23 @@
       "search_code",
       "create_pull_request"
     ]
+  },
+  {
+    "name": "kubernetes",
+    "transport": "stdio",
+    "command": "npx",
+    "args": [
+      "-y",
+      "mcp-server-kubernetes"
+    ]
+  },
+  {
+    "name": "sequential-thinking",
+    "transport": "stdio",
+    "command": "npx",
+    "args": [
+      "-y",
+      "@modelcontextprotocol/server-sequential-thinking"
+    ]
   }
 ]

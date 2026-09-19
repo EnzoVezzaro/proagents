@@ -39,7 +39,9 @@
   ],
   "skills": [
     "skills/01-anthropics-skills.md",
-    "skills/02-wesleyegberto-software-engineering-skills.md"
+    "skills/02-wesleyegberto-software-engineering-skills.md",
+    "skills/03-knowledge-work-plugins.md",
+    "skills/04-ux-writing-skill.md"
   ],
   "policies": [
     "policies/01-docs-are-verified-against-the-product-unverified-steps-are-m.md",

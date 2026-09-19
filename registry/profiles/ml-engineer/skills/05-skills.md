@@ -1,0 +1,8 @@
+---
+title: skills
+ref: github:mindrally/skills
+install: npx skills add mindrally/skills --skill machine-learning
+skills: machine-learning
+---
+
+training/eval fundamentals.

@@ -8,8 +8,17 @@ required:
   - git
 optional:
   - container-runtime
+mcp:
+  - name: playwright
+    transport: stdio
+    command: npx
+    args:
+      - -y
+      - "@playwright/mcp@latest"
 ---
 
 **Required:** filesystem, shell, git
 
 **Optional:** container-runtime
+
+**MCP servers:** playwright

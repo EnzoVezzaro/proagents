@@ -10,8 +10,17 @@ required:
 optional:
   - cloud-cli
   - kubernetes
+mcp:
+  - name: kubernetes
+    transport: stdio
+    command: npx
+    args:
+      - -y
+      - mcp-server-kubernetes
 ---
 
 **Required:** filesystem, shell, git, container-runtime
 
 **Optional:** cloud-cli, kubernetes
+
+**MCP servers:** kubernetes

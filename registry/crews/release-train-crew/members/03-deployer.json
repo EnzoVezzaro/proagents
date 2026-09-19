@@ -18,7 +18,10 @@
       "run_pipeline"
     ]
   },
-  "mcpServers": [],
+  "mcpServers": [
+    "github",
+    "kubernetes"
+  ],
   "context": [
     {
       "framework": "filesystem",

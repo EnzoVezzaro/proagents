@@ -13,7 +13,10 @@
     ],
     "approvalGates": []
   },
-  "mcpServers": [],
+  "mcpServers": [
+    "playwright",
+    "github"
+  ],
   "context": [
     {
       "framework": "filesystem",

@@ -63,7 +63,8 @@
   },
   "skills": [
     "skills/01-obra-superpowers.md",
-    "skills/02-wesleyegberto-software-engineering-skills.md"
+    "skills/02-wesleyegberto-software-engineering-skills.md",
+    "skills/03-agent-skills.md"
   ],
   "policies": [
     "policies/01-publish-before-after-measurements-for-every-developer-facing.md",

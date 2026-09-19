@@ -61,7 +61,10 @@
   },
   "skills": [
     "skills/01-obra-superpowers.md",
-    "skills/02-wesleyegberto-software-engineering-skills.md"
+    "skills/02-wesleyegberto-software-engineering-skills.md",
+    "skills/03-skills.md",
+    "skills/04-skills.md",
+    "skills/05-skills.md"
   ],
   "policies": [
     "policies/01-training-data-is-privacy-reviewed-pii-is-minimized-or-exclud.md",

@@ -62,7 +62,9 @@
     ]
   },
   "skills": [
-    "skills/01-wesleyegberto-software-engineering-skills.md"
+    "skills/01-wesleyegberto-software-engineering-skills.md",
+    "skills/02-agent-skills.md",
+    "skills/03-awesome-copilot.md"
   ],
   "policies": [
     "policies/01-breaking-changes-require-deprecation-windows-migration-notes.md",
