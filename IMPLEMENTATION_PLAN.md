@@ -43,18 +43,18 @@ builder (CORS-limited sources; CLI `search` is the full-parity path).
 
 ## Next up (ordered, 2026-09-19)
 
-1. **Docs landing page** — built with the scroll-craft skill, typesafe.ai aesthetic
-   (dimensional layered hero, restrained motion, real markup; brand tokens navy/blue/
-   violet/cyan/ice per DESIGN.md). Shipped as the VitePress home. Verified with the
-   scroll-state harness: desktop, mobile (390×844) and reduced-motion passes.
-2. **Publish the JSON-format registry** — v0.11.0 (bump → changelog → verify → tag;
+1. **Publish the JSON-format registry** — v0.11.0 (bump → changelog → verify → tag;
    CI publishes). npm's 0.10.0 still carries the legacy `.md` format, so consumers get
    the unified JSON registry only from 0.11.0 on.
-3. **Dogfood in ai-private-platform** — install `proagent@^0.11.0`, create the
+2. **Dogfood in ai-private-platform** — install `proagent@^0.11.0`, create the
    `cloud-fullstack-lead` profile (cloud full-stack lead engineer; owns the bus
    agents/workers), then `equip` + `validate` end-to-end against the JSON registry.
-4. Non-blocking polish (unchanged): capability picker during `profile create`; Studio
+3. Non-blocking polish (unchanged): capability picker during `profile create`; Studio
    federated search inside the builder (CLI `search` stays full parity).
+
+Landed since the table above: **docs landing page** — scroll-craft live-surface
+grammar, typesafe.ai aesthetic, verified on desktop/mobile/reduced-motion
+(see CHANGELOG [Unreleased]).
 
 ## Decisions locked (2026-09-19)
 
