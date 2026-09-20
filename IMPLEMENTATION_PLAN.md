@@ -25,9 +25,36 @@ new concept is mapped onto an existing module below; nothing already working is 
   compose → compileForHarness / installCrew → limitations report; blocked writes nothing);
   `docs/guide/registry.md` Projects section, getting-started flow.
 
+- **Phase 6** (registry format unification, 2026-09-19): done — **JSON-only registry**.
+  Folder-per-artifact + `manifest.json` entry point + modular `.json` section files
+  (identity, skills, rules, handoffs, mission, requirements, knowledge, …). Zero `.md`
+  under `registry/` (~782 files converted via `scripts/convert-registry-format.mjs`);
+  loaders, validation (`PATH_RE` → `.json`), adapters, CLI scaffolds (`profile create`,
+  `build --kind`), folder-sync scripts and the web SPA hydrators are JSON-only.
+- **Registry enrichment** (2026-09-19): done — profession-matched skill packs (curated
+  from skills.sh install counts) + MCP servers/packages on 16 profiles and all 8 crews
+  (`mcp/servers.json` + member wiring); adapters compile `tools.mcp` into harness
+  `.mcp.json` (verified end-to-end for equip + crew install).
+- **Release**: `proagent@0.10.0` on npm (tag-triggered OIDC trusted publishing).
+
 Remaining polish (non-blocking): capability picker during `profile create` (NEW_CHANGES.md
 §Profile creation — mapper exists, wiring pending); Studio federated search inside the
 builder (CORS-limited sources; CLI `search` is the full-parity path).
+
+## Next up (ordered, 2026-09-19)
+
+1. **Docs landing page** — built with the scroll-craft skill, typesafe.ai aesthetic
+   (dimensional layered hero, restrained motion, real markup; brand tokens navy/blue/
+   violet/cyan/ice per DESIGN.md). Shipped as the VitePress home. Verified with the
+   scroll-state harness: desktop, mobile (390×844) and reduced-motion passes.
+2. **Publish the JSON-format registry** — v0.11.0 (bump → changelog → verify → tag;
+   CI publishes). npm's 0.10.0 still carries the legacy `.md` format, so consumers get
+   the unified JSON registry only from 0.11.0 on.
+3. **Dogfood in ai-private-platform** — install `proagent@^0.11.0`, create the
+   `cloud-fullstack-lead` profile (cloud full-stack lead engineer; owns the bus
+   agents/workers), then `equip` + `validate` end-to-end against the JSON registry.
+4. Non-blocking polish (unchanged): capability picker during `profile create`; Studio
+   federated search inside the builder (CLI `search` stays full parity).
 
 ## Decisions locked (2026-09-19)
 
@@ -37,6 +64,7 @@ builder (CORS-limited sources; CLI `search` is the full-parity path).
 | Artifact taxonomy | **All 13 kinds in the schema from day one** (schema-complete; loaders land per kind as content arrives) |
 | Binary name | Keep `proagent` as the bin; docs use `proagent <cmd>` (project files stay `proagents.yaml` / `proagents.lock` per NEW_CHANGES.md) |
 | Rebrand scope | **Full rename** marketplace → registry (modules, docs, routes, UI copy) |
+| Registry format | **JSON-only** sections under the folder standard: `manifest.json` is the single entry point, sections are modular `.json` files agents load selectively; `.md` sections removed (knowledge included) so automations never parse prose |
 
 ## 0. Current → target mapping (what we reuse)
 

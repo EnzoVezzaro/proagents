@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed — breaking: JSON-only registry format
+
+The unified registry format is now **JSON-only** (`scripts/convert-registry-format.mjs`):
+every artifact is a folder whose `manifest.json` is the single entry point and whose
+sections are modular `.json` files. All ~782 legacy `.md` section files (identity,
+expertise, methods, skills, rules, standards, policies, verification, handoffs,
+mission, coordination, tasks, `tools/requirements.md`, knowledge docs) were converted;
+`registry/` contains zero Markdown. Loaders (`src/profiles/registry.ts`,
+`src/crew/hydrate.ts`), validation path patterns (`.json` only), adapters, CLI
+scaffolds (`profile create`, `build --kind`), folder-sync scripts and the web SPA
+hydrators are JSON-only, so automations never parse prose. Consumers of the npm
+registry artifact must upgrade to this version.
+
+### Added — scroll-craft landing for the docs home
+
+The VitePress home (`/`) is now a scroll-driven live-surface page built with the
+scroll-craft skill and the typesafe.ai aesthetic, themed to DESIGN.md tokens
+(`docs/.vitepress/theme/LandingIsland.vue` + `scrollcraft/builds/proagents-home/`).
+Seven acts, all real data: a session-terminal hero, the equip pipeline lighting stage
+by stage, the JSON-only registry schema with real counters (25/8/33/418), the
+signature-move hydrator (scroll drives the real security-engineer manifest hydrating
+into its 26 JSON section files, 2,125 → 3,596 B), a pannable catalog rail of real
+catalog entries, the PA-code enforcement table, and a working demo terminal computing
+over an embedded catalog snapshot. Verified with the scroll-craft harness: desktop,
+390×844 mobile and reduced-motion passes (no dead scroll, contrast ≥ 4.5:1).
+
 ## [0.10.0] — 2026-09-19
 
 ### Added — real skills and MCP servers for every profile and crew

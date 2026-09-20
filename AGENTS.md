@@ -39,6 +39,13 @@ not a prompt generator.
    references a specific harness; only `src/adapters/` knows how to compile per target.
    Manifests use the folder standard: every section entry is a path into the item's
    folder, hydrated to content at load time (`src/profiles/registry.ts`).
+8. **The registry is JSON-only.** Every artifact is a folder whose `manifest.json` is
+   the single entry point and whose section files are modular `.json` (identity,
+   skills, rules, handoffs, mission, `tools/requirements.json`, knowledge included).
+   Zero `.md` under `registry/` — loaders, validators (`PATH_RE`), adapters, CLI
+   scaffolds and folder-sync scripts all reject/emit JSON sections only, so
+   automations never parse prose. Keep it that way; new sections get `.json` files
+   plus a loader path in `src/profiles/registry.ts` / `src/crew/hydrate.ts`.
 
 ## Commands
 
@@ -71,6 +78,10 @@ npm run site:build  # full artifact → site/ (must pass before PRs)
 
 - `.proagent/session.json` — interview state (gitignored, inspectable)
 - `.agents/skills/<agent>/` — generated agent skills (committed if the user wants)
+- `scrollcraft/` — scroll-craft workspace: `builds/proagents-home/` is the docs
+  landing (Landing.vue mounts via `docs/.vitepress/theme/LandingIsland.vue`);
+  `FINGERPRINTS.md` records the build row; `builds/*/lab/` screenshots are
+  gitignored
 
 ## Browser verification (ego-browser)
 
