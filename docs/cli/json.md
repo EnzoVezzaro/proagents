@@ -107,7 +107,7 @@ proagent crew submit <file> --json         # → { status, crewId, version, repo
 
 `crew validate` exits non-zero with the deterministic `problems[]` (including
 subagent-standard codes PA043–PA048) when the crew fails. Folder-standard
-manifests (crew.json + members/ + …) are hydrated before validation.
+manifests (manifest.json + members/ + …) are hydrated before validation.
 
 ### validate --profiles
 

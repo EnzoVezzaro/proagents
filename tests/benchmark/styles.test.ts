@@ -7,7 +7,7 @@ import { REFERENCE_AGENTS, recordTrace, makeRunId } from "../../src/benchmark/tr
 import { runBenchmark, loadFixtureContents } from "../../src/benchmark/runner.js";
 import { computeScore, DEFAULT_WEIGHTS } from "../../src/benchmark/scoring.js";
 import { createBaseline, compareRuns } from "../../src/benchmark/baselines.js";
-import { execFileSync } from "node:child_process";
+import { runCli } from "../helpers/run-cli.js";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -488,7 +488,6 @@ describe("reference agents exercise the new styles (BENCH-RUN)", () => {
 // BENCH-SHIPPED-* — the three shipped suites, offline, through the CLI
 // ---------------------------------------------------------------------------
 
-const CLI = path.resolve("dist/cli/index.js");
 let shippedRoot = "";
 
 function shippedProject(): string {
@@ -504,7 +503,7 @@ function shippedProject(): string {
 
 function shippedCli(args: string[]): { stdout: string; status: number } {
   try {
-    return { stdout: execFileSync("node", [CLI, ...args], { cwd: shippedProject(), encoding: "utf8" }), status: 0 };
+    return { stdout: runCli(shippedProject(), args), status: 0 };
   } catch (err) {
     const e = err as { stdout?: string; status?: number };
     return { stdout: e.stdout ?? "", status: e.status ?? 1 };

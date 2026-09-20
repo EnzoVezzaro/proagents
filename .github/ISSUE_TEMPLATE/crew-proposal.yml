@@ -7,7 +7,7 @@ body:
     attributes:
       value: |
         Thanks for proposing a crew! **The easiest way to fill this in** is the
-        [Studio builder](https://enzovezzaro.github.io/proagents/) —
+        [Studio builder](https://proagents.reposell.dev/) —
         *Build a crew → File registry proposal* creates this issue with everything
         pre-filled, and CI validates it within seconds.
 

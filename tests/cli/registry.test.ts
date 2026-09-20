@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { execFileSync } from "node:child_process";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { runCli } from "../helpers/run-cli.js";
 
 /**
  * REGISTRY-CLI — JSON contracts for the registry command group (search, info,
@@ -13,8 +13,6 @@ import path from "node:path";
  * CLI JSON output changes must be additive: these tests pin the new shape
  * so the registry commands extend, never break, the machine contract.
  */
-
-const CLI = path.resolve("dist/cli/index.js");
 
 function makeRepo(files: Record<string, string> = {}): Promise<string> {
   return fs.mkdtemp(path.join(os.tmpdir(), "registry-cli-")).then(async (root) => {
@@ -28,13 +26,13 @@ function makeRepo(files: Record<string, string> = {}): Promise<string> {
 }
 
 function run(root: string, args: string[]): string {
-  return execFileSync("node", [CLI, ...args], { cwd: root, encoding: "utf8", input: "" });
+  return runCli(root, args, { input: "" });
 }
 
 /** Runs a command expected to fail; returns { status, stdout, stderr }. */
 function runFailing(root: string, args: string[]): { status: number; stdout: string; stderr: string } {
   try {
-    execFileSync("node", [CLI, ...args], { cwd: root, encoding: "utf8", input: "" });
+    runCli(root, args, { input: "" });
   } catch (err) {
     const e = err as { status?: number; stdout?: string; stderr?: string };
     return { status: e.status ?? -1, stdout: e.stdout ?? "", stderr: e.stderr ?? "" };

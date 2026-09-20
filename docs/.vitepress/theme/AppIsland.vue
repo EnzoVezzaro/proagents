@@ -59,7 +59,7 @@ onBeforeUnmount(() => {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--pa-cyan-bright);
+  background: var(--pa-cyan);
   animation: pa-pulse 1.1s ease-in-out infinite;
 }
 @keyframes pa-pulse {

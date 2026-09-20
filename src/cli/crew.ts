@@ -266,7 +266,7 @@ async function crewCreate(
   console.log("");
   console.log("Next:");
   console.log(`  proagent crew validate ${dir}        # gate before publishing`);
-  console.log(`  proagent crew build ${dir}/crew.json # install into this repo`);
+  console.log(`  proagent crew build ${dir}/manifest.json # install into this repo`);
   console.log(`  proagent crew submit ${dir}/crew.json # propose it to the registry`);
 }
 
@@ -298,24 +298,25 @@ Subcommands:
   validate <id|crew.json|dir> — Validate a crew (folder standard hydrated) —
                             subagent standards PA043–PA048 are enforced
   install <id>              Install a crew from the catalog into the current repo
-  build <crew.json>         Install a crew from a local manifest (builder output
-                            or folder-standard crew.json)
-    --file <crew.json>      Explicit manifest path
+  build <manifest.json>     Install a crew from a local manifest (builder output
+                            or folder-standard manifest.json)
+    --file <manifest.json>  Explicit manifest path
     --dry-run               Show the plan without writing
     --repo / --ref / --token
   create <profile-slug>…    Compose existing profiles into a custom crew: generates
-                            the crew folder (crew.json + mission/ + members/ +
-                            coordination/ + tasks/ + handoffs/ + rules/ +
-                            verification/ + tools/) in the current repo's
-                            registry/crews/. Every member binds a profile —
-                            the crew never duplicates profession content.
+                            the crew folder (manifest.json + mission.json +
+                            members/ + coordination/ + tasks/ + workflows/ +
+                            handoffs/ + rules/ + verification/ + mcp/) in the
+                            current repo's .proagent/crews/. Every member binds
+                            a profile — the crew never duplicates profession
+                            content.
     --name <Crew Name>      Crew name (default: derived from the slugs)
     --id <crew-slug>        Crew id (default: derived from the name)
     --description <text>    One-line description
     --role <member-role>    Role for the next member in pipeline order (one per
                             member, applied in argument order)
-  publish <crew.json>       Commit a crew to the catalog (folder-standard layout:
-                            crew.json + members/ + mission/ + … + mcp/)
+  publish <manifest.json>   Commit a crew to the catalog (folder-standard layout:
+                            manifest.json + members/ + mission.json + … + mcp/)
     --repo / --ref / --token (required token with contents:write)
   submit <crew.json>        File a registry proposal issue (recommended)
     --repo owner/name       Target repo (default: the registry repo)

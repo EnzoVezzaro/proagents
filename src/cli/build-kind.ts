@@ -341,6 +341,6 @@ export async function buildKindCrew(
   console.log("");
   console.log("Next:");
   console.log(`  proagent crew validate ${dir}        # gate (re-check as you edit)`);
-  console.log(`  proagent crew build ${dir}/crew.json # install into this repo`);
-  console.log(`  proagent crew submit ${dir}/crew.json # propose it to the registry`);
+  console.log(`  proagent crew build ${dir}/manifest.json # install into this repo`);
+  console.log(`  proagent crew submit ${dir}/manifest.json # propose it to the registry`);
 }

@@ -59,8 +59,8 @@ proagent inspect <slug> --json          # full manifest: expertise, methods, rul
 
 - Choose from what the user asked for ("security" → `security-engineer`), or inspect and
   propose the closest match. If two professions apply, propose composing them (step 3).
-- If nothing fits, the user can drop a JSON into `./profiles/` — say so, don't improvise a
-  fake profile in the conversation.
+- If nothing fits, the user can drop a profile folder into `.proagent/profiles/<slug>/` — say
+  so, don't improvise a fake profile in the conversation.
 
 ### 3. Equip
 
@@ -205,3 +205,11 @@ User: "build me an agent that fixes bugs"
 - `references/context.md` — context frameworks, adapters, and the firewall principle
 - `references/architecture.md` — spec schema, agent graph, validation codes
 - `references/self-improvement.md` — improvement lifecycle, policies, immutable constraints
+
+Beyond the two default paths, the CLI exposes a full surface — reach for it only when the
+task calls for it (see `docs/cli/index.md` for the complete reference):
+
+- Registry & projects: `proagent search`, `info`, `install`, `remove`, `update`, plus
+  project specs via `resolve`, `lock`, `setup` (driven by a `proagents.yaml` lockfile).
+- Verification at scale: `proagent benchmark list|create|run|report` for deterministic-first
+  agent evaluation.

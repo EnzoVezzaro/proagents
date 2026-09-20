@@ -1,5 +1,4 @@
 import { describe, expect, it, afterAll } from "vitest";
-import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -8,12 +7,11 @@ import { installCrew, planInstall, mergeMcpConfig, crewSkillMarkdown } from "../
 import { readCatalogLocal, emptyCatalog } from "../../src/crew/registry.js";
 import { CrewError } from "../../src/crew/types.js";
 import type { CrewDefinition } from "../../src/crew/types.js";
+import { runCli } from "../helpers/run-cli.js";
 
 /**
  * CREW-* — tests for the crew/registry subsystem. All offline.
  */
-
-const CLI = path.resolve("dist/cli/index.js");
 
 function baseCrew(): CrewDefinition {
   return {
@@ -140,7 +138,7 @@ describe("crew install (CREW-INSTALL)", () => {
       }
       const mcp = JSON.parse(fs.readFileSync(path.join(root, ".mcp.json"), "utf8")) as { mcpServers: Record<string, unknown> };
       expect(Object.keys(mcp.mcpServers).sort()).toEqual(["existing", "github"]);
-      // crew.json content matches the definition
+      // manifest.json content matches the definition
       const written = JSON.parse(fs.readFileSync(path.join(root, ".agents", "crews", "test-crew", "manifest.json"), "utf8")) as CrewDefinition;
       expect(written.id).toBe("test-crew");
       // worker skill contains the normative permission table
@@ -234,7 +232,7 @@ function cliProject(): string {
 
 function cli(args: string[], expectFailure = false): { stdout: string; status: number } {
   try {
-    return { stdout: execFileSync("node", [CLI, ...args], { cwd: cliProject(), encoding: "utf8" }), status: 0 };
+    return { stdout: runCli(cliProject(), args), status: 0 };
   } catch (err) {
     const e = err as { stdout?: string; status?: number };
     if (!expectFailure) throw err;

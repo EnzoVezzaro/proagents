@@ -5,6 +5,175 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.0] — 2026-09-20
+
+### Fixed — light-mode code blocks (docs)
+
+- Code block containers rendered a **dark navy background in light mode**:
+  `custom.css` set `--vp-code-block-bg: #060d33` on `:root` (both modes) while the
+  light Shiki theme (`github-light`) supplies light tokens — dark-on-dark text and
+  a slab that fought the paper canvas. Light mode is now the landing's
+  `.pa-manifest` panel: **paper `#f7f8fd` canvas, dark mono text, ink hairline
+  border, blue-tinted highlight**; the navy terminal (`.pa-proof__term` voice) is
+  dark mode only. Line-highlight/copy-button tokens are now set per mode.
+- The matching docs-theme round is part of this release: docs headlines, sidebar
+  group labels, tables, buttons, navbar, footer and code surfaces now re-use the
+  landing's exact voices (Nunito display, mono uppercase PA-LABEL strips, Geist
+  body) so both surfaces read as one product.
+
+### Changed — landing hero + harness-agnostic act
+
+- **Full-viewport ASCII hero**: the dithered-field canvas became the hero's absolute
+  background for the whole first viewport (`.pa-hero__stage { position: absolute; height:
+  100vh }`) with the copy layered above. The field is now pure futuristic computation —
+  interference waves, expanding pulse rings, the diagonal logo-ramp sweep and the cursor
+  etch — with a radial quiet zone so the headline and lede stay crisp. The bot-icon figure
+  (and the cursor flashlight reveal built on it) was removed with the two-column layout.
+- **§01 reframed as harness-agnostic**: "The missing layer" became "One profession. Every
+  harness." — the story of compiling one canonical profile into each environment's native
+  mechanisms — with a slowly revolving orbit (60s/rev, pauses on hover, static under
+  reduced motion) of all 9 harness chips: real brand marks, radial spokes sweeping with
+  the ring, and an ASCII energy core (`AsciiCore` in `asciiBot.ts`) behind the mark.
+- **§03 rebuilt as the equation**: "Different harnesses. Same profession." became the
+  literal product equation — CANONICAL PROFILE + AGENT HARNESS = PROFESSIONAL AGENT —
+  with an interactive harness picker (same 9 marks); the equip command line live-updates
+  its `--target <slug>` to the picked harness, matching `KNOWN_HARNESSES` in
+  `src/registry/spec.ts`.
+- **§02 layers became a composer**: clicking a layer ADDS its section to the composed
+  `manifest.json` (typed in char by char) instead of substituting it; selected layers
+  stay highlighted with a −/+ affordance. Section values are the real registry paths;
+  a "?" toggle retypes the document as plain-language explanations of what each section
+  carries (paths stay the default).
+- **Fan-out grid completed**: the ninth harness target (`generic-cli`) joined the §03
+  grid, filling the 3×3 exactly.
+- The archify-diagram experiment was reverted; `theme/landing/asciiBot.ts` remains the
+  single hero renderer.
+
+### Changed — docs/CLI/skill alignment round
+
+- **New drift fence**: `tests/docs/alignment.test.ts` (23 checks) machine-verifies that
+  every documented `proagent` command, flag, harness id, profile/crew slug and path
+  claim in README, docs/, the shipped skill, the landing page, `catalog.json` and
+  workflow guidance matches the source of truth (CLI dispatch, `HARNESS_SPECS`,
+  registry folders). Docs follow code; drift goes red.
+- **Hermetic CLI tests**: CLI-spawning vitest files now use `tests/helpers/run-cli.ts`,
+  which strips harness env signals (`OPENCODE`, `CLAUDECODE`, …) from the subprocess
+  environment. `detect`-dependent tests no longer flip primary harness when the suite
+  runs inside an agent session (fixes PROFILES-CLI-001/010 flakiness).
+- **Nine-target consistency**: the `--target` row in `docs/cli/index.md`, the skill's
+  harness-id reference, the profile mechanism matrix, the landing harness strip and
+  every `registry/catalog.json` `compatibility` array now list all nine targets
+  (`claude-code`, `codex`, `opencode`, `cursor`, `gemini-cli`, `copilot`, `openclaude`,
+  `freebuff`, `generic-cli`).
+- **JSON-only manifests everywhere shown**: the README profile example is now the real
+  JSON folder standard (`manifest.json` + `.json` section paths) instead of a YAML
+  manifest with `.md` sections; `docs/guide/profiles.md` shows `.json` knowledge paths;
+  `docs/guide/getting-started.md` shows valid JSON where it claims "plain JSON".
+- **Landing page**: the version badge is injected from `package.json` at build time
+  (no more hand-maintained `v0.11.0`), the equip example uses the real default flow
+  (no phantom `--harness auto`), and `profile validate` shows a real file argument.
+- **Shipped skill corrected**: local profiles live in `.proagent/profiles/<slug>/`
+  (not `./profiles/`), the compiled canonical manifest is `manifest.json` (not
+  `profile.json`), and a compact "beyond the two default paths" pointer covers the
+  registry/project (`search`…`setup`) and `benchmark` command groups without changing
+  the equip/interview default emphasis.
+- **New workflow conformance suite**: `tests/cli/workflow.test.ts` executes the CLI the
+  way users and agents meet it — every top-level command answers (read-only commands
+  succeed on a bare repo; state-dependent commands fail with guidance, never a stack
+  trace), the equip quickstart, the progressive interview (real question loop to READY →
+  spec → validate → build), the registry project flow (`build --kind spec` → resolve →
+  lock → `validate --spec` → `setup --dry-run`) and the benchmark flow run end-to-end,
+  `SKILL.md` frontmatter is validated against the Agent Skills spec, and every fenced
+  `proagent` invocation the skill teaches replays green in document order.
+- **Housekeeping**: the completed `IMPLEMENTATION_PLAN.md` and the alignment-round
+  `tasks/` planning files were removed after verification (all phases shipped; the
+  drift + workflow suites are the permanent guards).
+
+### Changed — Studio Policies step
+
+- The Build flow's Policies & harness targets step now mirrors the deterministic
+  core: all nine known harnesses (adds `openclaude`, `freebuff`) with per-target
+  tooltips, Select all/Clear controls, an inline PA506 policy check (trailing
+  wildcards + non-hostname allowlist entries warn before export), and a compiled
+  `policies:`/`harness:` yaml readout. `copyText` fallback no longer leaks its
+  textarea on `execCommand` failure. Web `SpecFinding` accepts `PA506`.
+
+### Changed — production domain
+
+- The site's production domain is **proagents.reposell.dev**: README header links,
+  docs (`registry.md` Studio/callback URLs), submission-issue templates and workflow
+  copy all point at it, and a `CNAME` file (via `docs/public/`) ships in the Pages
+  artifact so GitHub Pages serves the custom domain and 301s the old
+  `enzovezzaro.github.io/proagents` URL. All redirect shims are relative, so they
+  work unchanged on the new host.
+
+### Changed — Studio export: full agent build instructions
+
+- The Build flow's final step is now **"Instructions to build proagent <name>"**
+  (tab renamed from Export; `serializeAgentBrief` in `web/src/project-spec.ts`).
+  Copy places a complete build brief on the clipboard, addressed to the AI coding
+  agent working in the user's repo: what the environment contains (profiles,
+  crews, capabilities, policies, harness targets), the exact `proagents.yaml` in
+  a fenced block (byte-identical to `serializeSpecYaml`), the install +
+  `resolve`/`lock`/`setup` commands, how to verify the build (`setup` report,
+  harness files, `proagent status`, commit spec + lock), and the operating rules
+  once equipped (follow profile methods, evidence over assertion, stay inside
+  policies). Download keeps saving the plain spec file for the repo root.
+
+### Fixed — public-surface polish
+
+- **Studio registry (dev):** the catalog dev-middleware regex in
+  `docs/.vitepress/config.mts` contained `\registry` where `\r` is a carriage-return
+  escape, so the middleware never matched and Vite's history fallback answered
+  `registry/**` requests with the SPA `index.html` — every Studio `fetch().json()`
+  threw. Regex fixed; catalog, profile sections and capabilities now serve as JSON
+  in dev (production was unaffected — `scripts/assemble-site.mjs` copies the files).
+- **Landing color correctness:** `a { color: inherit }` out-ranked the button/link
+  component rules, so primary buttons rendered ink-on-blue and the light variant
+  white-on-white; component selectors now out-rank the generic rule. Manifest status
+  line switched to an AA cyan (`--cyan-ink`) on paper; section label muted color
+  lifted to pass AA on the tint surface.
+- **Landing alignment:** nav, containers and the ASCII caption strip share one
+  1200px gutter at every width; fan-out tiles render equal heights.
+
+### Changed — public-surface redesign: Logo Ramp (DESIGN.md §5.2)
+
+The whole public surface (landing, docs theme, 404, Studio SPA) now runs one
+ratified token set **sampled from the logo itself** (`branding/logo.png`):
+violet `#5d2de2` → blue `#0e4bec` → sky `#13a6e0` → cyan `#0cced4`, with the
+bot's navy `#000828` as the dark canvas. **Light mode is the default** (cool
+paper `#f7f8fd`); interactive color is the ramp core blue; the 4-stop ramp is
+reserved for brand moments (hero emphasis, footer band), never buttons or text
+fills. (Supersedes the same-day Phosphor Ink pass; purple and cyan are wanted
+again by the brand.)
+- Brand assets in `docs/public/` rebuilt from `branding/` (lockups, bot icon,
+  derived favicon, og-image) — previously stale files from the old palette.
+- **Landing rewritten** as a narrative page with a signature hero: the bot
+  rendered as **dithered ASCII art** on canvas (`theme/landing/asciiBot.ts`,
+  converted from `branding/logo-bot-icon.png`), swept by the logo ramp and
+  reacting to the cursor; static frame under reduced motion, loop paused
+  off-screen and on hidden tabs. The earlier build shipped four hardcoded
+  hand-drawn text frames instead — the canvas renderer now implements what
+  DESIGN.md §5.2 specifies. Layout follows the browserbase pattern: centered
+  editorial hero with the full-bleed ASCII band below it, then feature rows,
+  one shared section rhythm (`clamp(72px,10vw,110px)`), reveal-on-scroll
+  gated on `html.js`, mobile CTA kept visible (§20). The page covers what was
+  missing: the registry's publish/submit flow (PR or proposal issue,
+  CI-validated), federated sources (skills.sh, npm, MCP registry, GitHub),
+  crew installs, `proagents.yaml` → `resolve`/`lock`/`setup` environments,
+  and the PA validation table. All internal links are base-aware
+  (`withBase`) and the page is SSR'd (no scroll engine, no build step).
+- Display face switched to **Nunito** (matches the logo wordmark);
+  Bricolage Grotesque removed. Geist body + JetBrains Mono unchanged.
+- The scroll-craft landing build (`scrollcraft/`) was removed. The landing is a
+  static Vue island (`docs/.vitepress/theme/landing/`) **server-rendered** by
+  VitePress and wrapped by `LandingIsland.vue`. It must stay SSR'd: a client-only
+  mount lets VitePress hoist the island's static nodes into the lean JS chunk,
+  where they never render.
+- Docs theme (`custom.css`), `NotFound.vue`, static 404, `AppIsland.vue` and SPA
+  tokens (`web/src/ui/tokens.ts`) re-skinned on the same `--pa-*` set;
+  interactive pill-shaped controls reduced to 6px radii per DESIGN.md §7.
+
 ## [0.11.0] — 2026-09-19
 
 ### Changed — breaking: JSON-only registry format

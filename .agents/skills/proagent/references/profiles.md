@@ -1,7 +1,8 @@
 # Reference — Professional Profiles
 
 Machine-facing details for the equip path. The canonical schema lives in
-`src/profiles/types.ts`; shipped profiles in `profiles/*.json`.
+`src/profiles/types.ts`; shipped profiles live as folders in `registry/profiles/<slug>/`,
+each behind one `manifest.json` whose section entries are `.json` paths.
 
 ## Commands and JSON contracts
 
@@ -23,8 +24,8 @@ Machine-facing details for the equip path. The canonical schema lives in
 
 `HarnessSignal = { id, name, capabilities, evidence }` where capabilities include
 `projectInstructions`, `skills`, `ruleEnforcement` (`native | instructions | none`), `mcp`,
-`shell`, `git`. Harness ids: `claude-code`, `codex`, `opencode`, `cursor`, `gemini-cli`,
-`generic-cli`.
+`shell`, `git`. Harness ids: `claude-code`, `codex`, `opencode`, `cursor`, `gemini-cli`, `copilot`,
+`openclaude`, `freebuff`, `generic-cli`.
 
 Exit codes: profile validation failures and composition **errors** exit non-zero with
 `status: "blocked"`. Warnings never block.
@@ -63,7 +64,7 @@ For a harness with skills + native enforcement (Claude Code):
 
 ```text
 .agents/skills/<slug>/SKILL.md      # agent-skill mechanism
-.agents/skills/<slug>/profile.json  # canonical manifest (portable, inspectable)
+.agents/skills/<slug>/manifest.json  # canonical manifest (portable, inspectable)
 CLAUDE.md                           # project-instructions (marked block)
 .claude/settings.json               # rule-enforcement (PreToolUse hook)
 ```
@@ -92,10 +93,15 @@ contents:write) — proposals are the default because every change is a reviewab
 A repo can define its own professions:
 
 ```text
-./profiles/<slug>.json
+.proagent/profiles/<slug>/
+├── manifest.json          # the single entry point
+├── identity.json
+├── expertise/01-*.json
+└── …                      # same folder standard as registry profiles
 ```
 
-- Local profiles shadow built-ins with the same slug (discovery order: builtin → local).
+- Local profiles shadow built-ins with the same slug (resolution: local
+  `.proagent/profiles/` first, then a `registry/` checkout, then the packaged catalog).
 - They appear in `list --json` with `origin: "local"`.
 - `validate --profiles` flags them with a PA037 local notice so shipped vs. local is
   always distinguishable.

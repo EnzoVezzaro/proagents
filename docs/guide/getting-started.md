@@ -69,15 +69,17 @@ silently ignored. See [profiles](/guide/profiles#composition).
 
 Every profile is a versioned, inspectable file:
 
-```yaml
-version: "1"
-profile:  { slug: security-engineer, version: 1.0.0 }
-identity: { title: Security Engineer }
-expertise: [application security, threat modeling]
-methods:  [threat-modeling, root-cause-analysis]
-rules:    [never expose secrets, require security verification…]
-tools:    { required: [filesystem, shell, git] }
-verification: { required: [tests, security-scan] }
+```json
+{
+  "version": "1.0.0",
+  "profile": { "slug": "security-engineer" },
+  "identity": { "title": "Security Engineer" },
+  "expertise": ["application security", "threat modeling"],
+  "methods": ["threat-modeling", "root-cause-analysis"],
+  "rules": ["never expose secrets", "require security verification…"],
+  "tools": { "required": ["filesystem", "shell", "git"] },
+  "verification": { "required": ["tests", "security-scan"] }
+}
 ```
 
 Drop your own under `registry/profiles/<slug>/` in your repo — a checkout copy wins over

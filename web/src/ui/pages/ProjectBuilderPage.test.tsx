@@ -65,6 +65,25 @@ function mockFetch(): void {
       if (u.includes("catalog.json")) {
         return Promise.resolve(new Response(JSON.stringify(catalog), { status: 200 }));
       }
+      // The AI Magic call goes through callModel → OpenAI-compatible
+      // chat/completions. Reply with the strict-JSON contract.
+      if (u.includes("/chat/completions")) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              choices: [
+                {
+                  message: {
+                    content:
+                      '{"name":"Sargassum Alarm","intent":"Realtime sargassum beach monitoring with a React dashboard, Node ingestion API and PostgreSQL, needing DevOps and data-pipeline expertise.","notes":["Sharpened the intent with concrete stack."]}',
+                  },
+                },
+              ],
+            }),
+            { status: 200 },
+          ),
+        );
+      }
       return Promise.resolve(new Response("not found", { status: 404 }));
     }),
   );
@@ -81,7 +100,7 @@ describe("ProjectBuilderPage (PROJECT-BUILDER)", () => {
     mockFetch();
     render(<ProjectBuilderPage ctx={ctx} />);
     const rail = document.body.textContent ?? "";
-    for (const title of ["Intent", "Capabilities", "Artifacts", "Policies", "Export"]) {
+    for (const title of ["Intent", "Capabilities", "Artifacts", "Policies", "Instructions"]) {
       expect(rail).toContain(title);
     }
     expect(screen.getByLabelText(/Project name/i)).toBeTruthy();
@@ -129,8 +148,11 @@ describe("ProjectBuilderPage (PROJECT-BUILDER)", () => {
     expect(screen.getByRole("button", { name: /✓ In environment/ })).toBeTruthy();
   });
 
-  it("PROJECT-BUILDER-005: export previews the yaml and fires the download", async () => {
+  it("PROJECT-BUILDER-005: export previews the yaml and copies it to the clipboard", async () => {
     mockFetch();
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    const desc = Object.getOwnPropertyDescriptor(Navigator.prototype, "clipboard");
+    Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
     const clickSpy = vi.fn();
     const originalCreateElement = document.createElement.bind(document);
     const anchorSpy = vi.spyOn(document, "createElement").mockImplementation(((tag: string) => {
@@ -144,17 +166,57 @@ describe("ProjectBuilderPage (PROJECT-BUILDER)", () => {
     try {
       render(<ProjectBuilderPage ctx={ctx} />);
       fireEvent.change(screen.getByLabelText(/Project name/i), { target: { value: "my-saas" } });
-      fireEvent.click(screen.getByRole("tab", { name: /Export/ }));
+      fireEvent.click(screen.getByRole("tab", { name: /Instructions/ }));
       await waitFor(() => {
         expect(screen.getByLabelText(/proagents.yaml preview/)).toBeTruthy();
       });
       const preview = screen.getByLabelText(/proagents.yaml preview/).textContent ?? "";
       expect(preview).toContain("schema: proagents/v1");
       expect(preview).toContain("name: my-saas");
+      // Primary action: copy the FULL agent handoff brief (context + yaml +
+      // commands), not just the bare spec.
+      fireEvent.click(screen.getByRole("button", { name: /Copy full instructions/ }));
+      await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
+      const brief = writeText.mock.calls[0]?.[0] as string;
+      expect(brief).toContain("Instructions to build proagent my-saas");
+      expect(brief).toContain("```yaml");
+      expect(brief).toContain("schema: proagents/v1");
+      expect(brief).toContain("name: my-saas");
+      expect(brief).toContain("proagent resolve");
+      expect(brief).toContain("proagent setup");
+      expect(brief).toContain("PA502");
+      // The embedded yaml block matches the visible preview byte-for-byte.
+      const yamlPreview = screen.getByLabelText(/proagents.yaml preview/).textContent ?? "";
+      expect(brief).toContain(yamlPreview.replace(/\n$/, ""));
+      expect(await screen.findByText(/✓ Copied/)).toBeTruthy();
+      // Secondary action: the file download still works.
       fireEvent.click(screen.getByRole("button", { name: /Download proagents.yaml/ }));
       expect(clickSpy).toHaveBeenCalled();
     } finally {
       anchorSpy.mockRestore();
+      if (desc) Object.defineProperty(Navigator.prototype, "clipboard", desc);
+      else delete (navigator as unknown as { clipboard?: unknown }).clipboard;
+    }
+  });
+
+  it("PROJECT-BUILDER-005b: copy failure falls back to the download hint", async () => {
+    mockFetch();
+    const reject = vi.fn().mockRejectedValue(new Error("denied"));
+    Object.defineProperty(navigator, "clipboard", { value: { writeText: reject }, configurable: true });
+    const exec = document.execCommand;
+    (document as unknown as { execCommand: unknown }).execCommand = vi.fn(() => {
+      throw new Error("unsupported");
+    });
+    try {
+      render(<ProjectBuilderPage ctx={ctx} />);
+      fireEvent.change(screen.getByLabelText(/Project name/i), { target: { value: "my-saas" } });
+      fireEvent.click(screen.getByRole("tab", { name: /Instructions/ }));
+      await waitFor(() => screen.getByLabelText(/proagents.yaml preview/));
+      fireEvent.click(screen.getByRole("button", { name: /Copy full instructions/ }));
+      expect(await screen.findByText(/Copy failed/)).toBeTruthy();
+    } finally {
+      document.execCommand = exec;
+      delete (navigator as unknown as { clipboard?: unknown }).clipboard;
     }
   });
 
@@ -166,11 +228,57 @@ describe("ProjectBuilderPage (PROJECT-BUILDER)", () => {
     const checkbox = screen.getByRole("checkbox") as HTMLInputElement;
     expect(checkbox.checked).toBe(true); // default workspace-only
     fireEvent.click(screen.getByRole("button", { name: /codex/ }));
-    fireEvent.click(screen.getByRole("tab", { name: /Export/ }));
+    fireEvent.click(screen.getByRole("tab", { name: /Instructions/ }));
     await waitFor(() => {
       const preview = screen.getByLabelText(/proagents.yaml preview/).textContent ?? "";
       expect(preview).toContain("workspace-only: true");
       expect(preview).toContain("- codex");
     });
+  });
+
+  it("PROJECT-BUILDER-AIMAGIC-001: the AI Magic button is disabled without a provider key", async () => {
+    mockFetch();
+    render(<ProjectBuilderPage ctx={ctx} />);
+    const magic = screen.getByRole("button", { name: /AI Magic/i }) as HTMLButtonElement;
+    expect(magic.disabled).toBe(true);
+    expect(screen.getByText(/add a provider API key in Settings/i)).toBeTruthy();
+  });
+
+  it("PROJECT-BUILDER-AIMAGIC-002: with a key, it reviews and improves name + intent from strict JSON", async () => {
+    mockFetch();
+    const configured: AppCtx = {
+      ...ctx,
+      settings: { ...ctx.settings, provider: { provider: "openai", model: "gpt-test", apiKey: "sk-test" } },
+    };
+    render(<ProjectBuilderPage ctx={configured} />);
+    fireEvent.change(screen.getByLabelText(/Project name/i), { target: { value: "sargassum" } });
+    fireEvent.change(screen.getByLabelText(/Intent/i), { target: { value: "Beach monitoring app" } });
+    fireEvent.click(screen.getByRole("button", { name: /AI Magic/i }));
+    expect(await screen.findByText(/What the model improved/i)).toBeTruthy();
+    expect((screen.getByLabelText(/Project name/i) as HTMLInputElement).value).toBe("Sargassum Alarm");
+    expect((screen.getByLabelText(/Intent/i) as HTMLTextAreaElement).value).toContain("PostgreSQL");
+  });
+
+  it("PROJECT-BUILDER-006b: policies step offers all known harnesses, select all/clear, and warns on bad allowlist entries", async () => {
+    mockFetch();
+    render(<ProjectBuilderPage ctx={ctx} />);
+    fireEvent.change(screen.getByLabelText(/Project name/i), { target: { value: "my-saas" } });
+    fireEvent.click(screen.getByRole("tab", { name: /Policies/ }));
+    // All nine known harnesses are offered (mirror of src/registry/spec.ts).
+    for (const h of ["claude-code", "codex", "opencode", "cursor", "gemini-cli", "copilot", "openclaude", "freebuff", "generic-cli"]) {
+      expect(screen.getByRole("button", { name: new RegExp(h) })).toBeTruthy();
+    }
+    // Select all / clear work.
+    fireEvent.click(screen.getByRole("button", { name: /Select all/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Clear/ }));
+    expect(screen.getByText(/spec stays harness-agnostic/)).toBeTruthy();
+    // PA506: wildcard and malformed entries warn inline, before export.
+    const network = screen.getByLabelText(/Network allowlist/i);
+    fireEvent.change(network, { target: { value: "api.example.com*" } });
+    expect(await screen.findByText(/trailing wildcard/)).toBeTruthy();
+    fireEvent.change(network, { target: { value: "*.example.com" } });
+    expect(await screen.findByText(/does not look like a hostname/)).toBeTruthy();
+    fireEvent.change(network, { target: { value: "github.com, api.example.com" } });
+    await waitFor(() => expect(screen.queryByText(/trailing wildcard/)).toBeNull());
   });
 });

@@ -1,10 +1,11 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import type { AppCtx } from "../AppShell.js";
 import { ErrorNote } from "../cards.js";
 import { btnPrimary, btnGhost, btnSoft, field, label as labelTok, card, type as typeTok } from "../tokens.js";
+import { callModel } from "../../llm.js";
 import type { MarketplaceCatalog, MarketplaceItem, SpecDocument, SpecFinding } from "../../types.js";
 import { CATALOG_URL, catalogUrl } from "../../catalog.js";
-import { deriveCapabilities, serializeSpecYaml, toggleIn, validateSpecClient, downloadText, type CapabilityDef } from "../../project-spec.js";
+import { buildIntentReviewPrompt, parseIntentReview, deriveCapabilities, serializeSpecYaml, serializeAgentBrief, toggleIn, validateSpecClient, copyText, downloadText, type CapabilityDef } from "../../project-spec.js";
 
 /**
  * ProjectBuilderPage — the Studio BUILD mode (NEW_CHANGES.md §10):
@@ -19,8 +20,22 @@ import { deriveCapabilities, serializeSpecYaml, toggleIn, validateSpecClient, do
 /** The seed capability taxonomy, served beside the catalog. */
 const TAXONOMY_URL = catalogUrl("capabilities/index.json");
 
-/** Seed harness targets offered in the compatibility picker. */
-const HARNESS_TARGETS = ["claude-code", "codex", "opencode", "cursor", "gemini-cli", "copilot", "generic-cli"] as const;
+/** Seed harness targets offered in the compatibility picker — mirror of
+ * src/registry/spec.ts KNOWN_HARNESSES (PA505 validates against this set). */
+const HARNESS_TARGETS = ["claude-code", "codex", "opencode", "cursor", "gemini-cli", "copilot", "openclaude", "freebuff", "generic-cli"] as const;
+
+/** What each target compiles into — tooltip text on the picker chips. */
+const HARNESS_HINTS: Record<(typeof HARNESS_TARGETS)[number], string> = {
+  "claude-code": "Anthropic Claude Code — skills, hooks and settings.json",
+  codex: "OpenAI Codex CLI — AGENTS.md instructions",
+  opencode: "OpenCode — agents, rules and MCP config",
+  cursor: "Cursor — rules and MCP config",
+  "gemini-cli": "Google Gemini CLI — GEMINI.md and extensions",
+  copilot: "GitHub Copilot — instructions and MCP servers",
+  openclaude: "OpenClaude-compatible harnesses",
+  freebuff: "Freebuff — agents with skills and rules",
+  "generic-cli": "Any CLI agent — markdown profile + setup report",
+};
 
 type StepId = "intent" | "capabilities" | "artifacts" | "policies" | "export";
 
@@ -29,7 +44,7 @@ const STEPS: Array<{ id: StepId; title: string; hint: string }> = [
   { id: "capabilities", title: "Capabilities", hint: "Abstract abilities the environment needs" },
   { id: "artifacts", title: "Artifacts", hint: "Profiles, crews and skills from the registry" },
   { id: "policies", title: "Policies", hint: "Filesystem and network boundaries" },
-  { id: "export", title: "Export", hint: "proagents.yaml — the source of truth" },
+  { id: "export", title: "Instructions", hint: "the full build brief for your AI agent" },
 ];
 
 /** Default capability picks for a native catalog hit (provides → chips). */
@@ -37,7 +52,7 @@ function capabilitiesOfItems(items: MarketplaceItem[]): string[] {
   return [...new Set(items.flatMap((i) => i.provides ?? []))].sort();
 }
 
-export function ProjectBuilderPage(_props: { ctx: AppCtx }): React.JSX.Element {
+export function ProjectBuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
   const [step, setStep] = useState<StepId>("intent");
   const [catalog, setCatalog] = useState<MarketplaceCatalog | null>(null);
   const [taxonomy, setTaxonomy] = useState<CapabilityDef[]>([]);
@@ -53,6 +68,16 @@ export function ProjectBuilderPage(_props: { ctx: AppCtx }): React.JSX.Element {
   const [networkAllowed, setNetworkAllowed] = useState("");
   const [targets, setTargets] = useState<string[]>([]);
   const [exported, setExported] = useState(false);
+  const [copyState, setCopyState] = useState<"idle" | "ok" | "fail">("idle");
+
+  // AI Magic (Intent step): reviews and improves name + intent with the
+  // provider/model from Settings. Same pattern as PreviewPage — the key is
+  // the user's own, called straight from the browser.
+  const { settings } = props.ctx;
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiNotes, setAiNotes] = useState<string[]>([]);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const providerReady = Boolean(settings.provider.apiKey && settings.provider.model);
 
   useEffect(() => {
     let cancelled = false;
@@ -130,6 +155,28 @@ export function ProjectBuilderPage(_props: { ctx: AppCtx }): React.JSX.Element {
     [spec, catalog],
   );
 
+  /** Policy-level findings only — surfaced inline on the policies step. */
+  const policyFindings = useMemo(() => findings.filter((f) => f.code === "PA506"), [findings]);
+
+  /** The compiled policies + harness sections of the canonical yaml. */
+  const policiesYaml = useMemo(() => {
+    const parts: string[] = [];
+    let capture: "policies" | "harness" | null = null;
+    for (const line of serializeSpecYaml(spec).split("\n")) {
+      if (line.startsWith("policies:") || line.startsWith("harness:")) {
+        capture = line.startsWith("policies:") ? "policies" : "harness";
+        parts.push(line);
+        continue;
+      }
+      if (/^[a-z]/.test(line)) {
+        capture = null;
+        continue;
+      }
+      if (capture) parts.push(line);
+    }
+    return parts.join("\n");
+  }, [spec]);
+
   const suggested = useMemo(
     () => (intent.trim().length > 3 ? deriveCapabilities(intent, taxonomy) : []),
     [intent, taxonomy],
@@ -160,6 +207,52 @@ export function ProjectBuilderPage(_props: { ctx: AppCtx }): React.JSX.Element {
     }
   };
 
+  /**
+   * AI Magic (Intent step): the configured model reviews and improves the
+   * project name + intent. The capability chips stay user-controlled — the
+   * model only sharpens the prose the chips derive from.
+   */
+  const runAiMagic = useCallback(async () => {
+    if (aiBusy || !providerReady) return;
+    setAiBusy(true);
+    setAiError(null);
+    setAiNotes([]);
+    try {
+      const vocabulary = (
+        taxonomy.length > 0
+          ? taxonomy
+          : capabilitiesOfItems(catalog?.items ?? []).map((id): CapabilityDef => ({ id, title: id }))
+      ).map((c) => c.title ?? c.id);
+      const reply = await callModel(
+        settings.provider,
+        [
+          {
+            role: "system",
+            content:
+              "You are a precise editor for agent-environment specs. You return strict JSON and never wrap it in markdown fences.",
+          },
+          {
+            role: "user",
+            content: buildIntentReviewPrompt({ name, intent, capabilityTitles: vocabulary }),
+          },
+        ],
+        700,
+      );
+      const parsed = parseIntentReview(reply.text);
+      if (!parsed) {
+        setAiError("The model reply was not usable JSON — fields left unchanged. Try again.");
+        return;
+      }
+      if (parsed.name) setName(parsed.name);
+      if (parsed.intent) setIntent(parsed.intent);
+      setAiNotes(parsed.notes.length > 0 ? parsed.notes : ["Reviewed — the fields were already tight."]);
+    } catch (err) {
+      setAiError((err as Error).message);
+    } finally {
+      setAiBusy(false);
+    }
+  }, [aiBusy, providerReady, settings, taxonomy, catalog, name, intent]);
+
   if (loadError && !catalog) {
     return (
       <div>
@@ -188,7 +281,7 @@ export function ProjectBuilderPage(_props: { ctx: AppCtx }): React.JSX.Element {
             onClick={() => setStep(s.id)}
             style={{
               ...(step === s.id ? btnPrimary : btnSoft),
-              borderRadius: 999,
+              borderRadius: 6,
               padding: "7px 14px",
               fontSize: 13,
               cursor: "pointer",
@@ -204,11 +297,32 @@ export function ProjectBuilderPage(_props: { ctx: AppCtx }): React.JSX.Element {
       {/* Step: intent */}
       {step === "intent" && (
         <section style={{ ...card, maxWidth: 760 }}>
-          <h2 style={typeTok.h2}>What are you building?</h2>
-          <p style={{ color: "var(--cream-dim)", fontSize: 13, lineHeight: 1.6 }}>
-            Describe the project in one or two sentences. ProAgents suggests the capabilities your
-            environment needs — you stay in control of every pick.
-          </p>
+          <div style={{ display: "flex", gap: 12, alignItems: "start", justifyContent: "space-between", flexWrap: "wrap" }}>
+            <div style={{ minWidth: 0 }}>
+              <h2 style={typeTok.h2}>What are you building?</h2>
+              <p style={{ color: "var(--cream-dim)", fontSize: 13, lineHeight: 1.6 }}>
+                Describe the project in one or two sentences. ProAgents suggests the capabilities your
+                environment needs — you stay in control of every pick.
+              </p>
+            </div>
+            <button
+              onClick={runAiMagic}
+              disabled={aiBusy || !providerReady}
+              title={providerReady ? "Review and improve the name + intent with your model" : "Set a provider + model in Settings first"}
+              style={{
+                ...btnSoft,
+                borderRadius: 8,
+                padding: "8px 14px",
+                fontSize: 12.5,
+                fontWeight: 700,
+                cursor: aiBusy || !providerReady ? "not-allowed" : "pointer",
+                whiteSpace: "nowrap",
+                ...(providerReady ? { borderColor: "var(--blue-bright)" } : {}),
+              }}
+            >
+              {aiBusy ? "Reviewing…" : "✨ AI Magic"}
+            </button>
+          </div>
           <div style={{ display: "grid", gap: 12, marginTop: 14 }}>
             <div>
               <label htmlFor="pb-name" style={labelTok}>Project name</label>
@@ -231,6 +345,23 @@ export function ProjectBuilderPage(_props: { ctx: AppCtx }): React.JSX.Element {
                 style={{ ...field, resize: "vertical" }}
               />
             </div>
+            {aiNotes.length > 0 && (
+              <div style={{ border: "1px solid var(--line)", borderRadius: 8, padding: "10px 12px", fontSize: 12.5, lineHeight: 1.6 }}>
+                <div style={{ fontWeight: 700, marginBottom: 4 }}>✨ What the model improved</div>
+                <ul style={{ margin: 0, paddingLeft: 18 }}>
+                  {aiNotes.map((n) => (
+                    <li key={n}>{n}</li>
+                  ))}
+                </ul>
+                <div style={{ marginTop: 6, color: "var(--cream-dim)" }}>Capability chips are yours to adjust below.</div>
+              </div>
+            )}
+            {aiError && <ErrorNote message={aiError} />}
+            {!providerReady && (
+              <div style={{ color: "var(--cream-dim)", fontSize: 12 }}>
+                ✨ AI Magic reviews these fields with your own model — add a provider API key in Settings to enable it.
+              </div>
+            )}
             {suggested.length > 0 && (
               <div>
                 <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>
@@ -392,6 +523,9 @@ export function ProjectBuilderPage(_props: { ctx: AppCtx }): React.JSX.Element {
             <label style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 13.5, cursor: "pointer" }}>
               <input type="checkbox" checked={workspaceOnly} onChange={(e) => setWorkspaceOnly(e.target.checked)} />
               Filesystem: workspace-only
+              <span style={{ color: "var(--cream-dim)", fontSize: 12, fontWeight: 400 }}>
+                — the agent may only read/write inside this repository
+              </span>
             </label>
             <div>
               <label htmlFor="pb-network" style={labelTok}>Network allowlist (comma-separated hostnames)</label>
@@ -402,20 +536,54 @@ export function ProjectBuilderPage(_props: { ctx: AppCtx }): React.JSX.Element {
                 placeholder="github.com, api.example.com"
                 style={field}
               />
+              <div style={{ color: "var(--cream-dim)", fontSize: 12, marginTop: 6 }}>
+                Exact hostnames only — <code>*</code> allows all outbound. Checked by <code>proagent setup</code> (PA506).
+              </div>
             </div>
+            {policyFindings.length > 0 && (
+              <div>
+                {policyFindings.map((f, i) => (
+                  <div key={i} style={{ color: "var(--cream-dim)", fontSize: 12.5, lineHeight: 1.5, marginBottom: 6 }}>
+                    ⚠ [{f.code}] {f.message}
+                    {f.suggestion ? <div style={{ marginLeft: 18 }}>→ {f.suggestion}</div> : null}
+                  </div>
+                ))}
+              </div>
+            )}
             <div>
-              <div style={{ ...labelTok, marginBottom: 8 }}>Harness compatibility targets</div>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
+                <div style={{ ...labelTok, marginBottom: 8 }}>Harness compatibility targets</div>
+                <span style={{ color: "var(--cream-dim)", fontSize: 11.5 }}>
+                  {targets.length === 0 ? "none — spec stays harness-agnostic (mode: compatible)" : `${targets.length} selected`}
+                </span>
+                <span style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+                  <button
+                    onClick={() => setTargets([...HARNESS_TARGETS])}
+                    style={{ ...btnGhost, borderRadius: 8, padding: "3px 10px", fontSize: 11.5, cursor: "pointer" }}
+                  >
+                    Select all
+                  </button>
+                  <button
+                    onClick={() => setTargets([])}
+                    style={{ ...btnGhost, borderRadius: 8, padding: "3px 10px", fontSize: 11.5, cursor: "pointer" }}
+                  >
+                    Clear
+                  </button>
+                </span>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 8 }}>
                 {HARNESS_TARGETS.map((h) => (
                   <button
                     key={h}
                     onClick={() => setTargets((cur) => toggleIn(cur, h))}
                     aria-pressed={targets.includes(h)}
+                    title={HARNESS_HINTS[h]}
                     style={{
                       ...btnSoft,
-                      borderRadius: 999,
-                      padding: "5px 12px",
+                      borderRadius: 8,
+                      padding: "7px 12px",
                       fontSize: 12,
+                      textAlign: "left",
                       cursor: "pointer",
                       ...(targets.includes(h) ? { borderColor: "var(--blue-bright)", color: "var(--cream)" } : {}),
                     }}
@@ -425,21 +593,38 @@ export function ProjectBuilderPage(_props: { ctx: AppCtx }): React.JSX.Element {
                   </button>
                 ))}
               </div>
+              <div style={{ color: "var(--cream-dim)", fontSize: 12, marginTop: 6 }}>
+                Targeting specific harnesses lets <code>proagent setup</code> compile the profile into
+                each one's native mechanisms — and surface what it cannot enforce.
+              </div>
             </div>
+            <details>
+              <summary style={{ cursor: "pointer", color: "var(--cream-dim)", fontSize: 12.5 }}>
+                Compiled policies &amp; harness block
+              </summary>
+              <pre
+                aria-label="policies preview"
+                style={{ background: "var(--ink)", border: "1px solid var(--line)", borderRadius: 10, padding: "10px 14px", fontSize: 12, lineHeight: 1.6, overflow: "auto", marginTop: 10 }}
+              >
+                {policiesYaml || "# (no policies or harness targets — the spec stays harness-agnostic)"}
+              </pre>
+            </details>
           </div>
           <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
             <button onClick={() => setStep("artifacts")} style={{ ...btnGhost, cursor: "pointer" }}>← Back</button>
-            <button onClick={() => setStep("export")} style={{ ...btnPrimary, cursor: "pointer" }}>Next: Export →</button>
+            <button onClick={() => setStep("export")} style={{ ...btnPrimary, cursor: "pointer" }}>Next: Instructions →</button>
           </div>
         </section>
       )}
 
-      {/* Step: export */}
+      {/* Step: instructions (export) */}
       {step === "export" && (
         <section style={{ ...card, maxWidth: 860 }}>
-          <h2 style={typeTok.h2}>Export proagents.yaml</h2>
+          <h2 style={typeTok.h2}>Instructions to build proagent {name.trim() || "my-project"}</h2>
           <p style={{ color: "var(--cream-dim)", fontSize: 13, lineHeight: 1.6 }}>
-            The spec is the source of truth — commit it to the repo root next to your code. Then:
+            A complete build brief for your AI coding agent: what the environment contains, the exact
+            <code> proagents.yaml</code> to save at the repo root, the commands to run for your harness,
+            and how to verify the result. Copy it and paste it into the agent working in your repository.
           </p>
           <pre style={{ background: "var(--ink)", border: "1px solid var(--line)", borderRadius: 10, padding: "10px 14px", fontSize: 12.5, overflow: "auto" }}>
 {`proagent resolve    # capability → implementation graph
@@ -465,18 +650,43 @@ proagent setup      # install the environment for your harness`}
             {serializeSpecYaml(spec)}
           </pre>
 
-          <div style={{ display: "flex", gap: 10, marginTop: 16, flexWrap: "wrap" }}>
+          <details style={{ marginTop: 12 }}>
+            <summary style={{ cursor: "pointer", color: "var(--cream-dim)", fontSize: 12.5 }}>
+              Preview the full build instructions (what Copy places on the clipboard)
+            </summary>
+ <pre
+              aria-label="agent brief preview"
+              style={{ background: "var(--ink)", border: "1px solid var(--line)", borderRadius: 10, padding: 16, fontSize: 12.5, lineHeight: 1.55, overflow: "auto", marginTop: 10 }}
+            >
+              {serializeAgentBrief(spec)}
+            </pre>
+          </details>
+
+          <div style={{ display: "flex", gap: 10, marginTop: 16, flexWrap: "wrap", alignItems: "center" }}>
+            <button
+              onClick={async () => {
+                const ok = await copyText(serializeAgentBrief(spec));
+                setCopyState(ok ? "ok" : "fail");
+                setExported(ok);
+              }}
+              style={{ ...btnPrimary, cursor: "pointer" }}
+            >
+              {copyState === "ok" ? "✓ Copied — paste it into your AI coding agent" : copyState === "fail" ? "Copy failed — use the download instead" : "Copy full instructions"}
+            </button>
             <button
               onClick={() => {
                 downloadText("proagents.yaml", serializeSpecYaml(spec));
                 setExported(true);
               }}
-              style={{ ...btnPrimary, cursor: "pointer" }}
+              style={{ ...btnGhost, cursor: "pointer" }}
             >
               Download proagents.yaml
             </button>
             <button onClick={() => setStep("policies")} style={{ ...btnGhost, cursor: "pointer" }}>← Back</button>
           </div>
+          <p style={{ margin: "10px 0 0", color: "var(--cream-dim)", fontSize: 12.5 }}>
+            <strong>Copy full instructions</strong> places the complete build brief on the clipboard — the environment contents, the spec, the commands and the verification steps — so any AI coding agent can build it in your repo with your harness. <strong>Download</strong> saves just the <code>proagents.yaml</code> file for the repo root.
+          </p>
         </section>
       )}
 

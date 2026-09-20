@@ -306,7 +306,7 @@ export function crewProblems(crew: CrewDefinition, opts?: CrewProblemsOpts): str
       try {
         fsSync.accessSync(path.resolve(opts.crewDir, rel));
       } catch {
-        problems.push(`[PA048] section file "${rel}" is declared in crew.json but missing from the crew folder`);
+        problems.push(`[PA048] section file "${rel}" is declared in the crew manifest but missing from the crew folder`);
       }
     }
   }

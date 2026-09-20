@@ -197,7 +197,7 @@ function TagChip(props: { label: string; active: boolean; onClick: () => void })
         background: props.active ? "var(--accent-soft)" : "var(--ink-2)",
         color: props.active ? "var(--cyan)" : "var(--cream-dim)",
         border: `1px solid ${props.active ? "var(--cyan)" : "var(--line)"}`,
-        borderRadius: 999,
+        borderRadius: 6,
         padding: "4px 12px",
         fontSize: 12,
         cursor: "pointer",

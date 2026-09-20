@@ -45,7 +45,7 @@ onMounted(() => {
   font-family: var(--pa-font-mono);
   font-size: 13px;
   letter-spacing: 0.2em;
-  color: var(--pa-cyan-bright);
+  color: var(--pa-accent);
 }
 .pa-404 h1 {
   margin: 0;
@@ -73,22 +73,22 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   padding: 9px 18px;
-  border-radius: 9px;
-  background-image: var(--pa-grad);
-  color: #ffffff;
+  border-radius: 6px;
+  background: var(--pa-accent);
+  color: var(--pa-on-accent, #fff);
   font-weight: 600;
   font-size: 14px;
   text-decoration: none;
 }
 .pa-404-cta:hover {
-  color: #ffffff;
-  filter: brightness(1.12);
+  color: var(--pa-on-accent, #fff);
+  background: var(--pa-accent-strong);
 }
 .pa-404-alt {
   display: inline-flex;
   align-items: center;
   padding: 9px 18px;
-  border-radius: 9px;
+  border-radius: 6px;
   border: 1px solid var(--vp-c-border);
   color: var(--vp-c-text-1);
   font-weight: 600;
@@ -96,8 +96,11 @@ onMounted(() => {
   text-decoration: none;
 }
 .pa-404-alt:hover {
-  border-color: var(--vp-c-brand-1);
-  color: var(--vp-c-brand-1);
+  border-color: var(--pa-accent);
+  color: var(--pa-accent-strong);
+}
+html.dark .pa-404-alt:hover {
+  color: var(--pa-accent);
 }
 @media (prefers-reduced-motion: no-preference) {
   .pa-404 { transition: opacity 0.15s ease; }

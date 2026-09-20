@@ -1,8 +1,8 @@
 import { afterAll, describe, expect, it } from "vitest";
-import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { runCli } from "../helpers/run-cli.js";
 
 /**
  * BENCH-E2E-* — Layer 4: run the real CLI binary (same code path as users)
@@ -10,7 +10,6 @@ import path from "node:path";
  * judges only.
  */
 
-const CLI = path.resolve("dist/cli/index.js");
 let tmpRoot = "";
 
 function projectRoot(): string {
@@ -47,7 +46,7 @@ function projectRoot(): string {
 
 function cli(args: string[], expectFailure = false): { stdout: string; status: number } {
   try {
-    const stdout = execFileSync("node", [CLI, ...args], { cwd: projectRoot(), encoding: "utf8" });
+    const stdout = runCli(projectRoot(), args);
     return { stdout, status: 0 };
   } catch (err) {
     const e = err as { stdout?: string; status?: number };

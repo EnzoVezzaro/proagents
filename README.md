@@ -36,7 +36,7 @@ Existing Harness
 Professional Agent
 ```
 
-`npm i -g proagent` · [Documentation](https://enzovezzaro.github.io/proagents/) · [Registry](https://enzovezzaro.github.io/proagents/) · MIT
+`npm i -g proagent` · [Documentation](https://proagents.reposell.dev/) · [Registry](https://proagents.reposell.dev/) · MIT
 
 [![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-%E2%9D%A4-db61a2?logo=githubsponsors\&logoColor=white)](https://github.com/sponsors/EnzoVezzaro)
 
@@ -266,47 +266,62 @@ systems-architect
 
 A profile can contain:
 
-```yaml
-version: "2.1.0"
+```json
+{
+  "schema": "proagents/profile/v1",
+  "version": "1.1.0",
 
-profile:
-  name: Security Engineer
-  slug: security-engineer
-  version: "1.1.0"
+  "profile": {
+    "name": "Security Engineer",
+    "slug": "security-engineer",
+    "description": "Application security: threat modeling, secure coding, security verification.",
+    "author": "proagents",
+    "tags": ["security", "owasp", "threat-modeling"]
+  },
 
-# Every section entry is a path to a file in the profile's folder —
-# the manifest is the index, the folders are the source.
-identity: identity/01-security-engineer.md
+  "identity": "identity.json",
 
-expertise:
-  - expertise/01-application-security.md
-  - expertise/02-threat-modeling.md
+  "expertise": [
+    "expertise/01-application-security.json",
+    "expertise/02-threat-modeling.json"
+  ],
 
-knowledge:
-  - knowledge/security/owasp.md
-  - knowledge/security/authentication.md
+  "knowledge": [
+    "knowledge/owasp.json",
+    "knowledge/authentication.json"
+  ],
 
-methods:
-  - methods/01-threat-modeling.md
-  - methods/02-root-cause-analysis.md
+  "methods": [
+    "methods/01-threat-modeling.json",
+    "methods/02-root-cause-analysis.json"
+  ],
 
-skills:
-  - skills/01-security-audit.md
+  "skills": [
+    "skills/01-security-audit.json"
+  ],
 
-rules:
-  - rules/01-never-expose-secrets.md
-  - rules/02-require-security-verification.md
+  "rules": [
+    "rules/01-never-expose-secrets.json",
+    "rules/02-require-security-verification.json"
+  ],
 
-standards:
-  - standards/01-owasp.md
+  "standards": [
+    "standards/01-owasp.json"
+  ],
 
-tools: tools/requirements.md
+  "tools": "tools/requirements.json",
 
-verification:
-  required:
-    - verification/required/01-tests-pass.md
-    - verification/required/02-security-scan-clean.md
+  "verification": {
+    "required": [
+      "verification/required/01-tests.json",
+      "verification/required/02-security-scan.json"
+    ]
+  }
+}
 ```
+
+Every section entry is a path to a file in the profile's folder — the manifest is the
+index, the folders are the source, and every section is JSON (never prose).
 
 The schema is provider-agnostic and independent of any particular coding-agent harness.
 The loader hydrates path entries to content at read time, so equip, compile, crews and
@@ -673,22 +688,12 @@ A professional profile can compile into the native structure of the target codin
 For example:
 
 ```text
-.agents/
-├── skills/
-│   └── security-engineer/
-│       ├── profile.json
-│       ├── rules/
-│       ├── methods/
-│       ├── knowledge/
-│       ├── skills/
-│       └── verification/
-│
-├── skills/
-│   ├── security-audit/
-│   ├── threat-modeling/
-│   └── secure-code-review/
-│
-└── agent-architecture.json
+.agents/skills/security-engineer/
+├── SKILL.md         # the compiled agent skill (lean operating summary)
+└── manifest.json    # the canonical manifest (provenance + structured detail)
+
+AGENTS.md            # marked profile block in the project-instructions file
+.claude/settings.json  # native rule enforcement (where the harness supports it)
 ```
 
 The exact generated structure depends on the target harness.

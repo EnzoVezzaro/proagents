@@ -3,20 +3,22 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#000024" />
+    <meta name="theme-color" content="#f7f8fd" />
     <title>Page not found — ProAgents</title>
     <link rel="icon" type="image/png" href="/proagents/favicon.png" />
     <style>
       :root {
-        --ink: #000024;
-        --cream: #f4f7ff;
-        --cream-dim: #9aa6cf;
-        --line: #17245c;
-        --cyan: #0ccccc;
-        --grad: linear-gradient(120deg, #0048e4 0%, #3b2fe0 55%, #5424e4 100%);
+        --paper: #f7f8fd;
+        --ink: #0d1128;
+        --muted: #5b6480;
+        --line: rgba(13, 17, 40, 0.14);
+        --accent: #0e4bec;
+        --accent-strong: #0b3fc9;
+        --cyan: #0cced4;
+        --ramp: linear-gradient(90deg, #5d2de2 0%, #0e4bec 38%, #13a6e0 72%, #0cced4 100%);
       }
       * { box-sizing: border-box; }
-      html, body { margin: 0; background: var(--ink); color: var(--cream); }
+      html, body { margin: 0; background: var(--paper); color: var(--ink); }
       body {
         min-height: 100vh;
         display: grid;
@@ -29,30 +31,32 @@
         border: 1px solid var(--line);
         border-radius: 14px;
         padding: 40px 44px;
-        background: #040a33;
+        background: #ffffff;
       }
       h1 { font-size: 28px; margin: 22px 0 10px; letter-spacing: -0.02em; }
-      p { margin: 0 0 8px; color: var(--cream-dim); line-height: 1.55; }
-      p code { color: var(--cream); font-size: 0.92em; }
+      p { margin: 0 0 8px; color: var(--muted); line-height: 1.55; }
+      p code { color: var(--accent-strong); font-size: 0.92em; }
       .actions { display: flex; gap: 12px; margin-top: 26px; flex-wrap: wrap; }
       .btn {
         display: inline-block;
         padding: 10px 18px;
-        border-radius: 9px;
-        background: var(--grad);
+        border-radius: 6px;
+        background: var(--accent);
         color: #ffffff;
         font-weight: 600;
         font-size: 14px;
         text-decoration: none;
       }
+      .btn:hover { background: var(--accent-strong); }
       .btn.ghost {
         background: transparent;
         border: 1px solid var(--line);
-        color: var(--cream);
+        color: var(--ink);
         font-weight: 500;
       }
-      .btn:hover { filter: brightness(1.12); }
-      :focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+      .btn.ghost:hover { border-color: var(--accent); color: var(--accent-strong); }
+      .ramp { height: 3px; background: var(--ramp); border-radius: 2px; margin-top: 30px; }
+      :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
       @media (max-width: 560px) { main { padding: 28px 24px; } }
     </style>
     <script>
@@ -66,13 +70,14 @@
   </head>
   <body>
     <main>
-      <img src="/proagents/logo.png" alt="ProAgents" width="132" height="42" />
+      <img src="/proagents/logo-dark.png" alt="ProAgents" width="132" height="59" />
       <h1>Page not found</h1>
       <p>Old <code>/proagents/docs/…</code> links redirect into the merged site automatically; everything else was moved or never existed.</p>
       <div class="actions">
-        <a class="btn" href="/proagents/">Open the registry</a>
+        <a class="btn" href="/proagents/studio">Open the Studio</a>
         <a class="btn ghost" href="/proagents/guide/getting-started">Read the docs</a>
       </div>
+      <div class="ramp" role="presentation"></div>
     </main>
   </body>
 </html>

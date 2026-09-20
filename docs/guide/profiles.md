@@ -33,7 +33,7 @@ composes skills, methods, rules and verification into a coherent operating model
   },
   "identity": { "title": "Security Engineer", "summary": "…" },
   "expertise": ["application security", "threat modeling"],
-  "knowledge": ["knowledge/threat-modeling-basics.md"],
+  "knowledge": ["knowledge/threat-modeling-basics.json"],
   "methods": ["threat-modeling", "root-cause-analysis"],
   "skills": ["github:obra/superpowers"],
   "rules": ["never expose secrets", "require security verification…"],
@@ -51,42 +51,41 @@ The schema is provider-agnostic and independent of any coding-agent harness.
 ## Profile folder standard
 
 A profile is a **self-contained folder** — every section of the tree is a real
-folder of `NN-*.md` files (numeric prefix = display order), so any concept can
+folder of `NN-*.json` files (numeric prefix = display order), so any concept can
 be added, removed, swapped or extended without touching the others:
 
 ```
 <profile>/
-├── profile.json          canonical manifest — an INDEX; every entry links to its file
-├── README.md             layout contract
-├── identity/01-….md      who the agent is
-├── expertise/NN-*.md     one file per domain
+├── manifest.json         canonical manifest — an INDEX; every entry links to its file
+├── identity.json         who the agent is (title + summary)
+├── docs.json             about-this-folder notes (docs-site rendering)
+├── expertise/NN-*.json   one file per domain
 ├── knowledge/**          reference files installed at equip time
-├── methods/NN-*.md       one file per named method (playbooks)
-├── skills/NN-*.md        referenced skills (frontmatter: ref, install, skills)
-├── rules/NN-*.md         normative constraints
-├── policies/NN-*.md      governing policies of the profession
-├── standards/NN-*.md     frontmatter carries the authoritative url
-├── tools/requirements.md mirror of structured tool data
-└── verification/required|optional/NN-*.md
+├── methods/NN-*.json     one file per named method (playbooks)
+├── skills/NN-*.json      referenced skills (repo ref, install command, uses)
+├── rules/NN-*.json       normative constraints
+├── policies/NN-*.json    governing policies of the profession
+├── standards/NN-*.json   standards with authoritative URL + note
+├── tools/requirements.json  structured tool requirements (required/optional/mcp/packages)
+└── verification/required|optional/NN-*.json
 ```
 
-In the **folder standard**, every section entry in `profile.json` is a path to its
-file — the same format `knowledge` always used — and the loader hydrates paths to
-content at read time (missing files are reported by validation, never silently
-dropped):
+In the **folder standard**, every section entry in `manifest.json` is a path to its
+file — the loader hydrates paths to content at read time (missing files are reported
+by validation, never silently dropped):
 
 ```json
 {
-  "identity": "identity/01-security-engineer.md",
-  "expertise": ["expertise/01-application-security.md", "expertise/02-threat-modeling.md"],
-  "knowledge": ["knowledge/threat-modeling-basics.md"],
-  "methods": ["methods/01-threat-modeling.md"],
-  "rules": ["rules/01-never-expose-secrets.md"],
-  "verification": { "required": ["verification/required/01-tests.md"] }
+  "identity": "identity.json",
+  "expertise": ["expertise/01-application-security.json", "expertise/02-threat-modeling.json"],
+  "knowledge": ["knowledge/threat-modeling-basics.json"],
+  "methods": ["methods/01-threat-modeling.json"],
+  "rules": ["rules/01-never-expose-secrets.json"],
+  "verification": { "required": ["verification/required/01-tests.json"] }
 }
 ```
 
-`profile.json` is the index; the folders are the source. Two commands keep both
+`manifest.json` is the index; the folders are the source. Two commands keep both
 representations in sync (round-trip is a pinned fixed point):
 
 ```bash
@@ -98,7 +97,7 @@ Skills entries **reference** real skill collections (e.g. `github:obra/superpowe
 `github:anthropics/skills`) with per-repo install commands — skills are composed,
 never duplicated into the profile.
 
-All profiles are registry items: `registry/profiles/<slug>/profile.json` is the
+All profiles are registry items: `registry/profiles/<slug>/manifest.json` is the
 single source of truth (the npm package ships this folder, so offline equip works).
 Crews live alongside them in `registry/crews/<id>/`.
 
@@ -162,10 +161,13 @@ harness, using the strongest mechanism available:
 | OpenCode | `.agents/skills/<profile>/SKILL.md` | `AGENTS.md` block | native |
 | Cursor | `.agents/skills/<profile>/SKILL.md` | `AGENTS.md` block | instructions fallback |
 | Gemini CLI | `.agents/skills/<profile>/SKILL.md` | `GEMINI.md` block | instructions fallback |
+| GitHub Copilot | `.agents/skills/<profile>/SKILL.md` | `AGENTS.md` block | instructions fallback |
+| OpenClaude | `.agents/skills/<profile>/SKILL.md` | `AGENTS.md` block | instructions fallback |
+| Freebuff | `.agents/skills/<profile>/SKILL.md` | `AGENTS.md` block | none (reported) |
 | generic CLI | — (instructions only) | `AGENTS.md` block | none (reported) |
 
 Every skill-directory compile also writes the canonical manifest beside the skill
-(`profile.json`), so the portable profile stays inspectable in the target repo.
+(`manifest.json`), so the portable profile stays inspectable in the target repo.
 
 Equipping is idempotent: re-running replaces the marked `proagent:profile` block instead
 of duplicating it, and never touches the rest of your instructions file.
@@ -199,7 +201,7 @@ Verify
 
 Only relevant capabilities load when needed. The compiled artifacts follow the same
 principle: `SKILL.md` stays a lean operating summary; the canonical manifest sits beside
-it (`profile.json`) so tools can load structured detail on demand instead of parsing
+it (`manifest.json`) so tools can load structured detail on demand instead of parsing
 prose.
 
 ## Rules are enforced
@@ -274,13 +276,21 @@ report the offending profiles and a suggestion.
 
 ## Local and community profiles
 
-There is no separate local folder — the registry is the only source. To work on a
-profile locally, check out or create it under `registry/profiles/` in your repo:
+Profiles resolve from two local places before anything remote: your repo's
+`.proagent/profiles/` (where `proagent profile create` scaffolds consumer-repo
+creations) and a `registry/profiles/` checkout of the registry itself. To work
+on a profile locally:
 
 ```bash
+# a consumer-repo creation (wins over everything else):
+proagent profile create "My Profession" --slug my-profession
+$EDITOR .proagent/profiles/my-profession/manifest.json
+
+# or a registry checkout:
 mkdir -p registry/profiles/my-profession
-$EDITOR registry/profiles/my-profession/profile.json
-proagent list          # your checkout wins over the packaged snapshot
+$EDITOR registry/profiles/my-profession/manifest.json
+
+proagent list          # your local items win over the packaged snapshot
 proagent equip my-profession
 ```
 

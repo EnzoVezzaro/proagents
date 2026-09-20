@@ -7,11 +7,9 @@ footer: false
 
 <script setup>
 import LandingIsland from "./.vitepress/theme/LandingIsland.vue";
-import Landing from "../scrollcraft/builds/proagents-home/Landing.vue";
+import Landing from "./.vitepress/theme/landing/Landing.vue";
 </script>
 
-<ClientOnly>
-  <LandingIsland>
-    <Landing />
-  </LandingIsland>
-</ClientOnly>
+<LandingIsland>
+  <Landing />
+</LandingIsland>

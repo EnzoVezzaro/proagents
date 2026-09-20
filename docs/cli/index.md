@@ -56,7 +56,9 @@ Full details: [Registry guide](/guide/registry).
 | `build` | Generate deployable agent skills (`.agents/skills/<agent>/`) |
 | `agents` | List agents in the generated architecture |
 | `inspect` | Dump full session state (for agents/humans) |
+| `discover` | Suggest registry items matching a query (or the session's intent) |
 | `improve` | Show or configure self-improvement |
+| `self-improve` | Alias of `improve` (`--schedule <freq>` maps to `improve schedule <freq>`) |
 | `benchmark` | Benchmark generated agent systems (see below) |
 | `build --kind spec` | Emit a `proagents.yaml` draft from the session's staged tooling |
 
@@ -66,7 +68,7 @@ Full details: [Registry guide](/guide/registry).
 |---|---|
 | `--json` | Machine-readable output on stdout |
 | `--quiet` | Suppress decorations |
-| `--target <harness>` | Target harness for equip/compile (claude-code, codex, opencode, cursor, gemini-cli, generic-cli) |
+| `--target <harness>` | Target harness for equip/compile (claude-code, codex, opencode, cursor, gemini-cli, copilot, openclaude, freebuff, generic-cli) |
 | `--intent "<text>"` | Provide intent without the interactive prompt |
 | `--context <path>` | Add a context source (repeatable / comma-separated) |
 | `--context-framework <id>` | Use a context framework (builtin, optional, or path/URL) |
@@ -100,8 +102,10 @@ All support `--json`.
 ## Registry groups
 
 The Git-backed registry has two command groups — one per item kind. Both
-resolve a local checkout first (`registry/profiles/`, `registry/crews/`),
-then fall back to the remote catalog (`--repo owner/name --ref branch --token <gh-token>`).
+resolve local sources first — your repo's `.proagent/profiles/` and
+`.proagent/crews/` creations (where `profile create` / `crew create` scaffold),
+then a `registry/profiles/` / `registry/crews/` checkout — and fall back to the
+remote catalog (`--repo owner/name --ref branch --token <gh-token>`).
 
 ### crew
 
@@ -109,11 +113,11 @@ then fall back to the remote catalog (`--repo owner/name --ref branch --token <g
 |---|---|
 | `crew list` | List registry crews in the catalog |
 | `crew show <id>` | Print a crew definition (workers, permissions, MCP) |
-| `crew validate <crew.json\|dir>` | Hydrate + validate a crew manifest (folder standard or inline); enforces PA043–PA048 |
+| `crew validate <manifest.json\|dir>` | Hydrate + validate a crew manifest (folder standard or inline); enforces PA043–PA048 |
 | `crew install <id>` | Install a crew into the current repo (`.agents/crews/<id>/` + `.mcp.json`) |
 | `crew install <id> --dry-run` | Show the install plan without writing |
-| `crew build <crew.json>` | Install from a local manifest (builder output or folder-standard `crew.json`) |
-| `crew create <profile…>` | Compose existing profiles into a custom crew folder in `registry/crews/` (every member binds a profile) |
+| `crew build <manifest.json>` | Install from a local manifest (builder output or folder-standard `manifest.json`) |
+| `crew create <profile…>` | Compose existing profiles into a custom crew folder in `.proagent/crews/` (every member binds a profile) |
 | `crew publish <file>` | Direct catalog commit (contents:write) |
 | `crew submit <file>` | File a registry proposal issue (recommended) |
 
@@ -126,6 +130,7 @@ before validation.
 
 | Command | Purpose |
 |---|---|
+| `profile create <name>` | Scaffold a custom profile into `.proagent/profiles/<slug>/` (`--slug`, `--description`) |
 | `profile list` | List registry profiles in the catalog |
 | `profile show <id>` | Print a profile manifest (hydrated) |
 | `profile install <id>` | Resolve + validate + equip from the catalog (same as `equip`) |

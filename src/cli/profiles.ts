@@ -391,7 +391,7 @@ function printProfileHelp(): void {
 proagent profile — registry profile commands
 
 Usage:
-  proagent profile create <name>           Scaffold a custom profile into registry/profiles/
+  proagent profile create <name>           Scaffold a custom profile into .proagent/profiles/
     --slug <slug> --description <text>     (folder standard; passes PA03x; equips immediately)
   proagent profile list                    List registry profiles (Git-backed catalog)
     --repo owner/name --ref branch --token <gh-token>

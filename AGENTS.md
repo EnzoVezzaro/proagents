@@ -68,9 +68,15 @@ npm run site:build  # full artifact → site/ (must pass before PRs)
 - CLI JSON output changes must be additive
 - Validation rules get `PA0xx` codes + a suggestion string + tests (profiles: PA02x
   composition conflicts, PA03x profile validation; agents: PA001–PA013)
-- Brand palette (from `branding/`): navy `#000024`, blue `#0048e4`, violet
-  `#5424e4`, cyan `#0ccccc`, ice `#f4f7ff` — see DESIGN.md for the token
-  grammar before touching any UI color
+- Brand palette (DESIGN.md §5.2, "Logo Ramp" — ratified 2026-09-20): the
+  palette IS the logo (`branding/logo.png`) — violet `#5d2de2` → blue `#0e4bec`
+  → sky `#13a6e0` → cyan `#0cced4`, navy `#000828` dark canvas. Light is the
+  default mode (cool paper `#f7f8fd`); interactive color is the ramp core
+  blue. The 4-stop ramp is rationed to brand moments (hero em, footer band),
+  never buttons or text fills. Type pairing: Nunito display (the logo
+  wordmark's face) / Geist body / JetBrains Mono. Brand assets in `docs/public/`
+  are derived from `branding/` — never edit them directly. See DESIGN.md before
+  touching any UI color
 - The shipped skill lives at `.agents/skills/proagent/` — keep SKILL.md lean, push detail
   into `references/` (progressive disclosure)
 
@@ -78,10 +84,11 @@ npm run site:build  # full artifact → site/ (must pass before PRs)
 
 - `.proagent/session.json` — interview state (gitignored, inspectable)
 - `.agents/skills/<agent>/` — generated agent skills (committed if the user wants)
-- `scrollcraft/` — scroll-craft workspace: `builds/proagents-home/` is the docs
-  landing (Landing.vue mounts via `docs/.vitepress/theme/LandingIsland.vue`);
-  `FINGERPRINTS.md` records the build row; `builds/*/lab/` screenshots are
-  gitignored
+- `docs/.vitepress/theme/landing/` — the landing surface (Logo Ramp): a static
+  Vue SFC + stylesheet server-rendered by VitePress and wrapped by
+  `LandingIsland.vue`; no scroll engine, no build step. Keep the landing SSR'd —
+  a ClientOnly mount lets VitePress hoist its static nodes into the lean chunk,
+  and they never render.
 
 ## Browser verification (ego-browser)
 

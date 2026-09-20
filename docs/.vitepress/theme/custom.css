@@ -1,252 +1,342 @@
 /**
- * ProAgents theme — derived from the current logo (blue → violet gradient on
- * deep-space navy):
- *   navy    #000024   canvas (dark = the brand's native habitat)
- *   blue    #0048e4   primary (the logo's dominant hue)
- *   violet  #5424e4   secondary (the gradient's far end)
- *   cyan    #0ccccc   signal accent (focus, active markers)
- *   ice     #f4f7ff   text on dark
+ * ProAgents theme — Logo Ramp (DESIGN.md §5.2, ratified 2026-09-20).
+ * The palette IS the logo (branding/logo.png):
+ *   violet  #5d2de2   ramp start (the wordmark's first letters)
+ *   blue    #0e4bec   ramp core — primary actions, links, focus
+ *   sky     #13a6e0   ramp light
+ *   cyan    #0cced4   ramp end — live/ok states
+ *   navy    #000828   the bot's body — dark-mode canvas
+ * Light mode is the default (cool editorial paper); dark mode is the navy
+ * bot-world. One gradient utility: the 4-stop ramp, reserved for brand
+ * moments (thin rules, logo echoes) — never headline text, never buttons.
  *
- * Two full variants:
- *   :root  → light mode (ice paper, navy text, blue brand)
- *   .dark  → the logo's native deep-space world
- * VitePress toggles `html.dark` from the navbar switch + system preference.
- *
- * Typography: the hallmark pairing shared with the SPA (DESIGN.md) —
- * Bricolage Grotesque display / Geist body / JetBrains Mono code. The font
- * files are imported in theme/index.ts (`theme-without-fonts` + Fontsource
- * JS imports), so both surfaces ship identical fonts and resolve identical
- * family names.
+ * Typography: Nunito display (the logo wordmark's face) / Geist body /
+ * JetBrains Mono code. Font files are imported in theme/index.ts
+ * (Fontsource JS imports), so both surfaces ship identical fonts and
+ * resolve identical family names.
  */
 
 /* ---------------------------------------------------------------------------
- * Shared brand tokens (both modes)
- * ------------------------------------------------------------------------- */
+ * Brand tokens (both modes)
+ * ------------------------------------------------------------------------ */
 :root {
-  --pa-navy: #000024;
-  --pa-blue: #0048e4;
-  --pa-blue-bright: #2e6bff; /* hover lift */
-  --pa-blue-deep: #0036b3; /* readable on white */
-  --pa-violet: #5424e4;
-  --pa-violet-deep: #4a1fc4;
-  --pa-cyan: #0a9ea8; /* cyan that survives on white */
-  --pa-cyan-bright: #0ccccc;
-  --pa-ice: #f4f7ff;
-  --pa-grad: linear-gradient(120deg, #0048e4 0%, #3b2fe0 55%, #5424e4 100%);
+  --pa-violet: #5d2de2;
+  --pa-blue: #0e4bec;
+  --pa-sky: #13a6e0;
+  --pa-cyan: #0cced4;
+  --pa-navy: #000828;
 
-  --pa-font-display: "Bricolage Grotesque Variable", "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  /* Accent = ramp core. Interactive color in both modes. */
+  --pa-accent: var(--pa-blue);
+  --pa-accent-strong: #0b3fc9; /* AA text on light paper */
+  --pa-accent-soft: rgba(14, 75, 236, 0.08);
+  --pa-on-accent: #ffffff; /* text on solid accent */
+
+  /* The one sanctioned gradient: the logo ramp, as a utility. */
+  --pa-ramp: linear-gradient(90deg, #5d2de2 0%, #0e4bec 38%, #13a6e0 72%, #0cced4 100%);
+
+  --pa-font-display: "Nunito Variable", "Geist Variable", ui-sans-serif, system-ui, sans-serif;
   --pa-font-body: "Geist Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --pa-font-mono: "JetBrains Mono Variable", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
-  --vp-c-brand-1: var(--pa-blue-deep);
-  --vp-c-brand-2: var(--pa-violet-deep);
-  --vp-c-brand-3: var(--pa-blue);
-  --vp-c-brand-soft: rgba(0, 72, 228, 0.12);
+  /* VitePress brand slots. */
+  --vp-c-brand-1: var(--pa-accent-strong);
+  --vp-c-brand-2: var(--pa-accent);
+  --vp-c-brand-3: var(--pa-accent-strong);
+  --vp-c-brand-soft: var(--pa-accent-soft);
 
-  /* Same stacks as the marketplace island (web/src/ui) — one product,
-   * one voice. Replaces VitePress's default Inter webfont. */
+  /* Same stacks as the Studio island (web/src/ui) — one product, one voice. */
   --vp-font-family-base: var(--pa-font-body);
   --vp-font-family-mono: var(--pa-font-mono);
 
-  /* VitePress applies --vp-button-brand-bg via `background-color`, where a
-   * gradient is invalid and the button renders transparent (white text on
-   * white). Solid blue goes in the color slot; the brand gradient rides on
-   * background-image below, with the solid color as its fallback. */
-  --vp-button-brand-bg: var(--pa-blue);
-  --vp-button-brand-text: #ffffff;
+  /* Buttons: solid blue, white text, rectangular 6px. */
+  --vp-button-brand-bg: var(--pa-accent);
+  --vp-button-brand-text: var(--pa-on-accent);
   --vp-button-brand-border: transparent;
-  --vp-button-brand-hover-bg: var(--pa-blue-bright);
-  --vp-button-brand-hover-text: #ffffff;
-  --vp-button-brand-active-bg: var(--pa-blue-deep);
-  --vp-button-brand-active-text: #ffffff;
+  --vp-button-brand-hover-bg: var(--pa-accent-strong);
+  --vp-button-brand-hover-text: var(--pa-on-accent);
+  --vp-button-brand-active-bg: #0a37ad;
+  --vp-button-brand-active-text: var(--pa-on-accent);
   --vp-button-brand-active-border: transparent;
 
-  --vp-code-lang-color: #6b7290;
-
-  /* Hero name: solid brand blue via VitePress's sanctioned vars. The theme's
-   * built-in `.clip` rule carries background-clip:text — with a transparent
-   * background and a solid color it is a no-op, so the name can never paint
-   * as gradient text (DESIGN.md gate). */
-  --vp-home-hero-name-color: var(--pa-blue);
-  --vp-home-hero-name-background: transparent;
+  --vp-code-lang-color: #5b6480;
 }
 
 /* ---------------------------------------------------------------------------
- * Light mode (default) — ice paper, navy text
- * ------------------------------------------------------------------------- */
+ * Light mode (default) — cool editorial paper
+ * ------------------------------------------------------------------------ */
 :root {
-  --vp-c-bg: #fbfcff;
-  --vp-c-bg-alt: #f2f5fc;
+  --vp-c-bg: #f7f8fd;
+  --vp-c-bg-alt: #eef1f9;
   --vp-c-bg-elv: #ffffff;
-  --vp-c-bg-soft: #f2f5fc;
+  --vp-c-bg-soft: #eef1f9;
 
-  --vp-c-text-1: #0a1030;
-  --vp-c-text-2: #3d4569;
-  --vp-c-text-3: #6b7290;
+  --vp-c-text-1: #0d1128;
+  --vp-c-text-2: #3c4360;
+  --vp-c-text-3: #5b6480;
 
-  --vp-c-divider: #e2e7f4;
-  --vp-c-gutter: #eaeefb;
-  --vp-c-border: #d8deef;
+  --vp-c-divider: rgba(13, 17, 40, 0.12);
+  --vp-c-gutter: rgba(13, 17, 40, 0.07);
+  --vp-c-border: rgba(13, 17, 40, 0.16);
 
-  --vp-c-text-code: var(--pa-blue-deep);
-  --vp-code-bg: rgba(0, 72, 228, 0.07);
+  --vp-c-text-code: #0b3fc9;
+  --vp-code-bg: rgba(14, 75, 236, 0.06);
+  /* Code blocks are LIGHT in light mode — the landing's .pa-manifest panel:
+   * paper canvas, hairline ink border, dark mono text (config.mts pairs the
+   * light Shiki theme github-light with it). The navy terminal is the
+   * dark-mode brand moment (html.dark below), not a light-mode one. */
+  --vp-code-block-bg: #f7f8fd;
+  --vp-code-lang-color: #5b6480;
+  --vp-code-copy-code-bg: #eef1f9;
+  --vp-code-line-highlight-color: rgba(14, 75, 236, 0.07);
 }
 
 /* ---------------------------------------------------------------------------
- * Dark mode — the logo's native deep-space world
- * ------------------------------------------------------------------------- */
+ * Dark mode — the navy bot-world (sampled from branding/logo.png)
+ * ------------------------------------------------------------------------ */
 html.dark {
-  --vp-c-brand-1: #6f95ff; /* electric blue lifted for dark text contrast */
-  --vp-c-brand-2: #9d7bff;
-  --vp-c-brand-3: #0048e4;
+  --pa-accent: #6b93ff; /* ramp blue, lifted for navy */
+  --pa-accent-strong: #8badff;
+  --pa-accent-soft: rgba(107, 147, 255, 0.12);
+  --pa-on-accent: #05071a;
+
+  --vp-c-brand-1: var(--pa-accent);
+  --vp-c-brand-2: #8badff;
+  --vp-c-brand-3: var(--pa-accent-strong);
 
   --vp-c-bg: var(--pa-navy);
-  --vp-c-bg-alt: #040a33;
-  --vp-c-bg-elv: #0a1445;
-  --vp-c-bg-soft: #071040;
+  --vp-c-bg-alt: #060d33;
+  --vp-c-bg-elv: #0b1338;
+  --vp-c-bg-soft: #060d33;
 
-  --vp-c-text-1: var(--pa-ice);
-  --vp-c-text-2: #c3cbec;
-  --vp-c-text-3: #9aa6cf;
+  --vp-c-text-1: #eef1fb;
+  --vp-c-text-2: #b6bdd8;
+  --vp-c-text-3: #8590b0;
 
-  --vp-c-divider: #17245c;
-  --vp-c-gutter: #101a4d;
-  --vp-c-border: #22306e;
+  --vp-c-divider: rgba(238, 241, 251, 0.12);
+  --vp-c-gutter: rgba(238, 241, 251, 0.08);
+  --vp-c-border: rgba(238, 241, 251, 0.2);
 
-  --vp-c-text-code: #8fb0ff;
-  --vp-code-bg: rgba(12, 204, 204, 0.09);
-  --vp-code-lang-color: #9aa6cf;
-  --vp-home-hero-name-color: #6f95ff;
+  --vp-c-text-code: #7fd8ec;
+  --vp-code-bg: rgba(19, 166, 224, 0.1);
+  --vp-code-block-bg: #060d33;
+  --vp-code-lang-color: #8590b0;
+  --vp-code-copy-code-bg: #0b1338;
+  --vp-code-line-highlight-color: rgba(238, 241, 251, 0.08);
 }
 
 /* ---------------------------------------------------------------------------
- * Typography — Bricolage Grotesque display over Geist body (hallmark
- * pairing, DESIGN.md). Headline text renders SOLID: the "no gradient-clipped
- * text" gate replaces the old gradient hero name.
+ * Typography — the landing's editorial voice across the docs.
+ * Nunito 900 headlines with tight tracking (the wordmark's face), mono
+ * uppercase micro-labels, hairline structures. Body stays Geist.
  * ------------------------------------------------------------------------ */
-.VPHero .name,
-.VPHero .text,
 .VPDoc h1,
 .VPFeature .title {
   font-family: var(--pa-font-display);
   letter-spacing: -0.02em;
 }
 
-/* Hero bot icon: a small brand mark directly ABOVE the hero headline, aligned
- * with the type. VitePress renders hero images in a separate column that
- * cannot sit on top of the text, so the icon is a ::before on .text instead
- * (no halo — DESIGN.md bans atmosphere). Decorative mark: the headline it sits
- * on carries the meaning. */
-.VPHero .text::before {
-  content: "";
-  position: relative;
-  left: -30px;
-  display: block;
-  width: 176px;
-  height: 176px;
-  background: url("/proagents/bot-icon.png") no-repeat center / contain;
-  margin: 0;
+/* ───────────────────────────────────────────────────────────────────────────
+ * Docs ≡ Landing — one voice across both surfaces (landing.css is the
+ * reference; these rules re-skin VitePress chrome to match it).
+ * ───────────────────────────────────────────────────────────────────────── */
+
+/* Headlines: Nunito, tight, landing-weight. */
+.vp-doc h1 {
+  font: 900 40px/1.1 var(--pa-font-display);
+  letter-spacing: -0.025em;
+}
+.vp-doc h2 {
+  font: 800 26px/1.15 var(--pa-font-display);
+  letter-spacing: -0.02em;
+}
+.vp-doc h3 {
+  font: 800 19px/1.3 var(--pa-font-display);
+  letter-spacing: -0.01em;
 }
 
-/* Hero name: the color comes from --vp-home-hero-name-color above (solid in
- * both modes). Display font + tracking only — no background, no clip. */
-
-.dark .VPHero .name::after {
-  /* Display cut carries the weight on dark — no shadow, no glow. */
-  content: none;
+/* Section labels: sidebar group titles + "On this page" read like the
+ * landing's PA-LABEL strips — mono, uppercase, tracked, muted. */
+.VPSidebar .VPSidebarItem.level-0 > .item > .text,
+.VPDocAsideOutline .outline-title {
+  color: var(--vp-c-text-3);
+  font: 600 10px var(--pa-font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
-/* Cyan signal on the docs outline + sidebar active markers */
+/* Sidebar links: Geist 13px, quiet dividers between groups. */
+.VPSidebarItem.level-1 .text,
+.VPSidebarItem.level-2 .text {
+  font-size: 13px;
+}
+.VPSidebarGroup + .VPSidebarGroup {
+  border-top: 1px solid var(--vp-c-divider);
+  padding-top: 12px;
+}
+
+/* Tables: landing-style — mono uppercase headers, hairline rows. */
+.vp-doc th {
+  color: var(--vp-c-text-3);
+  font: 600 10px var(--pa-font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.vp-doc th,
+.vp-doc td {
+  padding: 12px 16px 12px 0;
+  border-bottom: 1px solid var(--vp-c-divider);
+}
+
+/* Body copy rhythm: Geist 15px/1.7 with comfortable link affordance. */
+.vp-doc p {
+  line-height: 1.7;
+}
+.vp-doc a:not(.no-style) {
+  text-decoration-color: rgba(14, 75, 236, 0.35);
+  text-underline-offset: 3px;
+}
+.vp-doc a:not(.no-style):hover {
+  text-decoration-color: currentColor;
+}
+
+/* Inline code + code blocks: flat hairline cards on paper, like the
+ * landing's manifest/c terminals. */
+.vp-doc div[class*="language-"] {
+  border-radius: 0;
+}
+.vp-doc code {
+  border-radius: 3px;
+}
+
+/* Accent on the docs outline + sidebar active markers (with a text/state
+ * twin: VitePress also bolds + recolors the active label). */
 .VPDocAsideOutline .outline-marker {
-  background: var(--pa-cyan-bright);
+  background: var(--pa-accent);
   border-radius: 2px;
 }
-.dark .VPDocAsideOutline .outline-marker {
-  background: var(--pa-cyan-bright);
-}
 .VPSidebarItem.is-active > .item > .indicator {
-  background: var(--pa-cyan-bright);
+  background: var(--pa-accent);
 }
 
-/* Custom block accents */
+/* Custom blocks — quiet tints, strong left rule, no giant alert boxes. */
 .custom-block.tip {
-  border-color: var(--pa-blue);
-  background: rgba(0, 72, 228, 0.08);
+  border-color: var(--pa-accent);
+  background: var(--pa-accent-soft);
   color: var(--vp-c-text-1);
 }
-.dark .custom-block.tip {
-  border-color: #2e6bff;
-  background: rgba(0, 72, 228, 0.16);
-}
 .custom-block.warning {
-  border-color: #d9a441;
-  background: rgba(217, 164, 65, 0.1);
+  border-color: #b98a2e;
+  background: rgba(239, 189, 104, 0.1);
+}
+.custom-block.danger {
+  border-color: #c2494f;
+  background: rgba(255, 116, 116, 0.08);
 }
 
-/* Code blocks: brand-tinted surface per mode. Background is also set through
-   the sanctioned --vp-code-block-bg var (VitePress's own rule uses it and
-   out-competes a plain `background` on the same selector). */
+/* Code blocks: flat hairline panels — the landing's .pa-manifest voice.
+ * Background comes from --vp-code-block-bg (VitePress's own rule
+ * out-competes a plain `background` on the same selector). Dark mode swaps
+ * to the navy terminal (scoped rule at the bottom of this file). */
 .vp-doc div[class*="language-"] {
-  background: #f4f6fd;
-  border: 1px solid var(--vp-c-border);
-}
-.dark .vp-doc div[class*="language-"] {
-  background: #030722;
-}
-:root {
-  --vp-code-block-bg: #f4f6fd;
-}
-.dark {
-  --vp-code-block-bg: #030722;
+  border: 1px solid rgba(13, 17, 40, 0.22);
 }
 
-/* Selection in brand blue */
+/* Landing owns the home viewport; the rest of the site retains VitePress chrome. */
+html:has(.pa-landing-island) .VPNav,
+html:has(.pa-landing-island) .VPLocalNav,
+html.pl-home .VPNav,
+html.pl-home .VPLocalNav {
+  display: none;
+}
+html:has(.pa-landing-island) .VPContent,
+html.pl-home .VPContent {
+  padding-top: 0;
+}
+
+/* Selection: the ramp blue, both modes. */
 ::selection {
-  background: rgba(0, 72, 228, 0.35);
+  background: rgba(14, 75, 236, 0.22);
 }
-.dark ::selection {
-  background: rgba(0, 72, 228, 0.55);
-  color: #ffffff;
+html.dark ::selection {
+  background: #2c56d4;
+  color: #eef1fb;
 }
 
-/* ---------------------------------------------------------------------------
- * Brand gradient on primary buttons (background-image slot — see token note
- * above). Hover lifts to the brighter gradient. Radius + weight match the
- * SPA's buttons (8–9px rounded rects, semibold) instead of VitePress pills.
- * ------------------------------------------------------------------------ */
+/* Buttons: the landing's pa-button geometry — 3px, solid blue, white text. */
 .VPButton {
-  border-radius: 9px;
-  font-weight: 600;
-}
-.VPButton.brand {
-  background-image: var(--pa-grad);
-}
-.VPButton.brand:hover {
-  background-image: linear-gradient(120deg, #2e6bff 0%, #5a3bea 55%, #6b35f2 100%);
+  border-radius: 3px;
+  font-weight: 700;
+  font-family: var(--pa-font-body);
 }
 
-/* Feature cards share the SPA's card family: 10px radius, tinted hairline. */
+/* ───────────────────────────────────────────────────────────────────────────
+ * Docs chrome ≡ landing nav — the navbar reads like the landing's header:
+ * same 68px height, hairline rule, mono uppercase links, Nunito title.
+ * ───────────────────────────────────────────────────────────────────────── */
+:root {
+  --vp-nav-height: 68px;
+  --vp-sidebar-bg-color: var(--vp-c-bg);
+}
+.VPNavBar,
+.VPNavBar .wrapper,
+.VPNavBar .wrapper .container {
+  background: var(--vp-c-bg);
+  border: none;
+}
+.VPNavBar:not(.home) .wrapper .container,
+.VPNavBar .divider-line {
+  border-bottom: 1px solid var(--vp-c-divider);
+}
+.VPNavBarTitle .title {
+  font: 800 15px var(--pa-font-display);
+  letter-spacing: -0.01em;
+}
+.VPNavBarTitle .title:hover {
+  color: var(--vp-c-text-1);
+}
+/* Bumped specificity (`.VPNavBarMenu .VPNavBarMenuLink`): VitePress's own
+ * component styles load after this file and would win at equal specificity.
+ * Values mirror the landing nav: mono, uppercase, 10px, muted → ink. */
+.VPNavBarMenu .VPNavBarMenuLink {
+  color: var(--vp-c-text-3);
+  font: 600 10px var(--pa-font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: color 0.15s;
+}
+.VPNavBarMenu .VPNavBarMenuLink:hover {
+  color: var(--vp-c-text-1);
+}
+.VPNavBarMenu .VPNavBarMenuLink.active {
+  color: var(--pa-accent-strong);
+}
+/* Code blocks echo the landing's manifest panel — flat hairline card,
+ * mono on the 1.8 rhythm. */
+.vp-doc div[class*="language-"] {
+  font-size: 12.5px;
+  line-height: 1.8;
+}
+
+/* Feature cards: 10px small-card radius, hairline, flat. */
 .VPFeature {
   border-radius: 10px;
 }
 
-/* Keyboard focus ring — visible, brand cyan, same as the SPA's global rule. */
+/* Keyboard focus ring — visible, accent, everywhere. */
 :focus-visible {
-  outline: 2px solid var(--pa-cyan-bright);
+  outline: 2px solid var(--pa-accent);
   outline-offset: 2px;
 }
 
 /* ───────────────────────────────────────────────────────────────────────────
- * Marketplace app island (web/src) — the app renders below the VitePress
- * navbar and consumes these aliases instead of owning a second token system.
- * Everything maps onto the same --pa-* / --vp-* vars, so the app follows the
- * theme in both modes with zero app-side mode logic.
- *
+ * Studio app island (web/src) — the app renders below the VitePress navbar
+ * and consumes these aliases instead of owning a second token system.
  * Scoped to :root (not .pa-app): the Settings modal portals itself to
- * document.body to escape the island's stacking context, and portaled
- * subtrees inherit custom properties only if they're defined above body.
- * The aliases reference --vp-* vars, so they still flip with html.dark.
- * ------------------------------------------------------------------------- */
+ * document.body, and portaled subtrees inherit custom properties only if
+ * they're defined above body. The aliases reference --vp-* vars, so they
+ * flip with html.dark.
+ * ------------------------------------------------------------------------ */
 :root {
   /* Canvases */
   --ink: var(--vp-c-bg);
@@ -260,26 +350,26 @@ html.dark {
   --cream-dim: var(--vp-c-text-2);
   --font-mono: var(--pa-font-mono);
 
-  /* Brand */
-  --blue: var(--vp-c-brand-1);
-  --blue-bright: var(--vp-c-brand-2);
-  --violet: var(--vp-c-brand-2);
-  --accent: var(--vp-c-brand-1);
-  --accent-soft: var(--vp-c-brand-soft);
-  /* Light mode gets the deep cyan (the bright variant washes out on white);
-   * dark mode swaps to the bright one below. */
-  --cyan: var(--pa-cyan);
-  --cyan-soft: rgba(12, 204, 204, 0.14);
+  /* Brand: the ramp core (lifted blue on navy), via the historic aliases. */
+  --blue: var(--pa-accent);
+  --blue-bright: var(--pa-accent-strong);
+  --violet: var(--pa-violet);
+  --accent: var(--pa-accent);
+  --accent-soft: var(--pa-accent-soft);
+  --cyan: var(--pa-accent);
+  --cyan-soft: var(--pa-accent-soft);
 
   /* Lines & semantics */
   --line: var(--vp-c-divider);
-  --grad: linear-gradient(120deg, #0048e4 0%, #3b2fe0 55%, #5424e4 100%);
-  --danger: #ff6b7a;
-  --ok: #3ddc97;
-  --warn: #ffc857;
+  --grad: var(--pa-accent); /* "gradient" alias now resolves to the solid core */
+  --danger: #c2494f;
+  --ok: #0a8a74;
+  --warn: #b98a2e;
 }
-.dark {
-  --cyan: var(--pa-cyan-bright);
+html.dark {
+  --danger: #ff8a8a;
+  --ok: #4fd8c0;
+  --warn: #efbd68;
 }
 
 /* The island renders inside .vp-doc: strip the doc-page decorations
@@ -292,14 +382,12 @@ html.dark {
   text-decoration: none;
 }
 
-/* Marketplace island page (layout: page has no doc container): the page
+/* Studio island page (layout: page has no doc container): the page
    header and the island share one container, so nothing full-bleeds. */
 .pa-mp-head {
   max-width: 1152px;
   margin: 0 auto;
   padding: 40px 24px 0;
-  /* One row: intro text left, action chips right (the island's React chips
-   * portal into #pa-mp-actions below — static content stays static). */
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
@@ -320,8 +408,6 @@ html.dark {
   color: var(--vp-c-text-2);
   font-size: 16px;
 }
-/* Right slot in the header row: chips sit on the text baseline (align-end).
-   Empty while loading (or on narrow screens, where the head wraps). */
 .pa-mp-actions {
   display: flex;
   align-items: center;
@@ -357,15 +443,20 @@ html.dark {
   transition: border-color 0.15s ease, color 0.15s ease;
 }
 .pa-app-chip:hover {
-  border-color: var(--vp-c-brand-1);
-  color: var(--vp-c-brand-1);
+  border-color: var(--pa-accent);
+  color: var(--pa-accent-strong);
 }
 
-/* Navbar logo: swap to the white-text lockup in dark mode. */
-.pa-app-logo {
-  content: url("/proagents/logo-dark.png");
+/* Navbar logo: the lockups are background-specific — light mode uses the
+ * dark-text lockup (logo-dark.png), dark mode swaps to the white-text
+ * lockup (logo.png). Scoped to the navbar: a global height rule crushes
+ * any other VPImage down to 30px. */
+.VPNavBar img.VPImage {
+  /* Same lockup width as the landing header (142px). */
+  width: 142px;
+  height: auto;
 }
-.dark .pa-app-logo {
+html.dark .VPNavBar img.VPImage {
   content: url("/proagents/logo.png");
 }
 
@@ -373,21 +464,156 @@ html.dark {
 .pa-404-logo {
   content: url("/proagents/logo-dark.png");
 }
-.dark .pa-404-logo {
+html.dark .pa-404-logo {
   content: url("/proagents/logo.png");
 }
 
-/* ---------------------------------------------------------------------------
- * Navbar logo per color mode — the lockups are background-specific:
- * light mode uses the dark-ink lockup (logo-dark.png), dark mode swaps to the
- * white-text lockup (logo.png). VitePress renders the title logo as .VPImage.
- * Scoped to the navbar: a global height rule crushes any other VPImage (e.g. a
- * hero image) down to 30px.
- * ------------------------------------------------------------------------- */
-.VPNavBar img.VPImage {
-  height: 30px;
-  width: auto;
+/* ───────────────────────────────────────────────────────────────────────────
+ * Docs chrome — landing parity (header / voice / terminals / footer)
+ * The docs pages speak the same visual language as the landing (.pa-nav,
+ * .pa-label, .pa-proof__term, .pa-footer): translucent hairline header with
+ * mono uppercase links, the readout beside the lockup, the ASCII core, navy
+ * code terminals and the navy footer band under the ramp strip. The landing
+ * owns the home viewport (html.pl-home hides this chrome); these rules style
+ * every other page so both surfaces read as one product.
+ * ------------------------------------------------------------------------ */
+
+/* Header surface — .pa-nav: translucent paper, blur, hairline. */
+.VPNav { --vp-nav-height: 68px; }
+.VPNavBar {
+  background: rgba(247, 248, 253, 0.92);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--vp-c-divider);
 }
-.dark .VPNavBar img.VPImage {
-  content: url("/proagents/logo.png");
+html.dark .VPNavBar {
+  background: rgba(0, 8, 40, 0.86);
+}
+
+/* Menu links — the landing nav voice: mono, uppercase, tracked. */
+.VPNavBarMenuLink,
+.VPNavBarMenuLink .text {
+  font-family: var(--pa-font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--vp-c-text-2);
+}
+.VPNavBarMenuLink:hover .text,
+.VPNavBarMenuLink.active .text {
+  color: var(--pa-accent-strong);
+}
+.VPNavScreen .VPLink {
+  font-family: var(--pa-font-mono);
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* The readout — "/ professional agent infrastructure" beside the lockup. */
+.VPNavBarTitle {
+  display: flex;
+  align-items: center;
+}
+.pa-docs-readout {
+  margin-left: 18px;
+  color: var(--vp-c-text-3);
+  font: 10px var(--pa-font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Nav extras: Get-started CTA (pa-button--small) + the compact ASCII core. */
+.pa-docs-nav-extras {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-left: 20px;
+}
+.pa-docs-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 13px;
+  border: 1px solid var(--pa-accent);
+  border-radius: 3px;
+  background: var(--pa-accent);
+  color: var(--pa-on-accent);
+  font: 600 10px var(--pa-font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  transition: transform 0.14s cubic-bezier(0.22, 1, 0.36, 1), background 0.18s, border-color 0.18s;
+}
+.pa-docs-cta:hover {
+  transform: translateY(-2px);
+  background: var(--pa-accent-strong);
+  border-color: var(--pa-accent-strong);
+  color: var(--pa-on-accent);
+}
+.pa-docs-cta:active { transform: translateY(1px); }
+.pa-docs-core {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+}
+.pa-docs-core canvas { display: block; }
+
+/* Code terminals (dark mode only): paper text on navy — the landing's
+ * .pa-proof__term voice. Light mode is the .pa-manifest panel: dark mono
+ * text on paper (inherited), github-light tokens, ink hairline border. */
+html.dark .vp-doc div[class*="language-"] {
+  color: #eef1fb;
+  border-color: rgba(238, 241, 251, 0.14);
+}
+.vp-doc div[class*="language-"] pre {
+  margin: 0;
+}
+
+/* Sidebar group titles — the pa-label voice. */
+.VPSidebarItem.level-0 > .item > .text {
+  font-family: var(--pa-font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--vp-c-text-3);
+}
+
+/* Footer — the navy close + the 4px ramp band (the sanctioned brand moment). */
+.VPFooter {
+  border-top: none;
+  background: var(--pa-navy);
+  color: #b5c0df;
+  font-family: var(--pa-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.VPFooter::before {
+  content: "";
+  display: block;
+  height: 4px;
+  background: var(--pa-ramp);
+}
+.VPFooter a {
+  color: #eef1fb;
+  text-decoration: none;
+}
+.VPFooter a:hover {
+  color: var(--pa-cyan);
+}
+html.dark .VPFooter {
+  background: #060d33;
+}
+
+@media (max-width: 900px) {
+  .pa-docs-readout { display: none; }
+}
+@media (max-width: 720px) {
+  .pa-docs-core { display: none; }
 }

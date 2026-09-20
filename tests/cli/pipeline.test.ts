@@ -1,8 +1,8 @@
 import { afterAll, describe, expect, it } from "vitest";
-import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { runCli } from "../helpers/run-cli.js";
 
 /**
  * PIPELINE-E2E — the full documented chain, end to end:
@@ -17,7 +17,6 @@ import path from "node:path";
  * newest registry additions (release-engineer, privacy-engineer).
  */
 
-const CLI = path.resolve("dist/cli/index.js");
 const CHECKOUT = process.cwd();
 const NEW_PROFILES = ["release-engineer", "privacy-engineer"];
 
@@ -54,7 +53,7 @@ function collectFiles(dir: string, prefix: string): string[] {
 
 function run(root: string, args: string[], expectFailure = false): { stdout: string; status: number } {
   try {
-    const stdout = execFileSync("node", [CLI, ...args], { cwd: root, encoding: "utf8", input: "" });
+    const stdout = runCli(root, args, { input: "" });
     return { stdout, status: 0 };
   } catch (err) {
     const e = err as { stdout?: string; status?: number };

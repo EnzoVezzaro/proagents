@@ -1,0 +1,925 @@
+/* ProAgents landing — "The Operator's Field Manual"
+ * Light workbench (default), navy close, the logo ramp rationed to brand
+ * moments (footer band + the ASCII sweep). One rhythm: every section is
+ * head + body rows, hairline-separated, no card chrome.
+ */
+@supports selector(html:has(*)) {
+  html:has(.pa-landing-island) .VPNav,
+  html:has(.pa-landing-island) .VPLocalNav { display: none; }
+  html:has(.pa-landing-island) .VPContent { padding-top: 0; }
+  html:has(.pa-landing-island) body { background: #f7f8fd; }
+}
+html.pl-home .VPNav,
+html.pl-home .VPLocalNav { display: none; }
+html.pl-home .VPContent { padding-top: 0; }
+html.pl-home body { background: #f7f8fd; }
+
+/* ---------- tokens ---------- */
+.pa-landing {
+  --paper: #f7f8fd;
+  --white: #fff;
+  --ink: #0d1128;
+  --copy: #3c4360;
+  --muted: #57627e;
+  --line: rgba(13, 17, 40, 0.13);
+  --line-strong: rgba(13, 17, 40, 0.3);
+  --violet: #5d2de2;
+  --blue: #0e4bec;
+  --blue-dark: #0b3fc9;
+  --sky: #13a6e0;
+  --cyan: #0cced4;
+  --cyan-ink: #067a8b; /* AA cyan for text on light paper (decorative cyan stays --cyan) */
+  --navy: #000828;
+  --navy-copy: #b5c0df;
+  --ramp: linear-gradient(90deg, var(--violet), var(--blue) 38%, var(--sky) 72%, var(--cyan));
+  --display: "Nunito Variable", ui-rounded, system-ui, sans-serif;
+  --body: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --mono: "JetBrains Mono Variable", ui-monospace, monospace;
+  min-height: 100vh;
+  overflow: clip;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--body);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+.pa-landing *,
+.pa-landing *::before,
+.pa-landing *::after { box-sizing: border-box; }
+/* Generic links inherit; component links/buttons set their own color at
+ * higher specificity (.pa-landing prefix beats this rule). */
+.pa-landing a { color: inherit; }
+.pa-container { width: min(1200px, calc(100% - 64px)); margin: 0 auto; }
+.pa-landing code {
+  font-family: var(--mono);
+  font-size: 0.86em;
+  color: var(--blue-dark);
+  background: rgba(14, 75, 236, 0.07);
+  padding: 2px 5px;
+}
+.pa-landing h1,
+.pa-landing h2 {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  line-height: 0.94;
+}
+.pa-landing h1 { max-width: 780px; font-size: clamp(3.2rem, 6.4vw, 6.8rem); }
+.pa-landing h2 { font-size: clamp(2.6rem, 5vw, 4.8rem); }
+.pa-landing h1 em,
+.pa-landing h2 em { font-style: normal; color: var(--blue-dark); }
+.pa-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  color: var(--muted);
+  font: 600 10px/1.4 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.pa-label > span:not(.pa-live-mark) { color: var(--violet); }
+.pa-live-mark {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 0 3px rgba(12, 206, 212, 0.13);
+}
+
+/* ---------- shared primitives ---------- */
+.pa-landing .pa-button {
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
+  border: 1px solid var(--blue);
+  border-radius: 3px;
+  background: var(--blue);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 0.14s cubic-bezier(0.22, 1, 0.36, 1), background 0.18s, border-color 0.18s;
+}
+.pa-landing .pa-button:hover { transform: translateY(-2px); background: var(--blue-dark); border-color: var(--blue-dark); color: #fff; }
+.pa-landing .pa-button:active { transform: translateY(1px); }
+.pa-landing .pa-button--small { min-height: 34px; padding: 0 13px; font: 600 10px var(--mono); text-transform: uppercase; letter-spacing: 0.05em; }
+.pa-landing .pa-button--light { background: #fff; border-color: #fff; color: var(--navy); }
+.pa-landing .pa-button--light:hover { background: #dce7ff; border-color: #dce7ff; color: var(--navy); }
+.pa-landing .pa-textlink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--blue-dark);
+  font: 600 10px var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+.pa-landing .pa-textlink:hover { color: var(--violet); }
+.pa-landing .pa-textlink--light { color: #fff; }
+.pa-landing .pa-textlink--light:hover { color: var(--cyan); }
+
+/* ---------- nav ---------- */
+.pa-nav {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  border-bottom: 1px solid var(--line);
+  background: rgba(247, 248, 253, 0.92);
+  backdrop-filter: blur(12px);
+}
+.pa-nav__inner {
+  width: min(1200px, calc(100% - 64px));
+  min-height: 68px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+.pa-logo { display: inline-flex; flex: 0 0 auto; align-items: center; }
+.pa-logo img { display: block; width: 142px; height: auto; }
+.pa-nav-readout { color: var(--muted); font: 10px var(--mono); letter-spacing: 0.06em; text-transform: uppercase; }
+/* GitHub star button, right of Get started: the theme's secondary button —
+ * same geometry as .pa-button--small (34px, radius 3, mono caps), white
+ * hairline surface, ink mark, blue-border hover with the family lift. */
+.pa-nav .pa-ghstar,
+.pa-nav .pa-ghstar:visited,
+.pa-nav .pa-ghstar span {
+  color: var(--ink);
+}
+.pa-ghstar {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 7px;
+  /* Tighten the pair with the primary CTA (nav gap is 25px). */
+  margin-right: -13px;
+  padding: 0 13px;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  background: var(--white);
+  font: 600 10px var(--mono);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: transform 0.14s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.18s, background 0.18s;
+}
+.pa-ghstar:hover { transform: translateY(-2px); border-color: var(--blue); background: var(--white); }
+.pa-ghstar:active { transform: translateY(1px); }
+.pa-ghstar:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.pa-ghstar svg { flex: 0 0 auto; color: var(--ink); }
+/* Nav coffee: types "buy me a coffee", opens the support popup. Styled
+ * like the readout — mono, uppercase, hairline underline instead of a pill. */
+.pa-coffee-wrap { position: relative; display: inline-flex; }
+.pa-coffee {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 0;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  background: none;
+  color: var(--muted);
+  font: 600 10px var(--mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.pa-coffee:hover { color: var(--blue-dark); border-color: var(--blue); }
+.pa-coffee:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.pa-coffee__type { display: inline-flex; align-items: center; min-width: 16ch; }
+.pa-coffee__caret {
+  display: inline-block;
+  width: 5px;
+  height: 10px;
+  margin-left: 2px;
+  background: var(--blue);
+  animation: pa-caret 0.9s steps(2, start) infinite;
+}
+/* The popup: anchored to the chip, fades + slides from it. */
+.pa-support {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 50%;
+  z-index: 40;
+  width: 320px;
+  padding: 18px;
+  border: 1px solid var(--line-strong);
+  background: var(--white);
+  box-shadow: 0 14px 40px rgba(13, 17, 40, 0.14);
+  transform: translateX(-50%);
+}
+.pa-support::before {
+  /* The little arrow that ties the card to its trigger. */
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-top: 1px solid var(--line-strong);
+  border-left: 1px solid var(--line-strong);
+  background: var(--white);
+  transform: translateX(-50%) rotate(45deg);
+}
+.pa-support p { margin: 0 0 14px; color: var(--copy); font-size: 12.5px; line-height: 1.6; }
+.pa-support__links { display: grid; gap: 8px; }
+.pa-support__links a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font: 700 13px var(--display);
+  text-decoration: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+.pa-support__links a:hover { border-color: var(--blue); background: rgba(14, 75, 236, 0.04); }
+.pa-support__links a:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.pa-support__links small { margin-left: auto; color: var(--muted); font: 600 9px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; }
+.pa-support__close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  padding: 2px 6px;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font: 700 16px var(--mono);
+  cursor: pointer;
+}
+.pa-support__close:hover { color: var(--ink); }
+/* Vue <Transition name="pa-support">: slide from the chip + fade. */
+.pa-support-enter-active,
+.pa-support-leave-active { transition: opacity 0.18s ease, transform 0.18s ease; }
+.pa-support-enter-from,
+.pa-support-leave-to { opacity: 0; transform: translateX(-50%) translateY(-6px); }
+.pa-support-enter-to,
+.pa-support-leave-from { opacity: 1; transform: translateX(-50%) translateY(0); }
+.pa-nav nav {
+  display: flex;
+  gap: 19px;
+  margin-left: auto;
+  color: var(--copy);
+  font: 10px var(--mono);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.pa-nav nav a { text-decoration: none; }
+.pa-nav nav a:hover { color: var(--blue-dark); }
+.pa-menu { display: none; margin-left: auto; border: 0; background: transparent; }
+.pa-menu span { display: block; width: 22px; height: 1px; background: var(--ink); }
+.pa-menu span + span { margin-top: 6px; }
+
+/* ---------- reveal on scroll (JS only; content visible without it) ---------- */
+html.js .pl-reveal { opacity: 0; transform: translateY(14px); }
+html.js .pl-reveal.is-in {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.5s ease-out, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ---------- hero: centered copy over a full-viewport ASCII field ---------- */
+.pa-hero {
+  position: relative;
+  background: transparent;
+  overflow: clip;
+  min-height: 100vh;
+}
+.pa-hero__copy {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: clamp(56px, 9vh, 96px) 0 clamp(40px, 6vh, 72px);
+}
+.pa-hero h1 { margin: 26px auto 0; max-width: 780px; }
+.pa-hero__lede {
+  max-width: 600px;
+  margin: 24px auto 0;
+  color: var(--copy);
+  font-size: 17px;
+  line-height: 1.58;
+}
+.pa-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+  margin-top: 31px;
+}
+.pa-hero__meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 30px;
+  margin-top: 38px;
+  color: var(--muted);
+  font: 10px var(--mono);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.pa-hero__meta span { display: flex; gap: 10px; }
+.pa-hero__meta b { color: var(--ink); font-weight: 500; }
+
+/* The full-bleed field: the canvas IS the hero background, absolutely
+ * positioned behind the copy for the whole first viewport. */
+.pa-hero__stage {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100vh;
+}
+.pa-hero__canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+/* Soft fade top/bottom + a quiet center so the copy stays crisp while
+ * the field keeps its full strength at the edges. */
+.pa-hero__stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    radial-gradient(58% 46% at 50% 42%, var(--paper) 46%, rgba(247, 248, 253, 0) 100%),
+    linear-gradient(180deg, var(--paper) 0%, rgba(247, 248, 253, 0) 30%, rgba(247, 248, 253, 0) 74%, var(--paper) 100%);
+  pointer-events: none;
+}
+
+/* ---------- sections ---------- */
+.pa-section {
+  padding: clamp(72px, 10vw, 110px) 0;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+}
+.pa-section--paper { background: var(--white); }
+.pa-section--tint { background: #eef2fb; }
+.pa-statement { display: grid; gap: 34px; grid-template-columns: 1fr; }
+.pa-statement h2 { margin-top: 24px; }
+.pa-statement__copy {
+  max-width: 620px;
+  color: var(--copy);
+  font-size: 17px;
+  padding-left: 26px;
+  border-left: 2px solid var(--cyan);
+}
+.pa-statement__copy p { margin: 0; }
+.pa-statement__copy p + p { margin-top: 18px; color: var(--muted); font-size: 15px; }
+.pa-secthead {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.62fr);
+  gap: clamp(36px, 6vw, 80px);
+  align-items: end;
+}
+.pa-secthead > p { max-width: 420px; margin: 0; color: var(--copy); font-size: 15px; }
+.pa-secthead h2 { margin-top: 24px; }
+
+/* ---------- 01 universal (harness-agnostic) + the orbit ---------- */
+.pa-universal {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 480px);
+  gap: clamp(36px, 6vw, 90px);
+  align-items: center;
+}
+.pa-universal h2 { margin-top: 24px; }
+.pa-universal__lede {
+  max-width: 560px;
+  margin-top: 22px;
+  padding-left: 26px;
+  border-left: 2px solid var(--cyan);
+  color: var(--copy);
+  font-size: 17px;
+}
+.pa-universal__lede p { margin: 0; }
+.pa-universal__lede p + p { margin-top: 16px; color: var(--muted); font-size: 15px; }
+.pa-universal__foot { margin: 24px 0 0; color: var(--muted); font: 10px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; }
+
+/* The orbit: a ring of harness chips circling the core. Pure CSS — one
+ * rotating ring; each chip parked at its angle via `--a` and counter-spun
+ * so labels stay level while the ring turns. The radius is a fixed px per
+ * breakpoint (percentages would resolve against the zero-size slot). */
+.pa-orbit {
+  --orbit-r: 230px;
+  position: relative;
+  aspect-ratio: 1;
+  width: calc(var(--orbit-r) * 2);
+  max-width: 100%;
+  justify-self: center;
+}
+.pa-orbit__spokes {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.pa-orbit__spokes line {
+  stroke: rgba(14, 75, 236, 0.3);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 3;
+  vector-effect: non-scaling-stroke;
+}
+/* Spokes sweep with the chips — the connection core → harness follows. */
+.pa-orbit__spokes {
+  animation: pa-spin 60s linear infinite;
+}
+.pa-orbit__ring {
+  position: absolute;
+  inset: 0;
+  border: 1px dashed var(--line-strong);
+  border-radius: 50%;
+  /* The whole assembly revolves once a minute; chips counter-rotate below
+   * so logos and labels stay level while circling the core. */
+  animation: pa-spin 60s linear infinite;
+}
+.pa-orbit:hover .pa-orbit__ring,
+.pa-orbit:hover .pa-orbit__chip,
+.pa-orbit:hover .pa-orbit__spokes { animation-play-state: paused; }
+.pa-orbit__slot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  /* park at the angle, push out to the rim, cancel the park angle */
+  transform: rotate(var(--a)) translateY(calc(-1 * var(--orbit-r))) rotate(calc(-1 * var(--a)));
+}
+.pa-orbit__chip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  translate: -50% -50%;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 0 13px 0 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--white);
+  box-shadow: 0 4px 14px rgba(13, 17, 40, 0.07);
+  font: 900 13px var(--display);
+  color: var(--ink);
+  white-space: nowrap;
+  /* Same keyframes, reversed: net orientation = −ring angle → level chips
+   * on a moving ring. (A separate "opposite" keyframe set + reverse would
+   * ADD the rotations — the earlier tilt bug.) */
+  animation: pa-spin 60s linear infinite reverse;
+}
+.pa-orbit__chip img {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+.pa-orbit__chip b {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--dot, var(--blue)) 16%, #fff);
+  color: var(--dot, var(--blue));
+  font: 800 12px var(--mono);
+}
+.pa-orbit__chip small { font: 600 11.5px var(--body); letter-spacing: 0.01em; }
+.pa-orbit__core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  gap: 1px;
+  width: 104px;
+  height: 104px;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--white);
+  box-shadow: 0 8px 26px rgba(13, 17, 40, 0.1);
+  overflow: hidden;
+}
+.pa-orbit__core-field {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.pa-orbit__core img,
+.pa-orbit__core small { position: relative; }
+.pa-orbit__core img { width: 126px; height: 126px; object-fit: contain; position: relative; top: -10px; }
+@keyframes pa-spin { to { transform: rotate(360deg); } }
+.pa-orbit__core small {
+  font: 700 8px var(--mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ---------- 02 layers + manifest (interactive: click a layer) ---------- */
+.pa-layers {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: clamp(30px, 4.5vw, 52px);
+  margin-top: 56px;
+  align-items: start;
+}
+.pa-layers ol { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line-strong); }
+.pa-layers li { border-bottom: 1px solid var(--line); }
+.pa-layers li button {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 35px 130px 1fr 15px;
+  gap: 14px;
+  align-items: baseline;
+  padding: 14px 2px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: padding-left 0.2s, color 0.2s, border-color 0.2s, background 0.2s;
+}
+.pa-layers li button:hover,
+.pa-layers li button:focus-visible { padding-left: 13px; color: var(--ink); }
+.pa-layers li.is-active button { color: var(--ink); background: rgba(14, 75, 236, 0.045); box-shadow: inset 2px 0 0 var(--blue); }
+.pa-layers li button > span { color: var(--violet); font: 10px var(--mono); }
+.pa-layers li button strong { color: var(--ink); font: 900 19px var(--display); text-transform: capitalize; }
+.pa-layers li.is-active button strong { color: var(--blue-dark); }
+.pa-layers li button small { font-size: 12px; }
+.pa-layers li button b { color: var(--cyan); font: 16px var(--mono); opacity: 0.35; transition: opacity 0.2s, transform 0.2s; }
+.pa-layers li button:hover b,
+.pa-layers li.is-active button b { opacity: 1; }
+.pa-layers li.is-active button b { transform: rotate(45deg); }
+.pa-manifest { align-self: start; padding: 24px; border: 1px solid var(--line-strong); background: var(--paper); }
+.pa-manifest__title { display: flex; align-items: center; gap: 10px; margin: 0 0 20px; color: var(--blue-dark); font: 600 10px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; }
+.pa-manifest__chip { color: var(--cyan-ink); }
+/* The "?" explain toggle: paths by default, meanings when active. */
+.pa-manifest__explain {
+  margin-left: auto;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--white);
+  color: var(--muted);
+  font: 700 11px var(--mono);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.pa-manifest__explain:hover { border-color: var(--blue); color: var(--blue-dark); }
+.pa-manifest__explain:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.pa-manifest__explain[aria-pressed="true"] {
+  border-color: var(--blue-dark);
+  background: var(--blue-dark);
+  color: #fff;
+}
+.pa-manifest pre { position: relative; margin: 0; min-height: 7.2em; color: var(--copy); font: 12px/1.8 var(--mono); overflow: auto; }
+.pa-manifest pre b { color: var(--blue-dark); font-weight: 500; }
+/* Typing caret — a blinking block while the layer document retypes. */
+.pa-manifest.is-typing pre::after {
+  content: "▌";
+  margin-left: 1px;
+  color: var(--blue);
+  animation: pa-caret 0.9s steps(2, start) infinite;
+}
+@keyframes pa-caret { to { visibility: hidden; } }
+.pa-manifest__status { display: flex; align-items: center; gap: 9px; margin: 23px 0 0; padding-top: 15px; border-top: 1px solid var(--line); color: var(--cyan-ink); font: 10px var(--mono); }
+.pa-foot { margin: 29px 0 0; color: var(--muted); font: 10px var(--mono); }
+.pa-foot a { color: var(--blue-dark); text-decoration: none; }
+.pa-foot a:hover { text-decoration: underline; }
+
+/* ---------- 03 the equation: profile + harness = proagent ---------- */
+.pa-eq {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr;
+  gap: 18px;
+  align-items: stretch;
+  margin-top: 56px;
+}
+.pa-eq__term {
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  padding: 26px 24px;
+  border: 1px solid var(--line-strong);
+  background: var(--white);
+}
+.pa-eq__kind { color: var(--muted); font: 600 9px var(--mono); letter-spacing: 0.12em; text-transform: uppercase; }
+.pa-eq__term strong { font: 900 22px var(--display); color: var(--ink); }
+.pa-eq__term small { color: var(--muted); font-size: 11.5px; line-height: 1.5; }
+.pa-eq__term--profile { border-top: 3px solid var(--violet); }
+.pa-eq__term--harness { border-top: 3px solid var(--blue); }
+.pa-eq__term--result {
+  border-top: 3px solid var(--cyan);
+  background: linear-gradient(180deg, rgba(12, 206, 212, 0.06), transparent 70%), var(--white);
+}
+.pa-eq__op {
+  align-self: center;
+  color: var(--blue-dark);
+  font: 900 30px var(--display);
+}
+.pa-eq__harness,
+.pa-eq__result { display: flex; align-items: center; gap: 10px; }
+.pa-eq__harness b { color: var(--blue-dark); font: 800 16px var(--mono); }
+.pa-eq__harness img,
+.pa-eq__result img { object-fit: contain; flex: 0 0 auto; }
+.pa-eq__result strong { color: var(--blue-dark); }
+/* The compile line: the command that performs the equation. */
+.pa-eq__compile {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 16px;
+  margin-top: 27px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  background: var(--white);
+}
+.pa-eq__compile code { background: none; font-weight: 700; }
+.pa-eq__compile-note { color: var(--muted); font: 10px var(--mono); letter-spacing: 0.03em; }
+.pa-eq__compile-note b { color: var(--cyan-ink); font-weight: 600; }
+/* Harness picker: same marks as the §01 orbit, minus the moving ring. */
+.pa-eq__pick { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.pa-eq__pick button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border: 1px solid var(--line);
+  background: var(--white);
+  color: var(--copy);
+  font: 600 11.5px var(--body);
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+.pa-eq__pick button img,
+.pa-eq__pick button b { flex: 0 0 auto; }
+.pa-eq__pick button b { color: var(--blue-dark); font: 800 11px var(--mono); }
+.pa-eq__pick button:hover { border-color: var(--blue); }
+.pa-eq__pick button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.pa-eq__pick button.is-picked {
+  border-color: var(--blue-dark);
+  background: rgba(14, 75, 236, 0.05);
+  box-shadow: inset 0 -2px 0 var(--blue-dark);
+  color: var(--ink);
+}
+
+/* ---------- 04 proof ---------- */
+.pa-proof { display: grid; grid-template-columns: 0.8fr 1.2fr; gap: 54px; margin-top: 56px; }
+.pa-proof__term { padding: 0 22px 20px; background: var(--navy); color: #fff; font: 11px/1.9 var(--mono); overflow: hidden; }
+.pa-proof__term p { margin: 0; }
+.pa-proof__term p > span { color: #94a1c3; }
+.pa-proof__term .ok { color: var(--cyan); }
+.pa-proof__term .result { margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(238, 241, 251, 0.15); }
+.pa-proof__term small { float: right; color: #94a1c3; font: inherit; }
+/* Terminal chrome: traffic lights + title. */
+.pa-proof__bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 -22px 16px;
+  padding: 9px 14px;
+  border-bottom: 1px solid rgba(238, 241, 251, 0.12);
+}
+.pa-proof__bar i { width: 9px; height: 9px; border-radius: 50%; background: rgba(238, 241, 251, 0.22); }
+.pa-proof__bar i:first-child { background: #ff5f57; }
+.pa-proof__bar i:nth-child(2) { background: #febc2e; }
+.pa-proof__bar i:nth-child(3) { background: #28c840; }
+.pa-proof__bar span { margin-left: 8px; color: #94a1c3; font: 600 9px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; }
+/* Block caret on the prompt line while the command "types". */
+.pa-proof__caret {
+  display: inline-block;
+  width: 6px;
+  height: 12px;
+  margin-left: 2px;
+  vertical-align: -2px;
+  background: var(--cyan);
+  animation: pa-caret 0.9s steps(2, start) infinite;
+}
+.pa-proof table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.pa-proof th {
+  padding: 0 12px 12px 0;
+  border-bottom: 1px solid var(--line-strong);
+  color: var(--muted);
+  font: 600 10px var(--mono);
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.pa-proof td { padding: 15px 12px 15px 0; border-bottom: 1px solid var(--line); color: var(--copy); vertical-align: top; }
+.pa-proof td:first-child { color: var(--blue-dark); font: 700 11px var(--mono); white-space: nowrap; }
+.pa-proof td:nth-child(2) { color: var(--muted); font: 10px var(--mono); }
+
+/* ---------- 05 close + footer ---------- */
+.pa-close {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(52% 60% at 18% 30%, rgba(93, 45, 226, 0.16), transparent 70%),
+    radial-gradient(46% 54% at 85% 75%, rgba(12, 206, 212, 0.1), transparent 70%),
+    var(--navy);
+  color: #f5f7ff;
+}
+.pa-close__grid {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: clamp(40px, 7vw, 96px);
+  align-items: center;
+  padding: clamp(80px, 10vw, 120px) 0;
+}
+.pa-close h2 { color: #fff; }
+.pa-close h2 em { color: #9fc4ff; }
+/* Stat strip: the registry's shape at a glance. */
+.pa-close__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  margin-top: 34px;
+  border-top: 1px solid rgba(238, 241, 251, 0.14);
+}
+.pa-close__stats span {
+  display: grid;
+  gap: 3px;
+  padding: 18px 26px 0 0;
+}
+.pa-close__stats span + span { padding-left: 26px; border-left: 1px solid rgba(238, 241, 251, 0.12); }
+.pa-close__stats b { font: 900 26px var(--display); color: #fff; }
+.pa-close__stats small { color: #91a0c9; font: 600 9px var(--mono); letter-spacing: 0.12em; text-transform: uppercase; }
+.pa-close .pa-label { color: #91a0c9; }
+.pa-close .pa-label > span:not(.pa-live-mark) { color: var(--cyan); }
+.pa-close__lede { max-width: 350px; margin: 26px 0 0; color: var(--navy-copy); }
+.pa-install {
+  padding: 0 25px 25px;
+  border: 1px solid rgba(238, 241, 251, 0.2);
+  background: rgba(238, 241, 251, 0.05);
+  font: 12px/1.8 var(--mono);
+}
+/* Terminal-style chrome, matching the §04 term. */
+.pa-install__bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 -25px 18px;
+  padding: 9px 14px;
+  border-bottom: 1px solid rgba(238, 241, 251, 0.12);
+}
+.pa-install__bar i { width: 9px; height: 9px; border-radius: 50%; background: rgba(238, 241, 251, 0.22); }
+.pa-install__bar i:first-child { background: #ff5f57; }
+.pa-install__bar i:nth-child(2) { background: #febc2e; }
+.pa-install__bar i:nth-child(3) { background: #28c840; }
+.pa-install__bar span { margin-left: 8px; color: #91a0c9; font: 600 9px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; }
+/* Command lines: click to copy. */
+.pa-install__line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin: 0 0 6px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: copy;
+  transition: border-color 0.15s, background 0.15s;
+}
+.pa-install__line:hover { border-color: rgba(238, 241, 251, 0.25); background: rgba(238, 241, 251, 0.04); }
+.pa-install__line:focus-visible { outline: 2px solid var(--cyan); outline-offset: 1px; }
+.pa-install__line code {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: none;
+  color: #f5f7ff;
+  font: inherit;
+  padding: 0;
+}
+.pa-install__line span { color: var(--cyan); }
+.pa-install__line em {
+  color: #7180a6;
+  font: 600 9px var(--mono);
+  font-style: normal;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.pa-install__line:hover em,
+.pa-install__line:focus-visible em { opacity: 0.8; }
+.pa-install__line.is-copied { border-color: rgba(12, 206, 212, 0.5); }
+.pa-install__line.is-copied em { color: var(--cyan); opacity: 1; }
+.pa-install p.ok { margin: 10px 0 0; padding: 0 10px; color: var(--cyan); }
+.pa-install__actions { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; margin-top: 25px; }
+/* The logo-ramp band: the gradient itself travels through the 4 brand
+ * stops (violet → blue → sky → cyan → violet). Oversized + oversized
+ * keyframe range = seamless loop; frozen under reduced motion. */
+.pa-ramp {
+  height: 4px;
+  background: linear-gradient(90deg, var(--violet), var(--blue) 25%, var(--sky) 50%, var(--cyan) 75%, var(--violet));
+  background-size: 300% 100%;
+  animation: pa-ramp-flow 9s linear infinite;
+}
+@keyframes pa-ramp-flow {
+  to { background-position: 300% 0; }
+}
+.pa-footer { border-top: 1px solid rgba(238, 241, 251, 0.14); }
+.pa-footer__inner { display: flex; align-items: center; min-height: 90px; gap: 25px; }
+.pa-footer .pa-logo img { width: 126px; }
+.pa-footer nav { display: flex; flex-wrap: wrap; gap: 18px; margin-left: auto; color: var(--navy-copy); font: 10px var(--mono); }
+.pa-footer nav a { text-decoration: none; }
+.pa-footer nav a:hover { color: var(--cyan); }
+.pa-footer small { color: #7180a6; font: 9px var(--mono); white-space: nowrap; }
+
+/* ---------- a11y + motion ---------- */
+.pa-landing :focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) {
+  html.js .pl-reveal { opacity: 1; transform: none; transition: none; }
+  .pa-landing *,
+  .pa-landing *::before,
+  .pa-landing *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- responsive ---------- */
+@media (max-width: 1000px) {
+  .pa-secthead { grid-template-columns: 1fr; gap: 26px; align-items: start; }
+  .pa-universal { grid-template-columns: 1fr; gap: 44px; }
+  /* Chips are ~110px wide; the radius must leave room inside the viewport. */
+  .pa-orbit { --orbit-r: 128px; }
+  .pa-layers,
+  .pa-proof { grid-template-columns: 1fr; gap: 40px; }
+  .pa-eq { grid-template-columns: 1fr; gap: 10px; }
+  .pa-eq__op { padding: 2px 0; }
+  .pa-close__grid { grid-template-columns: 1fr; }
+  .pa-close__stats b { font-size: 22px; }
+  .pa-close__stats span { padding-right: 18px; }
+  .pa-close__stats span + span { padding-left: 18px; }
+}
+@media (max-width: 720px) {
+  .pa-container,
+  .pa-nav__inner { width: calc(100% - 32px); }
+  .pa-nav__inner { min-height: 62px; gap: 14px; }
+  .pa-logo img { width: 122px; }
+  .pa-nav-readout,
+  .pa-coffee,
+  .pa-nav nav { display: none; }
+  /* Keep the primary CTA visible on mobile (DESIGN.md §20). */
+  .pa-nav .pa-button--small { display: inline-flex; margin-left: auto; }
+  .pa-menu { display: block; margin-left: 12px; }
+  .pa-nav nav.is-open {
+    position: absolute;
+    top: 62px;
+    right: 16px;
+    left: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 0;
+    padding: 8px 16px;
+    border: 1px solid var(--line);
+    background: var(--white);
+    box-shadow: 0 15px 30px rgba(13, 17, 40, 0.1);
+  }
+  .pa-nav nav.is-open a { padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .pa-nav nav.is-open a:last-child { border: 0; }
+  /* The Get started CTA stays visible on mobile as its own compact control. */
+  .pa-menu { margin-left: 12px; }
+  .pa-hero__lede { font-size: 16px; }
+  /* Hero: keep the field to the first viewport on mobile too. */
+  .pa-hero__stage { height: 100vh; }
+  .pa-layers { grid-template-columns: 1fr; gap: 26px; }
+  .pa-layers li button { grid-template-columns: 32px 1fr 15px; gap: 9px; }
+  .pa-layers li button small { grid-column: 2/4; font-size: 11px; }
+  .pa-section { padding: 64px 0; }
+  .pa-statement__copy { padding-left: 18px; font-size: 16px; }
+  .pa-eq__term { padding: 20px 18px; }
+  .pa-eq__term strong { font-size: 19px; }
+  .pa-eq__op { font-size: 24px; justify-self: center; }
+  .pa-cmdline { align-items: flex-start; flex-wrap: wrap; }
+  .pa-cmdline b { white-space: normal; }
+  .pa-proof { margin-top: 42px; }
+  .pa-proof table { font-size: 12px; }
+  .pa-proof th,
+  .pa-proof td { padding-right: 7px; }
+  .pa-footer__inner { flex-wrap: wrap; padding: 22px 0; }
+  .pa-footer nav { order: 3; width: 100%; margin: 0; }
+  .pa-footer small { margin-left: auto; }
+}

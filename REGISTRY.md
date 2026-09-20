@@ -571,7 +571,8 @@ Choose:
 >    files a reviewable issue; CI validates the PROFILE-JSON block; maintainer `/publish`
 >    commits it.
 > 2. **Pull request** — the SPA's "Publish via pull request" (GitHub sign-in required)
->    creates a branch, commits `items/<slug>.json` + `catalog.json`, and opens a PR;
+>    creates a branch, commits the folder standard (`profiles/<slug>/manifest.json` +
+>    section folders) + `catalog.json`, and opens a PR;
 >    `.github/workflows/registry-pr.yml` validates every changed item and the index
 >    consistency; a maintainer merge publishes. Fork-based PRs are supported for
 >    contributors without push access.
@@ -581,8 +582,8 @@ Choose:
 > provenance manifests are specified below.
 >
 > **Remote vs local equip:** `npx proagent equip <slug>` resolves built-ins → local
-> `./profiles/` → the registry catalog. A profile only works remotely once it is
-> merged into the catalog repo — until then, use the downloaded JSON locally.
+> `.proagent/profiles/` → the registry catalog. A profile only works remotely once it is
+> merged into the catalog repo — until then, use the local folder.
 
 Publishing should package the **entire professional profile**, including its dependency graph and provenance.
 
@@ -593,20 +594,18 @@ proagent profile publish ./profile
 A published profile should contain:
 
 ```text
-profile.json
-skills/
-knowledge/
+manifest.json     # the index: identity, expertise, methods, rules, skills, tools, verification
+identity.json
+docs.json
+expertise/
+knowledge/        # when the profile ships reference files
 methods/
+skills/
 rules/
-policies/
-tools/
-mcp/
-context/
-verification/
-benchmarks/
-dependencies/
-compatibility/
-README.md
+policies/         # when present
+standards/        # when present
+tools/requirements.json
+verification/required|optional/
 ```
 
 Every external resource should retain provenance:

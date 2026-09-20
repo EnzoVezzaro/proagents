@@ -17,7 +17,7 @@ repo, and any item pulls into your repository with one command.
 
 | Piece | Where | What it is |
 |---|---|---|
-| Studio app | [`/proagents/studio`](https://enzovezzaro.github.io/proagents/studio) | Static SPA (React + Vite) deployed to GitHub Pages — runs entirely in your browser |
+| Studio app | [`/proagents/studio`](https://proagents.reposell.dev/studio) | Static SPA (React + Vite) deployed to GitHub Pages — runs entirely in your browser |
 | Catalog | `registry/catalog.json` + `registry/profiles/` + `registry/crews/` + `registry/capabilities/` | **Git-as-database**: the repo itself is the data layer; every listing is a reviewable JSON file, and Pages serves reads |
 | CLI | `proagent equip <slug>` · `proagent setup` · `proagent search …` | the courier: pulls a spec (profile or crew) — or resolves a whole environment — and hands it to your harness |
 | Installer | `.agents/skills/<profile>/` + instructions block · `.agents/crews/<id>/` + `.mcp.json` | the on-disk layout any agent runtime can execute |
@@ -50,12 +50,12 @@ proagent compile security-engineer --target codex # explicit harness
 
 ### Remote vs local equip
 
-`npx proagent equip <slug>` resolves in order: your repo's `registry/profiles/` checkout →
+`npx proagent equip <slug>` resolves in order: your repo's `.proagent/profiles/` local
+creations (written by `proagent profile create`) → a `registry/profiles/` checkout →
 the packaged snapshot shipped with the npm package → the remote catalog (fetched from the
-catalog repo). Consequence: a profile you just built **works locally immediately** (drop
-the item folder in `registry/profiles/`), but the same one-liner only works remotely for
-other people **after the profile is merged into the catalog repo** — which is exactly what
-publishing does.
+catalog repo). Consequence: a profile you just scaffolded **works locally immediately**,
+but the same one-liner only works remotely for other people **after the profile is
+merged into the catalog repo** — which is exactly what publishing does.
 
 ### The `profile` command group
 
@@ -82,15 +82,15 @@ the folders are the source:
 
 ```
 registry/crews/<crew-id>/
-├── crew.json                          # the index: version, crew metadata, section paths
-├── mission/01-mission.md              # why the team exists
+├── manifest.json                      # the index: version, crew metadata, section paths
+├── mission.json                       # why the team exists
 ├── members/NN-<member-id>.json        # profile bindings (CrewMemberSource)
-├── coordination/NN-*.md               # how members coordinate and decide
-├── tasks/NN-*.md                      # the units of work each member owns
-├── workflows/NN-*.md                  # end-to-end team workflows
-├── handoffs/NN-*.md                   # per-edge handoff contracts (frontmatter)
-├── rules/NN-*.md                      # team-level normative rules
-├── verification/NN-*.md               # how the crew verifies its output
+├── coordination/NN-*.json             # how members coordinate and decide
+├── tasks/NN-*.json                    # the units of work each member owns
+├── workflows/NN-*.json                # end-to-end team workflows
+├── handoffs/NN-*.json                 # per-edge handoff contracts
+├── rules/NN-*.json                    # team-level normative rules
+├── verification/NN-*.json             # how the crew verifies its output
 └── mcp/servers.json                   # crew-level MCP servers
 ```
 
@@ -98,8 +98,8 @@ Every member binds an existing profile (`profile` field in its member file) —
 expertise, methods and rules come from the profile, never from the crew;
 permissions are explicit per member and never inherited. Edit the team by
 editing the section files; add a member by adding a `members/NN-<id>.json`
-binding and listing it in `crew.json`. The CLI, SPA and CI all hydrate the
-paths at load time — same model as `profile.json`.
+binding and listing it in `manifest.json`. The CLI, SPA and CI all hydrate the
+paths at load time — same model as a profile's `manifest.json`.
 
 Crews are also held to the **subagent standards** (the crew-side form of the
 PA001–PA013 architecture rules), enforced by the validator at publish and PR
@@ -125,7 +125,7 @@ it, and writes everything the crew needs into the repo you ran it in:
 
 ```
 .agents/crews/incidere-incident-response/
-├── crew.json                  # full definition (source of truth)
+├── manifest.json              # full definition (source of truth)
 ├── SKILL.md                   # crew-level operating skill
 └── workers/
     ├── triage/{SKILL.md, agent.json}
@@ -256,7 +256,7 @@ publish action.
 
 Either way you end with a **CrewDefinition JSON** that:
 
-- installs locally: download it, run `proagent crew build ./crew.json --file <id>.json` in
+- installs locally: download it, run `proagent crew build <dir>/manifest.json` in
   any repo (skills, agent contracts, merged `.mcp.json`), or
 - publishes to the registry by **filing a proposal issue** (next section).
 
@@ -265,13 +265,15 @@ Registry submissions are gated by CI on two paths:
 
 1. **Pull request (recommended — used by the profile builder's *Ship* tab).** Sign in with
    GitHub, press **Publish via pull request**: the app creates a branch
-   (`proagent-profile/<slug>`), commits `profiles/<slug>/profile.json` + the catalog index, and opens
+   (`proagent-profile/<slug>`), commits `profiles/<slug>/manifest.json` + the section
+   folders and the catalog index, and opens
    a PR. The `Registry PR validation` workflow validates every changed item with the
    same deterministic validator and checks index consistency. Contributors without push
    access are supported automatically (the branch lands on a fork). A maintainer merge
    publishes.
-2. **Proposal issue.** `proagent crew submit crew.json` / `proagent profile submit
-   profile.json` (or the builders' *File proposal issue* buttons) open an issue with the
+2. **Proposal issue.** `proagent crew submit <item-dir>/manifest.json` /
+   `proagent profile submit <item-dir>/manifest.json` (or the builders' *File proposal issue*
+   buttons) open an issue with the
    full JSON in a parseable block; the `Crew proposal pipeline` workflow extracts and
    validates it, commenting ✅ or ❌ with exact problems. A maintainer comments `/publish`
    to commit, `/close <reason>` to reject.
@@ -322,7 +324,7 @@ App's settings.
 - ✅ **Enable Device Flow** — required for the Settings-modal sign-in button
 - ✅ **Request user authorization (OAuth) during installation** — identity is granted on
   install
-- **Callback URL** `https://enzovezzaro.github.io/proagents/auth` — used by web
+- **Callback URL** `https://proagents.reposell.dev/auth` — used by web
   application flow, not device flow (harmless to keep)
 - **Permissions**: `repository metadata` (read) is enough for sign-in, previews and
   proposal issues; PR-based publishing additionally needs **Contents** read & write on
@@ -367,13 +369,13 @@ CLI). Project files always outrank the global one, and CI secrets beat everythin
 The recommended path (used by the builder's *Ship* tab too):
 
 ```bash
-# crews
-proagent crew validate my-crew.json       # must pass
-proagent crew submit my-crew.json         # files the proposal issue; CI validates it
+# crews (folder standard — manifest.json is the entry point)
+proagent crew validate registry/crews/my-crew/manifest.json       # must pass
+proagent crew submit registry/crews/my-crew/manifest.json         # files the proposal issue; CI validates it
 
 # profiles
-proagent profile validate my-profile.json # must pass
-proagent profile submit my-profile.json   # files the proposal issue; CI validates it
+proagent profile validate registry/profiles/my-profession/manifest.json # must pass
+proagent profile submit registry/profiles/my-profession/manifest.json   # files the proposal issue; CI validates it
 ```
 
 A maintainer then comments `/publish` on the issue, which commits the item folder

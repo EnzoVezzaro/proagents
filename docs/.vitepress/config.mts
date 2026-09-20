@@ -16,7 +16,7 @@ function catalogDevServer() {
     // loader chokes on. The logic is 15 lines and dev-only.
     configureServer(server: any) {
       server.middlewares.use((req: any, res: any, next: () => void) => {
-        const m = (req.url ?? "").split("?")[0].match(/^\/proagents\/\registry\/(.+)$/);
+        const m = (req.url ?? "").split("?")[0].match(/^\/proagents\/registry\/(.+)$/);
         if (!m) return next();
         const root = resolve(process.cwd(), "registry");
         const file = resolve(root, decodeURIComponent(m[1]));
@@ -40,6 +40,10 @@ export default defineConfig({
     "Professional profiles for existing coding agents — equip Claude Code, Codex, OpenCode and friends with professional expertise, methods, rules and verification.",
   head: [
     ["link", { rel: "icon", type: "image/png", href: "/proagents/favicon.png" }],
+    // Marks the runtime as JS-capable before first paint: the landing's
+    // reveal animation only hides .pl-reveal nodes under html.js, so
+    // no-JS visitors (and reduced-motion) always get the full content.
+    ["script", {}, "document.documentElement.classList.add('js')"],
     ["meta", { property: "og:type", content: "website" }],
     ["meta", { property: "og:title", content: "ProAgents" }],
     [
@@ -50,7 +54,7 @@ export default defineConfig({
       },
     ],
     ["meta", { property: "og:image", content: "/proagents/og-image.png" }],
-    ["meta", { name: "theme-color", content: "#000024" }],
+    ["meta", { name: "theme-color", content: "#f7f8fd" }],
   ],
   base: "/proagents/",
   cleanUrls: true,
@@ -76,6 +80,13 @@ export default defineConfig({
       jsxImportSource: "react",
     },
   },
+  // Code surfaces follow the mode (see theme/custom.css): light mode is the
+  // landing's .pa-manifest panel — paper canvas, dark mono text — so the
+  // light Shiki theme is github-light; dark mode keeps the navy terminal
+  // (.pa-proof__term voice) with github-dark tokens.
+  markdown: {
+    theme: { light: "github-light", dark: "github-dark" },
+  },
   themeConfig: {
     // Light navbar gets the dark-ink lockup; dark mode swaps to the white-text
     // lockup via `.dark img.VPImage` in theme/custom.css.
@@ -91,11 +102,6 @@ export default defineConfig({
         text: "Context",
         link: "/context/",
         activeMatch: "/context/",
-      },
-      { text: "npm", link: "https://www.npmjs.com/package/proagent" },
-      {
-        text: "GitHub",
-        link: "https://github.com/EnzoVezzaro/proagents",
       },
       {
         text: "Sponsor",
@@ -165,7 +171,7 @@ export default defineConfig({
     ],
     footer: {
       message:
-        'Released under the <a href="/proagents/license">MIT License</a> · <a href="https://github.com/sponsors/EnzoVezzaro">Sponsor on GitHub</a> · <a href="https://ko-fi.com/enzojuniorvezzaro">Ko-fi</a>',
+        'Released under the <a href="/proagents/license">MIT License</a> · <a href="https://github.com/sponsors/EnzoVezzaro">Sponsor on GitHub</a> · <a href="https://ko-fi.com/enzojuniorvezzaro">Buy me a ☕</a>',
       copyright: "Copyright © 2026 ProAgents contributors",
     },
     outline: { level: [2, 3], label: "On this page" },

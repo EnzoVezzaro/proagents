@@ -264,7 +264,7 @@ export interface SpecDocument {
 
 /** A client-side validation finding (mirror of SpecFinding; PA5xx codes). */
 export interface SpecFinding {
-  code: "PA501" | "PA502" | "PA505";
+  code: "PA501" | "PA502" | "PA505" | "PA506";
   severity: "error" | "warning";
   message: string;
   suggestion?: string;
