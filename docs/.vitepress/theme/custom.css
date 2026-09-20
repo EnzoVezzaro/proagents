@@ -457,15 +457,15 @@ html.dark {
   height: auto;
 }
 html.dark .VPNavBar img.VPImage {
-  content: url("/proagents/logo.png");
+  content: url("/logo.png");
 }
 
 /* 404 view logo — same mode-aware lockup swap. */
 .pa-404-logo {
-  content: url("/proagents/logo-dark.png");
+  content: url("/logo-dark.png");
 }
 html.dark .pa-404-logo {
-  content: url("/proagents/logo.png");
+  content: url("/logo.png");
 }
 
 /* ───────────────────────────────────────────────────────────────────────────

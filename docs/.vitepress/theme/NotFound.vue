@@ -1,16 +1,14 @@
 <script setup lang="ts">
 // Branded not-found view (replaces VitePress's default "keep looking" quote).
-// Also recovers stale URLs: pre-merge bookmarks like /proagents/docs/guide/…
-// land here (no such file) and are redirected into the merged URL space.
+// Also recovers stale URLs: pre-merge bookmarks like /docs/guide/… (and the
+// older /proagents/docs/… form) land here and are redirected into the site.
 import { onMounted } from "vue";
 
-// Runtime binding (not a static src) so Vue's asset pipeline leaves the
-// base-prefixed public path alone.
-const logo = "/proagents/logo.png";
+const logo = "/logo.png";
 
 onMounted(() => {
   const m = window.location.pathname.match(/^\/(?:proagents\/)?docs\/(.*)$/);
-  if (m) window.location.replace(`/proagents/${m[1]}`);
+  if (m) window.location.replace(`/${m[1]}`);
 });
 </script>
 
@@ -23,8 +21,8 @@ onMounted(() => {
       The page you asked for does not exist — but the registry and the docs do.
     </p>
     <div class="pa-404-actions">
-      <a class="pa-404-cta" href="/proagents/studio">Open the Studio</a>
-      <a class="pa-404-alt" href="/proagents/guide/getting-started">Read the docs</a>
+      <a class="pa-404-cta" href="/studio">Open the Studio</a>
+      <a class="pa-404-alt" href="/guide/getting-started">Read the docs</a>
     </div>
   </div>
 </template>

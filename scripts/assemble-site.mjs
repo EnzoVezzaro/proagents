@@ -1,12 +1,13 @@
 /**
  * Assembles the GitHub Pages artifact from the single VitePress build.
  *
- * The site base is /proagents/ — the whole VitePress output (island home at
- * the root, docs beside it) maps 1:1 onto the Pages URL space, and VitePress
- * copies docs/public/ verbatim (branded 404.html with the old-/docs/-URL
- * redirect, the /app/ shim). The only assembly work left is the git-backed
- * catalog, copied beside the emitted index.html where the island's
- * catalog.ts derives it from BASE_URL.
+ * The site base is / (custom domain proagents.reposell.dev, served from the
+ * domain root) — the whole VitePress output (island home at the root, docs
+ * beside it) maps 1:1 onto the URL space, and VitePress copies docs/public/
+ * verbatim (branded 404.html with the old-/docs/-URL redirect, the /app/
+ * shim). The only assembly work left is the git-backed catalog, copied
+ * beside the emitted index.html where the island's catalog.ts derives it
+ * from BASE_URL.
  *
  * `npm run site:build` and .github/workflows/pages.yml run exactly this
  * script, so a local build and a CI build are byte-for-byte comparable.
@@ -46,7 +47,7 @@ mkdirSync(SITE, { recursive: true });
 //   assets/         → one bundle (docs + app code together)
 cpSync(DOCS_DIST, SITE, { recursive: true });
 
-// Git-backed catalog data → served at /proagents/registry/*.
+// Git-backed catalog data → served at /registry/*.
 // Items may carry subdirectories (knowledge references), so copy recursively.
 // capabilities/index.json feeds the Studio Build mode's capability picker.
 mkdirSync(join(SITE, "registry"), { recursive: true });

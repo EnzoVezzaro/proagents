@@ -2,7 +2,7 @@
  * `npm run dev` — the whole project in one terminal:
  *
  *   [core]  tsc --watch   → dist/ (CLI/library build, rebuilds on save)
- *   [docs]  vitepress dev → http://localhost:5173/proagents/docs/
+ *   [docs]  vitepress dev → http://localhost:5173/docs/
  *
  * Docs and the Studio app are ONE VitePress site now: the app island
  * mounts on the home page and the React bundle hot-reloads through the same

@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed — custom-domain asset 404s (site down)
+
+- **Every hashed asset on proagents.reposell.dev returned 404** (blank page: CSS,
+  JS, logos, harness marks, favicon all gone while the HTML loaded). The artifact
+  was still built with `base: "/proagents/"` — correct for the old project-path
+  Pages URL (`enzovezzaro.github.io/proagents/`) but wrong once the custom domain
+  took over: GitHub Pages serves a custom domain from the **root**, so all
+  `/proagents/assets/…` references missed the files that physically sit at
+  `/assets/…`. **Base switched to `/`** and every hardcoded `/proagents/…`
+  reference updated to root-absolute paths: favicon + og:image head tags, footer
+  license link, navbar logo swaps and 404 lockup (`custom.css` `content: url()`),
+  the Vue 404 view (links, logo, stale-URL redirect), the static `404.html`
+  (favicon, logo, buttons, redirect — which now also recovers the bare
+  `/docs/…` form), the Studio GitHub PR body URL, `docs/guide/registry.md`, and
+  the dev-server catalog middleware regex. `catalog.ts`/`links.ts` already derive
+  from `BASE_URL`, so the island follows the new base automatically.
+
 ## [0.12.0] — 2026-09-20
 
 ### Fixed — light-mode code blocks (docs)

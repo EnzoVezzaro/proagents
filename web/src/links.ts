@@ -2,8 +2,8 @@
  * Cross-surface links for the Studio app — which lives INSIDE the
  * VitePress site as a client-only island. "Docs" is no longer another origin:
  * the app navigates between app routes and doc pages with plain relative
- * hrefs resolved against the shared base (/proagents/ in production, the
- * vitepress dev server root in development).
+ * hrefs resolved against the shared base (the domain root in production —
+ * proagents.reposell.dev — and the vitepress dev server root in development).
  *
  * VITE_DOCS_URL, if set, overrides the doc route prefix (forks serving docs
  * elsewhere) — see .env.example.

@@ -365,7 +365,7 @@ export async function publishProfileAsPr(
       head: branch,
       base: base.default_branch,
       body: [
-        `Automated profile proposal via the [ProAgents Studio builder](https://enzovezzaro.github.io/proagents/).`,
+        `Automated profile proposal via the [ProAgents Studio builder](https://proagents.reposell.dev/).`,
         ``,
         `Adds \`registry/profiles/${slug}/profile.json\` + catalog index entry. The deterministic validator runs on this PR.`,
         `Maintainers: verify the profession is sound, then merge to publish.`,

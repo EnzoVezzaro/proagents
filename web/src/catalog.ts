@@ -2,11 +2,12 @@
  * Catalog URLs — derived from Vite's BASE_URL instead of fragile
  * window.location relative-path math.
  *
- * The app is mounted inside the single VitePress site (base /proagents/), and
- * the Git-backed catalog is copied beside the emitted index.html:
+ * The app is mounted inside the single VitePress site (base / — the custom
+ * domain serves from the root), and the Git-backed catalog is copied beside
+ * the emitted index.html:
  *
- *   prod: BASE_URL "/proagents/"  →  /proagents/registry/…
- *   dev:  same base, served by vitepress dev from docs/public
+ *   prod: BASE_URL "/"            →  /registry/…
+ *   dev:  BASE_URL "/"            →  /registry/… (vitepress dev serves docs/public)
  *   test: BASE_URL "/"            →  /registry/… (jsdom origin)
  */
 

@@ -17,7 +17,7 @@ repo, and any item pulls into your repository with one command.
 
 | Piece | Where | What it is |
 |---|---|---|
-| Studio app | [`/proagents/studio`](https://proagents.reposell.dev/studio) | Static SPA (React + Vite) deployed to GitHub Pages — runs entirely in your browser |
+| Studio app | [`/studio`](https://proagents.reposell.dev/studio) | Static SPA (React + Vite) deployed to GitHub Pages — runs entirely in your browser |
 | Catalog | `registry/catalog.json` + `registry/profiles/` + `registry/crews/` + `registry/capabilities/` | **Git-as-database**: the repo itself is the data layer; every listing is a reviewable JSON file, and Pages serves reads |
 | CLI | `proagent equip <slug>` · `proagent setup` · `proagent search …` | the courier: pulls a spec (profile or crew) — or resolves a whole environment — and hands it to your harness |
 | Installer | `.agents/skills/<profile>/` + instructions block · `.agents/crews/<id>/` + `.mcp.json` | the on-disk layout any agent runtime can execute |

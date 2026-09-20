@@ -16,7 +16,7 @@ function catalogDevServer() {
     // loader chokes on. The logic is 15 lines and dev-only.
     configureServer(server: any) {
       server.middlewares.use((req: any, res: any, next: () => void) => {
-        const m = (req.url ?? "").split("?")[0].match(/^\/proagents\/registry\/(.+)$/);
+        const m = (req.url ?? "").split("?")[0].match(/^\/registry\/(.+)$/);
         if (!m) return next();
         const root = resolve(process.cwd(), "registry");
         const file = resolve(root, decodeURIComponent(m[1]));
@@ -39,7 +39,7 @@ export default defineConfig({
   description:
     "Professional profiles for existing coding agents — equip Claude Code, Codex, OpenCode and friends with professional expertise, methods, rules and verification.",
   head: [
-    ["link", { rel: "icon", type: "image/png", href: "/proagents/favicon.png" }],
+    ["link", { rel: "icon", type: "image/png", href: "/favicon.png" }],
     // Marks the runtime as JS-capable before first paint: the landing's
     // reveal animation only hides .pl-reveal nodes under html.js, so
     // no-JS visitors (and reduced-motion) always get the full content.
@@ -53,10 +53,13 @@ export default defineConfig({
         content: "Professional profiles for existing coding agents.",
       },
     ],
-    ["meta", { property: "og:image", content: "/proagents/og-image.png" }],
+    ["meta", { property: "og:image", content: "/og-image.png" }],
     ["meta", { name: "theme-color", content: "#f7f8fd" }],
   ],
-  base: "/proagents/",
+  // The site is served from a custom domain root (proagents.reposell.dev),
+  // not a project path (enzovezzaro.github.io/proagents/). Base must stay "/"
+  // or every hashed asset reference 404s against the custom domain.
+  base: "/",
   cleanUrls: true,
   vite: {
     plugins: [catalogDevServer()],
@@ -171,7 +174,7 @@ export default defineConfig({
     ],
     footer: {
       message:
-        'Released under the <a href="/proagents/license">MIT License</a> · <a href="https://github.com/sponsors/EnzoVezzaro">Sponsor on GitHub</a> · <a href="https://ko-fi.com/enzojuniorvezzaro">Buy me a ☕</a>',
+        'Released under the <a href="/license">MIT License</a> · <a href="https://github.com/sponsors/EnzoVezzaro">Sponsor on GitHub</a> · <a href="https://ko-fi.com/enzojuniorvezzaro">Buy me a ☕</a>',
       copyright: "Copyright © 2026 ProAgents contributors",
     },
     outline: { level: [2, 3], label: "On this page" },
