@@ -72,7 +72,10 @@ interface Invocation {
 }
 
 function extractInvocations(rel: string): Invocation[] {
-  const text = read(rel);
+  const raw = read(rel);
+  // Frontmatter is metadata, not command documentation — a description like
+  // "how agents parse proagent output" must not count as an invocation.
+  const text = raw.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, "");
   const lines = text.split("\n");
   const found: Invocation[] = [];
   for (const [i, line] of lines.entries()) {

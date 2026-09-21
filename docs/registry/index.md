@@ -2,6 +2,7 @@
 layout: page
 sidebar: false
 outline: false
+description: 'Every installable profile, crew and agent in the ProAgents registry — each with its exact CLI equip command.'
 ---
 
 <div class="pa-mp-head">

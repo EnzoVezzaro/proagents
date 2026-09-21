@@ -1,3 +1,7 @@
+---
+description: 'ProAgents equips existing coding agents with professional expertise, methods, rules and verification — it gives them a profession.'
+---
+
 # What is ProAgents?
 
 ProAgents is an open-source **agentic CLI + Agent Skill** that **equips existing coding

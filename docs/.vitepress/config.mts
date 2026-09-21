@@ -1,4 +1,4 @@
-import { defineConfig } from "vitepress";
+import { defineConfig, type HeadConfig } from "vitepress";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve, sep } from "node:path";
 
@@ -36,7 +36,48 @@ function catalogDevServer() {
   };
 }
 
-// https://vitepress.dev/reference/site-config
+/**
+ * Per-page social/SEO head. The static `head` block below is site-wide only —
+ * every page used to emit the same og:title/description and a RELATIVE og:image
+ * (which crawlers drop, so shares rendered bare). transformHead derives the
+ * real title/description per page and emits absolute-URL og/twitter/canonical
+ * tags. Runs for both SSG and dev; the static og:* block was removed so tags
+ * are never duplicated.
+ */
+const SITE_URL = "https://proagents.reposell.dev";
+const DEFAULT_DESCRIPTION =
+  "Professional profiles for existing coding agents — equip Claude Code, Codex, OpenCode and friends with professional expertise, methods, rules and verification.";
+
+function pageHead(context: {
+  pageData: { title?: string; description?: string; relativePath?: string; frontmatter?: Record<string, unknown> };
+}): HeadConfig[] {
+  const fm = context.pageData.frontmatter ?? {};
+  // Redirect stubs (/marketplace) and JS-only app pages don't need cards;
+  // 404 is rendered from a virtual page with no relativePath.
+  if (fm.layout === false || fm.head?.some((t: unknown[]) => t[1]?.['http-equiv'] === 'refresh')) return [];
+  const description = context.pageData.description || DEFAULT_DESCRIPTION;
+  // VitePress pageData.title is already the composed H1/title.
+  const title = context.pageData.title || "ProAgents";
+  const isHome = context.pageData.relativePath === "index.md";
+  const ogTitle = isHome ? "ProAgents — professional profiles for coding agents" : title;
+  const path = (context.pageData.relativePath ?? "").replace(/(^|\/)index\.md$/, "$1").replace(/\.md$/, "");
+  const url = `${SITE_URL}/${path}`.replace(/\/$/, "/");
+  const image = `${SITE_URL}/og-image.png`;
+  return [
+    ["link", { rel: "canonical", href: url }],
+    ["meta", { property: "og:url", content: url }],
+    ["meta", { property: "og:type", content: "website" }],
+    ["meta", { property: "og:site_name", content: "ProAgents" }],
+    ["meta", { property: "og:title", content: ogTitle }],
+    ["meta", { property: "og:description", content: description }],
+    ["meta", { property: "og:image", content: image }],
+    ["meta", { name: "twitter:card", content: "summary_large_image" }],
+    ["meta", { name: "twitter:title", content: ogTitle }],
+    ["meta", { name: "twitter:description", content: description }],
+    ["meta", { name: "twitter:image", content: image }],
+  ];
+}
+
 export default defineConfig({
   lang: "en-US",
   title: "ProAgents",
@@ -48,16 +89,8 @@ export default defineConfig({
     // reveal animation only hides .pl-reveal nodes under html.js, so
     // no-JS visitors (and reduced-motion) always get the full content.
     ["script", {}, "document.documentElement.classList.add('js')"],
-    ["meta", { property: "og:type", content: "website" }],
-    ["meta", { property: "og:title", content: "ProAgents" }],
-    [
-      "meta",
-      {
-        property: "og:description",
-        content: "Professional profiles for existing coding agents.",
-      },
-    ],
-    ["meta", { property: "og:image", content: "/og-image.png" }],
+    // og:* / twitter:* / canonical are emitted per page by transformHead
+    // (absolute URLs, real per-page titles). Only mode-agnostic tags live here.
     ["meta", { name: "theme-color", content: "#f7f8fd" }],
   ],
   // The site is served from a custom domain root (proagents.reposell.dev),
@@ -65,6 +98,16 @@ export default defineConfig({
   // or every hashed asset reference 404s against the custom domain.
   base: "/",
   cleanUrls: true,
+  // Crawlability: sitemap.xml at the domain root (hostname must be absolute).
+  // The /marketplace redirect stub stays out of the index (item urls are
+  // relative — 'marketplace', the hostname is prefixed at write time).
+  sitemap: {
+    hostname: SITE_URL,
+    transformItems: (items) => items.filter((i) => !i.url.replace(/^\//, "").split("/").pop()!.startsWith("marketplace")),
+  },
+  transformHead: async (context) => {
+    return pageHead(context);
+  },
   vite: {
     plugins: [catalogDevServer()],
     vue: {

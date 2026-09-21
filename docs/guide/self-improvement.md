@@ -1,3 +1,7 @@
+---
+description: 'Optional and policy-gated: how a generated agent proposes improvements to its own specs, with humans approving the diff.'
+---
+
 # Self-improvement
 
 Optional, off by default, and policy-gated. Self-improvement lets a generated agent

@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — landing crews act + site SEO/social meta
+
+- **New landing section §04 "CREWS / MULTI-AGENT — Many professionals. One
+  workflow."** between the equation and the evidence acts (evidence → §05, start
+  here → §06). The roster panel is **real registry data**: security-audit-crew's four
+  workers with their actual profiles (systems-architect, security-engineer ×2,
+  privacy-engineer), read/write permission surfaces and MCP servers, plus the
+  approval-gate callout (the release train's deploy step requires a human go). The
+  install list carries five example crews with their exact `proagent crew install`
+  commands and worker counts, linking to the registry listing. Editorial row rhythm
+  matches the rest of the landing (hairline rows, mono code, violet top rule);
+  stacks to one column <1000px. The section count landing stat strip still says 8
+  crews — now with a section that shows what a crew is.
+- **Per-page SEO + social-card meta**: the static site-wide `og:*` head block
+  (which gave every page the same og:title/description and a **relative og:image**
+  crawlers drop) is replaced by a `transformHead` hook emitting per-page
+  canonical, `og:url`, `og:title`, `og:description`, `og:image` and the full
+  `twitter:card` set (summary_large_image) — all absolute URLs against
+  proagents.reposell.dev. Home gets the fuller "ProAgents — professional profiles
+  for coding agents" card title. Redirect stubs (/marketplace, /app) emit no
+  cards. 17 content pages gained page-specific frontmatter descriptions (YAML
+  quoted — several contain `: `).
+- **Crawlability**: `sitemap.xml` via VitePress's sitemap option (18 pages,
+  marketplace stub excluded) and a `robots.txt` pointing at it.
+- The docs drift-fence (`DOCS-ALIGN-001`) scraped `proagent …` from frontmatter
+  prose as fake CLI invocations (e.g. a description saying "how agents parse
+  proagent output"); the extractor now strips frontmatter before scanning —
+  metadata is not command documentation.
+
 ## [0.13.0] — 2026-09-21
 
 ### Fixed — docs site round (header, /registry 404, footer)

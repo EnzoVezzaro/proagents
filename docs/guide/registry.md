@@ -1,3 +1,7 @@
+---
+description: 'The registry is a repository of specs, not agents — Git-as-database profiles, crews and the catalog index.'
+---
+
 # Registry: the spec repository
 
 The registry is a **repository of specs, not agents**: profile specs (professions) and

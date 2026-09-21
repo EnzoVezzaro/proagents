@@ -1,3 +1,7 @@
+---
+description: 'The deterministic interview: the same knowledge state always produces the same next question, spec and build.'
+---
+
 # The question engine
 
 The engine is **deterministic**: the same knowledge state always produces the same next

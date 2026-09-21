@@ -1,3 +1,7 @@
+---
+description: 'Benchmarks measure the generated agent system — architecture, permissions, tool discipline and artifacts — not the LLM.'
+---
+
 # Benchmark system
 
 ProAgents benchmarks the **generated agent system** — architecture, permissions, tool discipline, artifacts and execution behavior — not an LLM. The lifecycle reads:

@@ -1,3 +1,7 @@
+---
+description: 'Install the CLI, equip your first professional profile and verify it — running in five minutes.'
+---
+
 # Getting started
 
 ## Install

@@ -1,3 +1,7 @@
+---
+description: 'Single agent or multi-agent crew: how ProAgents derives the architecture and handoff graph from the spec, not templates.'
+---
+
 # Agent architecture & graphs
 
 ## Single agent or team — derived, not templated

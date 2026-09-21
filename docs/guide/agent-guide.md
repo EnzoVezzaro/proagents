@@ -1,3 +1,7 @@
+---
+description: 'How another AI coding agent drives ProAgents end-to-end: detect, list, equip, interview, validate and build — deterministically.'
+---
+
 # Agent operating guide
 
 ProAgents is built for **agents operating agents**. Another AI coding agent can drive the

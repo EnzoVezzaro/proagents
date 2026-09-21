@@ -1,3 +1,7 @@
+---
+description: 'The deterministic --json contract: stable shapes for every operation, exit codes, and how agents parse proagent output.'
+---
+
 # JSON interface
 
 Every important operation supports `--json`. Output is deterministic for a given session

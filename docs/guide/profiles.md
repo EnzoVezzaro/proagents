@@ -1,3 +1,7 @@
+---
+description: 'The Professional Agent Profile schema: ten modular JSON sections, composition rules and the PA03x validation codes.'
+---
+
 # Professional profiles
 
 The profile is ProAgents' core primitive: a portable, structured, versioned definition of

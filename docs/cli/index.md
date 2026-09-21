@@ -1,3 +1,7 @@
+---
+description: 'Every proagent command: equip profiles, install crews, validate, search, build and benchmark — with flags and --json output.'
+---
+
 # CLI overview
 
 ```

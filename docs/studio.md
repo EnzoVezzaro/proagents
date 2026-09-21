@@ -2,6 +2,7 @@
 layout: page
 sidebar: false
 outline: false
+description: 'Build, discover and equip professional profiles and crews — everything runs entirely in your browser.'
 ---
 
 <div class="pa-mp-head">
