@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] — 2026-09-21
+
+### Fixed — docs site round (header, /registry 404, footer)
+
+- **Landing header links**: "Profiles" and "Registry" both linked to `/registry/` —
+  the same page twice. Profiles now opens the **Professional profiles guide**
+  (`/guide/profiles`, the schema/composition/validation doc), matching the site nav
+  where Docs covers it; Registry keeps the listing page.
+- **/registry rendered the branded 404 in dev**: the dev-only catalog middleware in
+  `config.mts` intercepted **every** `/registry/*` request — including
+  `/registry/index.md`, the page-module request VitePress's client router makes when
+  loading the page itself. The repo's data folder `registry/` is JSON-only (no
+  `index.md`), so the middleware 404'd it and the router fell back to the not-found
+  view. The middleware now serves only files that physically exist under the repo
+  `registry/` folder and **falls through everything else** to VitePress's pipeline
+  (which serves the page module and handles genuinely missing URLs). Path-traversal
+  rejection kept. Production was never affected — `assemble-site.mjs` copies the
+  catalog files beside the emitted page there.
+- **Docs footer replaced with the landing's navy close**: the plain VitePress text
+  footer ("Released under the MIT License · Sponsor on GitHub · … / Copyright") is
+  retired; a new `theme/SiteFooter.vue` renders through the `layout-bottom` slot on
+  every docs page — the 4px animated logo-ramp band, the light lockup, mono uppercase
+  nav (What is ProAgents? / Registry / JSON interface / GitHub) and the
+  `MIT / OPEN SOURCE / 2026` line. One footer across both surfaces. VitePress's own
+  footer hides on sidebar pages (the fixed sidebar covers it); here the band instead
+  **indents past the sidebar with the same padding math as VPContent** (≥960px, and
+  ≥1440px recenters against the layout max-width) so the close keeps the full-bleed
+  navy band. Narrow sidebar viewports (960–1240px) stack the row like the landing's
+  small-screen footer. The home landing renders its own §05 close — excluded via the
+  `footer: false` frontmatter, no double footer.
+
 ### Added — Registry listing page (/registry)
 
 - New **/registry** page: every installable artifact in the catalog — profiles, crews
