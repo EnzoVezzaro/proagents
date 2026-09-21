@@ -18,6 +18,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   database — the static JSON ships beside the page); header, footer and the no-JS/CLI
   fallback server-render. Machines get the same data:
   `curl https://proagents.reposell.dev/registry/catalog.json`.
+- **Search + harness filters + compatibility marks**: a mono search box (token-AND
+  across name, id, description and tags), a harness chip bar mirroring `HARNESS_SPECS`
+  (9 targets, same vendor marks as the landing orbit; click to filter, click again to
+  clear, plus a Clear control), and per-card compatibility rows — every harness mark
+  full-color when supported, ghosted grayscale when not declared in the catalog's
+  `compatibility`. Section counts read "shown of total" while filtering, and empty
+  sections hide.
 - **Nav renamed**: the top-bar "Registry" entry (which pointed at the Studio app) is
   now **"Studio"**, and "Registry" opens the new listing page. The docs sidebar gains
   a Registry group (Browse the registry / Registry & crews guide). Landing links

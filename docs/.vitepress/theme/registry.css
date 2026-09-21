@@ -27,6 +27,102 @@
   color: var(--pa-violet);
 }
 
+/* Toolbar — search field + harness chips. */
+.pa-reg-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 28px;
+}
+.pa-reg-search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 560px;
+}
+.pa-reg-search span {
+  color: var(--vp-c-text-3);
+  font: 600 10px var(--pa-font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.pa-reg-search input {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 12px;
+  border: 1px solid var(--vp-c-border);
+  border-radius: 4px;
+  background: var(--vp-c-bg-elv);
+  color: var(--vp-c-text-1);
+  font: 500 13px var(--pa-font-mono);
+}
+.pa-reg-search input:focus {
+  outline: 2px solid var(--pa-accent);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+.pa-reg-search input::placeholder {
+  color: var(--vp-c-text-3);
+}
+
+.pa-reg-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.pa-reg-chip,
+.pa-reg-clear {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 11px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 999px;
+  background: var(--vp-c-bg-elv);
+  color: var(--vp-c-text-2);
+  font: 500 11px var(--pa-font-mono);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+.pa-reg-chip img,
+.pa-reg-chip .pa-reg-chip-cli {
+  filter: grayscale(1);
+  opacity: 0.75;
+  transition: filter 0.15s ease, opacity 0.15s ease;
+}
+.pa-reg-chip .pa-reg-chip-cli {
+  font: 700 8px var(--pa-font-mono);
+  letter-spacing: 0.04em;
+}
+.pa-reg-chip:hover {
+  border-color: var(--pa-accent);
+  color: var(--vp-c-text-1);
+}
+.pa-reg-chip:hover img,
+.pa-reg-chip:hover .pa-reg-chip-cli {
+  filter: none;
+  opacity: 1;
+}
+.pa-reg-chip.is-active {
+  border-color: var(--pa-accent);
+  background: var(--pa-accent-soft);
+  color: var(--pa-accent-strong);
+}
+.pa-reg-chip.is-active img,
+.pa-reg-chip.is-active .pa-reg-chip-cli {
+  filter: none;
+  opacity: 1;
+}
+.pa-reg-clear {
+  border-style: dashed;
+  background: transparent;
+  color: var(--vp-c-text-3);
+}
+.pa-reg-clear:hover {
+  color: var(--pa-accent-strong);
+  border-color: var(--pa-accent);
+}
+
 /* Kind intro line — short, quiet, carries the canonical command. */
 .pa-reg-note {
   margin: 12px 0 0;
@@ -94,6 +190,34 @@
   color: var(--vp-c-text-3);
   font: 500 10px var(--pa-font-mono);
   letter-spacing: 0.02em;
+}
+
+/* Harness compatibility marks — full-color supported, ghosted not-declared. */
+.pa-reg-compat {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 2px 0 0;
+}
+.pa-reg-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+}
+.pa-reg-mark img {
+  filter: grayscale(0);
+  opacity: 0.95;
+}
+.pa-reg-mark-cli {
+  font: 700 7px var(--pa-font-mono);
+  letter-spacing: 0.04em;
+  color: var(--vp-c-text-2);
+}
+.pa-reg-mark.is-off img,
+.pa-reg-mark.is-off .pa-reg-mark-cli {
+  filter: grayscale(1);
+  opacity: 0.22;
 }
 
 /* Install command — mono, accent, click-to-copy. */
