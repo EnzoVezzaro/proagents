@@ -34,6 +34,21 @@ const visible = computed(() => frontmatter.value.footer !== false);
           <a :href="withBase('/cli/json')">JSON interface</a>
           <a href="https://github.com/EnzoVezzaro/proagents">GitHub</a>
         </nav>
+        <a
+          class="pa-site-footer__ph"
+          href="https://www.producthunt.com/products/proagents?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-proagents"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="ProAgents on Product Hunt"
+        >
+          <img
+            alt="ProAgents - Give your coding agent a profession. | Product Hunt"
+            width="250"
+            height="54"
+            src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1257611&amp;theme=light&amp;t=1790033178328"
+            loading="lazy"
+          />
+        </a>
         <small>MIT / open source / 2026</small>
       </div>
     </footer>
@@ -88,6 +103,14 @@ html.dark .pa-site-footer__band { background: #060d33; }
   text-decoration: none;
 }
 .pa-site-footer__inner nav a:hover { color: var(--pa-cyan); }
+/* Product Hunt featured badge — a third-party chip, like the harness icons. */
+.pa-site-footer__ph {
+  display: flex;
+  flex-shrink: 0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.pa-site-footer__ph img { display: block; width: 250px; height: 54px; }
 .pa-site-footer__inner small {
   color: #7180a6;
   font: 9px var(--pa-font-mono);
@@ -121,6 +144,7 @@ html.dark .pa-site-footer__band { background: #060d33; }
     width: 100%;
     margin: 0;
   }
+  .pa-site-footer__ph { order: 4; margin: 6px 0 0; }
 }
 
 @media (max-width: 900px) {
@@ -130,6 +154,7 @@ html.dark .pa-site-footer__band { background: #060d33; }
     padding: 22px 0;
   }
   .pa-site-footer__inner nav { order: 3; width: 100%; margin: 0; }
+  .pa-site-footer__ph { order: 4; margin: 6px 0 0; }
   .pa-site-footer__inner small { margin-left: auto; }
 }
 </style>

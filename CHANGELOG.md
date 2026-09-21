@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — Product Hunt featured badge in the docs footer
+
+- The official PH featured embed badge joins the site-wide `SiteFooter` nav row
+  (link + SVG badge, lazy-loaded, stacks below the nav on narrow viewports) —
+  every docs page now carries the launch chip; the landing keeps its fuller
+  §06 launch card.
+
+### Changed — React 19 across the Studio
+
+- `react`, `react-dom`, `@types/react`, `@types/react-dom` moved to `^19.3.0`
+  as one coordinated bump with a fresh lockfile install. Supersedes the split
+  Dependabot PRs (#14, #15) — each alone was a broken half-upgrade that failed
+  CI (types 19 / react 18, react-dom 19 / react 18). No legacy API usage in
+  the app (no `ReactDOM.render`, no `defaultProps`), so the bump is a pure
+  dependency jump; full suite green (452/452).
+
 ## [0.14.0] — 2026-09-21
 
 ### Added — landing crews act + site SEO/social meta
