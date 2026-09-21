@@ -12,8 +12,15 @@ const coffeeTyped = ref("");
 const supportOpen = ref(false);
 let coffeeTimer: number | null = null;
 const SUPPORT_LINKS = {
+  stripe: "https://buy.stripe.com/6oU6oI4XIdDs80t6701Nu02",
   kofi: "https://ko-fi.com/enzojuniorvezzaro",
   github: "https://github.com/sponsors/EnzoVezzaro",
+};
+/* -- Product Hunt launch card (§06): the official embed, re-skinned in the
+ * house style — PH's orange is a third-party accent, like the harness chips. */
+const PH = {
+  thumb: "https://ph-files.imgix.net/3cd95755-ac81-4efc-8787-2c67646c1ca0.png?auto=compress,format&codec=mozjpeg&cs=strip&fit=crop&h=80&w=80",
+  url: "https://www.producthunt.com/products/proagents?embed=true&utm_source=embed&utm_medium=post_embed",
 };
 /** Start the nav coffee typewriter once on mount (skipped: reduced motion). */
 function startCoffeeType(): void {
@@ -377,6 +384,7 @@ function toggleExplain(): void {
             <div v-if="supportOpen" class="pa-support" role="dialog" aria-label="Support ProAgents">
               <p>ProAgents is free and open source. If it earns its keep on your team:</p>
               <div class="pa-support__links">
+                <a :href="SUPPORT_LINKS.stripe" target="_blank" rel="noopener noreferrer">💳 Donate <small>Stripe ↗</small></a>
                 <a :href="SUPPORT_LINKS.kofi" target="_blank" rel="noopener noreferrer">☕ Buy me a coffee <small>Ko-fi ↗</small></a>
                 <a :href="SUPPORT_LINKS.github" target="_blank" rel="noopener noreferrer">★ Sponsor <small>GitHub ↗</small></a>
               </div>
@@ -617,11 +625,35 @@ function toggleExplain(): void {
         </div>
       </section>
 
-      <!-- ===================== 06 CLOSE ===================== -->
+      <!-- ===================== 06 PRODUCT HUNT ===================== -->
+      <section class="pa-section pa-ph" aria-labelledby="ph-title">
+        <div class="pa-container pa-ph__grid">
+          <div class="pa-ph__intro pl-reveal">
+            <p class="pa-label"><span>06</span> COMMUNITY / LAUNCH</p>
+            <h2 id="ph-title">Launch week on<br /><em>Product Hunt.</em></h2>
+            <p class="pa-ph__lede">ProAgents is live on Product Hunt. A vote takes ten seconds; a founder review lasts longer — tell us which profession your agent should learn next.</p>
+          </div>
+          <div class="pa-ph__wrap pl-reveal">
+            <article class="pa-ph__card">
+              <div class="pa-ph__head">
+                <img class="pa-ph__thumb" :src="PH.thumb" alt="ProAgents Product Hunt thumbnail" width="56" height="56" loading="lazy" />
+                <div class="pa-ph__meta">
+                  <strong>ProAgents</strong>
+                  <small>Give your coding agent a profession.</small>
+                </div>
+              </div>
+              <a class="pa-ph__cta" :href="PH.url" target="_blank" rel="noopener noreferrer">Check it out on Product Hunt <span aria-hidden="true">→</span></a>
+              <p class="pa-ph__status"><span class="pa-live-mark"></span> featured launch / v{{ pkg.version }} / MIT</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== 07 CLOSE ===================== -->
       <section class="pa-close">
         <div class="pa-container pa-close__grid">
           <div class="pl-reveal">
-            <p class="pa-label"><span>06</span> START HERE</p>
+            <p class="pa-label"><span>07</span> START HERE</p>
             <h2>Give the work<br /><em>a standard.</em></h2>
             <p class="pa-close__lede">Install the CLI, pick a profession, and keep the harness your team already trusts. The compiler does the porting — verification does the proof.</p>
             <div class="pa-close__stats" role="list">

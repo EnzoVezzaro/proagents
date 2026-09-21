@@ -184,7 +184,7 @@ html.dark {
 }
 .vp-doc th,
 .vp-doc td {
-  padding: 12px 16px 12px 0;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--vp-c-divider);
 }
 
@@ -585,6 +585,12 @@ html.dark .vp-doc div[class*="language-"] {
 }
 
 /* Footer — the navy close + the 4px ramp band (the sanctioned brand moment). */
+/* VitePress's default .aside-curtain (gradient at the bottom of the sidebar
+ * column) bleeds over the custom footer on short pages — retire it; the
+ * footer owns its own navy close. */
+.aside-curtain {
+  display: none;
+}
 .VPFooter {
   border-top: none;
   background: var(--pa-navy);
