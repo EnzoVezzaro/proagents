@@ -723,7 +723,69 @@ html.js .pl-reveal.is-in {
 .pa-proof td:first-child { color: var(--blue-dark); font: 700 11px var(--mono); white-space: nowrap; }
 .pa-proof td:nth-child(2) { color: var(--muted); font: 10px var(--mono); }
 
-/* ---------- 05 close + footer ---------- */
+/* ---------- 04 crews ---------- */
+.pa-crew {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: clamp(32px, 5vw, 72px);
+  margin-top: 56px;
+  align-items: start;
+}
+.pa-crew__roster {
+  border: 1px solid var(--line-strong);
+  border-top: 3px solid var(--violet);
+  background: var(--white);
+  padding: 24px 24px 18px;
+}
+.pa-crew__title {
+  margin: 0 0 14px;
+  color: var(--ink);
+  font: 700 13px var(--mono);
+}
+.pa-crew__title small { display: block; margin-top: 4px; color: var(--muted); font: 10px var(--mono); letter-spacing: 0.06em; text-transform: uppercase; }
+.pa-crew__roster ol { list-style: none; margin: 0; padding: 0; }
+.pa-crew__roster li {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) auto;
+  gap: 2px 14px;
+  padding: 11px 0;
+  border-top: 1px solid var(--line);
+}
+.pa-crew__roster li strong { color: var(--ink); font: 600 13.5px var(--body); }
+.pa-crew__roster li code { color: var(--blue-dark); font: 600 10.5px var(--mono); justify-self: end; }
+.pa-crew__roster li small { grid-column: 1; color: var(--muted); font: 10.5px var(--mono); }
+.pa-crew__roster li em { grid-column: 2; justify-self: end; color: var(--muted); font: 9.5px var(--mono); font-style: normal; white-space: nowrap; }
+.pa-crew__gate {
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border-left: 2px solid var(--cyan);
+  color: var(--copy);
+  font-size: 12.5px;
+}
+.pa-crew__list { display: grid; gap: 0; }
+.pa-crew__row {
+  display: grid;
+  grid-template-columns: minmax(0, auto) 1fr;
+  gap: 4px 16px;
+  align-items: baseline;
+  padding: 13px 4px;
+  border-bottom: 1px solid var(--line);
+  text-decoration: none;
+}
+.pa-crew__row:hover { background: rgba(14, 75, 236, 0.04); }
+.pa-crew__row code { color: var(--blue-dark); font: 600 11.5px var(--mono); white-space: nowrap; }
+.pa-crew__row small { color: var(--muted); font-size: 12px; text-align: right; }
+.pa-crew__foot {
+  margin: 16px 0 0;
+  color: var(--muted);
+  font: 10px var(--mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.pa-crew__foot a { color: var(--blue-dark); text-decoration: none; }
+.pa-crew__foot a:hover { text-decoration: underline; }
+
+/* ---------- 06 close + footer ---------- */
 .pa-close {
   position: relative;
   overflow: hidden;
@@ -866,6 +928,7 @@ html.js .pl-reveal.is-in {
   .pa-orbit { --orbit-r: 128px; }
   .pa-layers,
   .pa-proof { grid-template-columns: 1fr; gap: 40px; }
+  .pa-crew { grid-template-columns: 1fr; gap: 40px; }
   .pa-eq { grid-template-columns: 1fr; gap: 10px; }
   .pa-eq__op { padding: 2px 0; }
   .pa-close__grid { grid-template-columns: 1fr; }
@@ -917,6 +980,10 @@ html.js .pl-reveal.is-in {
   .pa-cmdline b { white-space: normal; }
   .pa-proof { margin-top: 42px; }
   .pa-proof table { font-size: 12px; }
+  .pa-crew__row { grid-template-columns: 1fr; gap: 3px; }
+  .pa-crew__row small { text-align: left; }
+  .pa-crew__roster li { grid-template-columns: 1fr auto; }
+  .pa-crew__roster li em { display: none; }
   .pa-proof th,
   .pa-proof td { padding-right: 7px; }
   .pa-footer__inner { flex-wrap: wrap; padding: 22px 0; }

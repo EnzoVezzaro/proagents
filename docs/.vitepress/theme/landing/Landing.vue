@@ -106,7 +106,24 @@ const VALIDATION = [
   ["PA043", "crew", "production write lacks an approval gate"],
   ["PA047", "crew", "member file mismatches its manifest"],
 ] as const;
-/* -- §04 terminal: types the validate command, then prints evidence -- */
+/* -- §04 crews: many professionals, one workflow --
+ * The roster is REAL registry data (registry/crews/security-audit-crew):
+ * each worker's profile, permission surface and MCP servers exactly as
+ * shipped. The installable crews strip mirrors the catalog; keep in sync. */
+const CREW_WORKERS = [
+  { name: "Audit Scout", profile: "systems-architect", perms: "read: repo · write: none", mcp: "github, sequential-thinking" },
+  { name: "Threat Modeler", profile: "security-engineer", perms: "read: repo · write: none", mcp: "github" },
+  { name: "Code Security Auditor", profile: "security-engineer", perms: "read: repo · write: none", mcp: "github" },
+  { name: "Privacy Auditor", profile: "privacy-engineer", perms: "read: repo · write: none", mcp: "github" },
+] as const;
+const CREWS = [
+  { id: "pr-review-gate", size: 2, copy: "Read-only review gate for pull requests" },
+  { id: "security-audit-crew", size: 4, copy: "Threat-model-driven security audit" },
+  { id: "release-train-crew", size: 4, copy: "QA sign-off → release → gated deploy" },
+  { id: "data-platform-crew", size: 4, copy: "Schema, pipeline and quality ownership" },
+  { id: "web-quality-crew", size: 4, copy: "Performance and accessibility passes" },
+] as const;
+/* -- §05 terminal: types the validate command, then prints evidence -- */
 /* SSR/no-JS renders the full transcript; on first scroll into view the
  * JS path replays it like a live terminal (skipped under reduced motion). */
 const TERM_LINES: Array<{ kind: "cmd" | "ok"; text: string }> = [
@@ -535,12 +552,46 @@ function toggleExplain(): void {
         </div>
       </section>
 
-      <!-- ===================== 04 EVIDENCE ===================== -->
+      <!-- ===================== 04 CREWS ===================== -->
+      <section class="pa-section pa-section--tint">
+        <div class="pa-container">
+          <div class="pa-secthead pl-reveal">
+            <div>
+              <p class="pa-label"><span>04</span> CREWS / MULTI-AGENT</p>
+              <h2>Many professionals.<br /><em>One workflow.</em></h2>
+            </div>
+            <p>A crew wires profile-backed workers into a handoff graph — each member keeps its profession, its scoped permissions and its own verification before done.</p>
+          </div>
+          <div class="pa-crew pl-reveal">
+            <div class="pa-crew__roster">
+              <p class="pa-crew__title">security-audit-crew <small>4 workers · 5 handoffs · installable as one unit</small></p>
+              <ol>
+                <li v-for="w in CREW_WORKERS" :key="w.name">
+                  <strong>{{ w.name }}</strong>
+                  <code>{{ w.profile }}</code>
+                  <small>{{ w.perms }}</small>
+                  <em aria-hidden="true">mcp: {{ w.mcp }}</em>
+                </li>
+              </ol>
+              <p class="pa-crew__gate">+ approval gates where it matters: the release-train's deploy step requires a human go.</p>
+            </div>
+            <div class="pa-crew__list">
+              <a v-for="c in CREWS" :key="c.id" class="pa-crew__row" :href="LINKS.registry">
+                <code>proagent crew install {{ c.id }}</code>
+                <small>{{ c.size }} workers — {{ c.copy }}</small>
+              </a>
+              <p class="pa-crew__foot">Every member compiles for your harness. <a :href="LINKS.registry">Browse all crews <span aria-hidden="true">↗</span></a></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== 05 EVIDENCE ===================== -->
       <section class="pa-section pa-section--paper">
         <div class="pa-container">
           <div class="pa-secthead pl-reveal">
             <div>
-              <p class="pa-label"><span>04</span> VALIDATION / EVIDENCE</p>
+              <p class="pa-label"><span>05</span> VALIDATION / EVIDENCE</p>
               <h2>A professional<br /><em>leaves evidence.</em></h2>
             </div>
             <p>No black box. Deterministic checks gate install, publish and resolution so a broken profession cannot quietly enter the system.</p>
@@ -566,11 +617,11 @@ function toggleExplain(): void {
         </div>
       </section>
 
-      <!-- ===================== 05 CLOSE ===================== -->
+      <!-- ===================== 06 CLOSE ===================== -->
       <section class="pa-close">
         <div class="pa-container pa-close__grid">
           <div class="pl-reveal">
-            <p class="pa-label"><span>05</span> START HERE</p>
+            <p class="pa-label"><span>06</span> START HERE</p>
             <h2>Give the work<br /><em>a standard.</em></h2>
             <p class="pa-close__lede">Install the CLI, pick a profession, and keep the harness your team already trusts. The compiler does the porting — verification does the proof.</p>
             <div class="pa-close__stats" role="list">
