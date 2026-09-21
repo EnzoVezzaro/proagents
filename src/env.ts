@@ -7,7 +7,8 @@ import path from "node:path";
  *
  * Convention (mirrors .env.example) — the project is fully open source, so
  * only identity/publishing credentials live here; there are no payment
- * secrets (donations run through GitHub Sponsors / Ko-fi links): *   - `PROAGENT_REGISTRY_REPO` → registry catalog repository
+ * secrets (donations run through GitHub Sponsors / Ko-fi / a hosted Stripe
+ * Payment Link): *   - `PROAGENT_REGISTRY_REPO` → registry catalog repository
  *     (deprecated alias: `PROAGENT_MARKET_REPO`, still honored)
  *   - `GITHUB_TOKEN`          → contents:write token for publishing
  *   - `GITHUB_APP_CLIENT_ID`  → device-flow client id (public)

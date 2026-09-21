@@ -568,6 +568,7 @@ function ShipTab(props: {
           </p>
         )}
         <div style={{ display: "flex", gap: 14, fontSize: 12, marginTop: 14 }}>
+          <a href="https://buy.stripe.com/6oU6oI4XIdDs80t6701Nu02" target="_blank" rel="noreferrer" style={{ color: "var(--cream-dim)" }}>Donate (Stripe)</a>
           <a href="https://github.com/sponsors/EnzoVezzaro" target="_blank" rel="noreferrer" style={{ color: "var(--cream-dim)" }}>Sponsor the project</a>
           <a href="https://ko-fi.com/enzojuniorvezzaro" target="_blank" rel="noreferrer" style={{ color: "var(--cream-dim)" }}>Ko-fi</a>
         </div>

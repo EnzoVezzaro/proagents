@@ -109,7 +109,7 @@ export function CrewDetailPage(props: { id: string; ctx: AppCtx }): React.JSX.El
             Preview on your repo
           </a>
           <a
-            href="https://github.com/sponsors/EnzoVezzaro"
+            href="https://buy.stripe.com/6oU6oI4XIdDs80t6701Nu02"
             target="_blank"
             rel="noreferrer"
             style={{ display: "block", textAlign: "center", marginTop: 10, border: "1px solid var(--line)", color: "var(--cream)", borderRadius: 10, padding: "10px 0", textDecoration: "none", fontSize: 13 }}

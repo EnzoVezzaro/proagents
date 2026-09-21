@@ -131,7 +131,7 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
   const actionChips = (
     <>
       <a
-        href="https://github.com/sponsors/EnzoVezzaro"
+        href="https://buy.stripe.com/6oU6oI4XIdDs80t6701Nu02"
         target="_blank"
         rel="noreferrer"
         className="pa-app-chip"

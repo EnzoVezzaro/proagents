@@ -344,9 +344,12 @@ saves you time, support development through the donation channels:
 - **GitHub Sponsors** — <https://github.com/sponsors/EnzoVezzaro> (the Donate button in
   the Studio header and the Sponsor button on the repo)
 - **Ko-fi** — <https://ko-fi.com/enzojuniorvezzaro>
+- **Stripe Payment Link** — <https://buy.stripe.com/6oU6oI4XIdDs80t6701Nu02> (hosted
+  checkout on Stripe's domain — card payments without an account)
 
-Both are wired into `.github/FUNDING.yml`, the README, the docs footer and the Studio
-app. There are no payment processors in the codebase: no Stripe, no keys, no checkout.
+All are wired into `.github/FUNDING.yml`, the README, the docs footer and the Studio
+app. There are no payment processors in the codebase: no keys, no SDKs, no checkout
+code — the Stripe link is a hosted payment URL, nothing more.
 
 ## Environment & secrets (.env)
 

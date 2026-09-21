@@ -42,6 +42,10 @@ Professional Agent
 
 [![Ko-fi](https://img.shields.io/badge/Support%20on-Ko--fi-ff5e5b?logo=ko-fi\&logoColor=white)](https://ko-fi.com/enzojuniorvezzaro)
 
+[![Donate via Stripe](https://img.shields.io/badge/Donate-Stripe-635bff?logo=stripe\&logoColor=white)](https://buy.stripe.com/6oU6oI4XIdDs80t6701Nu02)
+
+<div style="font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif; border: 1px solid rgb(224, 224, 224); border-radius: 12px; padding: 20px; max-width: 500px; margin: 20px auto 0; background: rgb(255, 255, 255); box-shadow: rgba(0, 0, 0, 0.05) 0px 2px 8px;"><div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;"><img alt="ProAgents" src="https://ph-files.imgix.net/3cd95755-ac81-4efc-8787-2c67646c1ca0.png?auto=compress,format&amp;codec=mozjpeg&amp;cs=strip&amp;fit=crop&amp;h=80&amp;w=80" style="width: 64px; height: 64px; border-radius: 8px; object-fit: cover; flex-shrink: 0;"><div style="flex: 1 1 0%; min-width: 0px;"><h3 style="margin: 0px; font-size: 18px; font-weight: 600; color: rgb(26, 26, 26); line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">ProAgents</h3><p style="margin: 4px 0px 0px; font-size: 14px; color: rgb(102, 102, 102); line-height: 1.4; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">Give your coding agent a profession.</p></div></div><a href="https://www.producthunt.com/products/proagents?embed=true&amp;utm_source=embed&amp;utm_medium=post_embed" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; gap: 4px; margin-top: 12px; padding: 8px 16px; background: rgb(255, 97, 84); color: rgb(255, 255, 255); text-decoration: none; border-radius: 9999px; font-size: 16px; font-weight: 600; line-height: 1.5;">Check it out on Product Hunt →</a></div>
+
 </div>
 
 ---
@@ -1065,10 +1069,11 @@ ProAgents is free and open-source software.
 
 If it saves you time, consider supporting development:
 
+* 💳 [Stripe — one-time donation](https://buy.stripe.com/6oU6oI4XIdDs80t6701Nu02)
 * ❤ [GitHub Sponsors — EnzoVezzaro](https://github.com/sponsors/EnzoVezzaro)
 * ☕ [Ko-fi — enzojuniorvezzaro](https://ko-fi.com/enzojuniorvezzaro)
 
-Sponsorships support maintenance, new professional profiles, benchmark suites, harness adapters and context frameworks.
+Donations support maintenance, new professional profiles, benchmark suites, harness adapters and context frameworks.
 
 ---
 
