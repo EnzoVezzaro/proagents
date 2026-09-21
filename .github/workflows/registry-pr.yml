@@ -15,16 +15,16 @@ permissions:
   contents: read
   pull-requests: write
 
-permissions:
-  contents: read
-  pull-requests: write
-
 concurrency:
   group: registry-pr-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   validate:
+    # Belt-and-braces: this workflow validates pull requests only. A
+    # push-triggered run (e.g. from a trigger-parse fallback) has no
+    # github.base_ref to diff against and must skip, not go red.
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
