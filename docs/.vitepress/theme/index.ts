@@ -9,6 +9,7 @@ import AppIsland from "./AppIsland.vue";
 import DocsNavExtras from "./DocsNavExtras.vue";
 import NotFound from "./NotFound.vue";
 import RegistryPage from "./RegistryPage.vue";
+import SiteFooter from "./SiteFooter.vue";
 import "@fontsource-variable/nunito";
 import "@fontsource-variable/geist";
 import "@fontsource-variable/jetbrains-mono";
@@ -29,6 +30,10 @@ export default {
       "nav-bar-title-after": () =>
         h("span", { class: "pa-docs-readout" }, "/ professional agent infrastructure"),
       "nav-bar-content-after": () => h(DocsNavExtras),
+      // The landing's navy close on every docs page (the ramp band + logo +
+      // mono nav). The home landing renders its own §05 footer; SiteFooter
+      // hides itself there via the `footer: false` frontmatter.
+      "layout-bottom": () => h(SiteFooter),
     });
   },
   enhanceApp({ app }) {

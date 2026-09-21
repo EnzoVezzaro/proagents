@@ -79,7 +79,7 @@ const LINKS = {
   harnessIcon: (file: string) => withBase(`/harness/${file}`),
   gettingStarted: withBase("/guide/getting-started"),
   whatIs: withBase("/guide/what-is-proagents"),
-  profiles: withBase("/registry/"),
+  profiles: withBase("/guide/profiles"),
   profileGuide: withBase("/guide/profiles"),
   registry: withBase("/registry/"),
   browse: withBase("/registry/"),

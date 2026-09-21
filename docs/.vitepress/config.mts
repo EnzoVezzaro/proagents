@@ -20,11 +20,15 @@ function catalogDevServer() {
         if (!m) return next();
         const root = resolve(process.cwd(), "registry");
         const file = resolve(root, decodeURIComponent(m[1]));
-        if (!file.startsWith(root + sep) || !existsSync(file)) {
+        if (!file.startsWith(root + sep)) {
           res.statusCode = 404;
           res.end("not found");
           return;
         }
+        // Missing files fall through to VitePress's pipeline: the router loads
+        // the page module itself at /registry/index.md (docs/registry/index.md),
+        // which must NOT be answered from the data folder.
+        if (!existsSync(file)) return next();
         res.setHeader("Content-Type", "application/json");
         res.end(readFileSync(file));
       });
@@ -182,11 +186,9 @@ export default defineConfig({
       { icon: "github", link: "https://github.com/EnzoVezzaro/proagents" },
       { icon: "npm", link: "https://www.npmjs.com/package/proagent" },
     ],
-    footer: {
-      message:
-        'Released under the <a href="/license">MIT License</a> · <a href="https://github.com/sponsors/EnzoVezzaro">Sponsor on GitHub</a> · <a href="https://ko-fi.com/enzojuniorvezzaro">Buy me a ☕</a>',
-      copyright: "Copyright © 2026 ProAgents contributors",
-    },
+    // The text footer is retired: the site-wide close is the landing's navy
+    // band (theme/SiteFooter.vue via the layout-bottom slot) — one footer
+    // across both surfaces.
     outline: { level: [2, 3], label: "On this page" },
     docFooter: { prev: "Previous", next: "Next" },
     lastUpdated: true,
