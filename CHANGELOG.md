@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0] — 2026-09-21
+
 ### Added — landing crews act + site SEO/social meta
 
 - **New landing section §04 "CREWS / MULTI-AGENT — Many professionals. One
@@ -35,6 +37,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   prose as fake CLI invocations (e.g. a description saying "how agents parse
   proagent output"); the extractor now strips frontmatter before scanning —
   metadata is not command documentation.
+
+### Added — Product Hunt launch week + Stripe donations
+
+- **Landing act §06 "COMMUNITY / LAUNCH — Launch week on Product Hunt."** between
+  the evidence act and the close (close → §07): the official Product Hunt launch
+  embed rebuilt in the house style — hairline card on white (PH thumbnail,
+  wordmark title, tagline) with Product Hunt orange `#ff6154` reserved as the
+  third-party accent on the CTA pill (3px house geometry, hover + focus-visible
+  states), and a mono status footer (`featured launch / vX / MIT`). Thumbnail
+  lazy-loaded; stacks to one column <1000px. The raw embed card also ships in
+  the README header (renders wherever raw HTML survives; GitHub shows the
+  badges beside it).
+- **Stripe Payment Link donations**: a hosted one-time donation URL
+  (buy.stripe.com) joins GitHub Sponsors and Ko-fi across every donation
+  surface — `.github/FUNDING.yml` (`custom:`), the README (header badge +
+  support section), the docs (`license.md`, the registry guide's Donations
+  section), the landing's ☕ support popup (💳 Donate — first option) and the
+  Studio app (header Donate chip, builder footer, crew-detail "Support the
+  project" button). Still no processor in the codebase: the link is a hosted
+  payment URL and checkout happens on Stripe's domain — no keys, no SDKs, no
+  checkout code.
+
+### Fixed — aside curtain over the docs footer
+
+- **VitePress's default `.aside-curtain` retired**: the gradient the default
+  theme pins to the bottom of the doc-sidebar column bled over the custom navy
+  footer on short pages. Hidden globally in `theme/custom.css` — the footer
+  owns its close with the 4px ramp band.
 
 ## [0.13.0] — 2026-09-21
 
