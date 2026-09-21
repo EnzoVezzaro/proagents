@@ -99,7 +99,8 @@ export default defineConfig({
     siteTitle: false,
     nav: [
       { text: "Docs", link: "/guide/what-is-proagents", activeMatch: "/guide/" },
-      { text: "Registry", link: "/studio", activeMatch: "/studio" },
+      { text: "Studio", link: "/studio", activeMatch: "/studio" },
+      { text: "Registry", link: "/registry", activeMatch: "/registry" },
       { text: "CLI", link: "/cli/", activeMatch: "/cli/" },
       {
         text: "Context",
@@ -155,6 +156,15 @@ export default defineConfig({
           items: [
             { text: "Overview", link: "/cli/" },
             { text: "JSON interface", link: "/cli/json" },
+          ],
+        },
+      ],
+      "/registry": [
+        {
+          text: "Registry",
+          items: [
+            { text: "Browse the registry", link: "/registry/" },
+            { text: "Registry & crews", link: "/guide/registry" },
           ],
         },
       ],

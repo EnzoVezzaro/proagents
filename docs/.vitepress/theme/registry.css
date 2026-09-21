@@ -1,0 +1,167 @@
+/* Registry listing page (/registry) — the landing's section rhythm: mono
+ * uppercase PA-LABEL strips, hairline card grid, mono install commands.
+ * Light mode is default; dark mode follows the site's --vp-* flips. */
+
+.pa-reg {
+  max-width: 1152px;
+  margin: 0 auto;
+  padding: 8px 24px 72px;
+}
+
+.pa-reg-section {
+  margin-top: 40px;
+}
+
+/* Section label — the landing's pa-label voice. */
+.pa-reg-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  color: var(--vp-c-text-3);
+  font: 600 10px/1.4 var(--pa-font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.pa-reg-label span {
+  color: var(--pa-violet);
+}
+
+/* Kind intro line — short, quiet, carries the canonical command. */
+.pa-reg-note {
+  margin: 12px 0 0;
+  max-width: 760px;
+  color: var(--vp-c-text-2);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+.pa-reg-note code {
+  color: var(--pa-accent-strong);
+  font-family: var(--pa-font-mono);
+  font-size: 12px;
+}
+
+/* Card grid — hairline cards, no chrome, the landing's manifest voice. */
+.pa-reg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+  margin-top: 20px;
+}
+.pa-reg-grid[aria-busy="true"] {
+  min-height: 120px;
+}
+
+.pa-reg-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 18px 18px 16px;
+  border: 1px solid var(--vp-c-border);
+  border-radius: 0;
+  background: var(--vp-c-bg-elv);
+  transition: border-color 0.15s ease;
+}
+.pa-reg-card:hover {
+  border-color: rgba(14, 75, 236, 0.45);
+}
+
+.pa-reg-name {
+  margin: 0;
+  color: var(--vp-c-text-1);
+  font: 900 15px/1.25 var(--pa-font-display);
+  letter-spacing: -0.01em;
+}
+
+.pa-reg-desc {
+  margin: 0;
+  color: var(--vp-c-text-2);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.pa-reg-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 2px 0 0;
+}
+.pa-reg-tags span {
+  padding: 2px 7px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 999px;
+  color: var(--vp-c-text-3);
+  font: 500 10px var(--pa-font-mono);
+  letter-spacing: 0.02em;
+}
+
+/* Install command — mono, accent, click-to-copy. */
+.pa-reg-cmd {
+  margin-top: auto;
+  padding: 8px 10px;
+  border: 1px dashed var(--vp-c-divider);
+  border-radius: 4px;
+  background: var(--pa-accent-soft);
+  color: var(--pa-accent-strong);
+  font: 500 11px/1.5 var(--pa-font-mono);
+  cursor: copy;
+  user-select: all;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+.pa-reg-cmd:hover {
+  border-color: var(--pa-accent);
+}
+.pa-reg-cmd.is-copied {
+  border-color: var(--pa-cyan);
+  border-style: solid;
+  color: var(--pa-accent-strong);
+}
+.pa-reg-cmd.is-copied::after {
+  content: " ✓ copied";
+  color: #067a8b;
+  font-weight: 600;
+}
+html.dark .pa-reg-cmd.is-copied::after {
+  color: var(--pa-cyan);
+}
+
+/* Fallback / noscript copy. */
+.pa-reg-noscript {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 18px;
+  border: 1px dashed var(--vp-c-divider);
+  color: var(--vp-c-text-2);
+  font-size: 13px;
+}
+.pa-reg-noscript code {
+  color: var(--pa-accent-strong);
+  font-family: var(--pa-font-mono);
+  font-size: 12px;
+}
+
+/* Footer — machines line, the landing's pa-foot voice. */
+.pa-reg-foot {
+  margin: 48px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--vp-c-divider);
+  color: var(--vp-c-text-3);
+  font: 10px/1.8 var(--pa-font-mono);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.pa-reg-foot code {
+  color: var(--vp-c-text-2);
+  font-family: var(--pa-font-mono);
+  text-transform: none;
+}
+
+@media (max-width: 720px) {
+  .pa-reg {
+    padding: 0 16px 56px;
+  }
+  .pa-reg-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -8,10 +8,13 @@ import { h } from "vue";
 import AppIsland from "./AppIsland.vue";
 import DocsNavExtras from "./DocsNavExtras.vue";
 import NotFound from "./NotFound.vue";
+import RegistryPage from "./RegistryPage.vue";
 import "@fontsource-variable/nunito";
 import "@fontsource-variable/geist";
 import "@fontsource-variable/jetbrains-mono";
 import "./custom.css";
+// Registry listing page (/registry) — card grid + install-command styles.
+import "./registry.css";
 
 export default {
   extends: DefaultTheme,
@@ -30,5 +33,6 @@ export default {
   },
   enhanceApp({ app }) {
     app.component("AppIsland", AppIsland);
+    app.component("RegistryPage", RegistryPage);
   },
 };

@@ -78,9 +78,11 @@ const LINKS = {
   bot: withBase("/bot-icon.png"),
   harnessIcon: (file: string) => withBase(`/harness/${file}`),
   gettingStarted: withBase("/guide/getting-started"),
-  profiles: withBase("/guide/what-is-proagents"),
+  whatIs: withBase("/guide/what-is-proagents"),
+  profiles: withBase("/registry/"),
   profileGuide: withBase("/guide/profiles"),
-  registry: withBase("/guide/registry"),
+  registry: withBase("/registry/"),
+  browse: withBase("/registry/"),
   cli: withBase("/cli/"),
   json: withBase("/cli/json"),
   studio: withBase("/studio"),
@@ -347,7 +349,7 @@ function toggleExplain(): void {
   <div class="pa-landing">
     <header class="pa-nav">
       <div class="pa-nav__inner">
-        <a class="pa-logo" :href="LINKS.profiles"><img :src="LINKS.logo" alt="ProAgents" width="150" height="42" /></a>
+        <a class="pa-logo" :href="LINKS.whatIs"><img :src="LINKS.logo" alt="ProAgents" width="150" height="42" /></a>
         <span class="pa-nav-readout">/ professional agent infrastructure</span>
         <span class="pa-coffee-wrap">
           <button class="pa-coffee" type="button" :aria-haspopup="'dialog'" :aria-expanded="supportOpen" title="Support ProAgents" @click="supportOpen = !supportOpen">
@@ -387,7 +389,7 @@ function toggleExplain(): void {
           <p class="pa-hero__lede">ProAgents equips the agent you already use with a Professional Agent Profile — expertise, methods, rules, tools and verification, versioned in an open JSON registry and compiled into your harness.</p>
           <div class="pa-hero__actions">
             <a class="pa-button" :href="LINKS.gettingStarted">Equip a profile</a>
-            <a class="pa-textlink" :href="LINKS.registry">Explore the registry <span aria-hidden="true">↗</span></a>
+            <a class="pa-textlink" :href="LINKS.registry">Browse the registry <span aria-hidden="true">↗</span></a>
           </div>
         </div>
         <div class="pa-hero__stage" :class="{ 'is-live': botReady }" aria-hidden="true">
@@ -601,9 +603,9 @@ function toggleExplain(): void {
         <div class="pa-ramp" aria-hidden="true"></div>
         <footer class="pa-footer">
           <div class="pa-container pa-footer__inner">
-            <a class="pa-logo" :href="LINKS.profiles"><img :src="LINKS.logoLight" alt="ProAgents" width="126" height="35" /></a>
+            <a class="pa-logo" :href="LINKS.whatIs"><img :src="LINKS.logoLight" alt="ProAgents" width="126" height="35" /></a>
             <nav aria-label="Footer navigation">
-              <a :href="LINKS.profiles">What is ProAgents?</a>
+              <a :href="LINKS.whatIs">What is ProAgents?</a>
               <a :href="LINKS.registry">Registry</a>
               <a :href="LINKS.json">JSON interface</a>
               <a href="https://github.com/EnzoVezzaro/proagents">GitHub</a>

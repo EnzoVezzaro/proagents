@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — Registry listing page (/registry)
+
+- New **/registry** page: every installable artifact in the catalog — profiles, crews
+  and agents — each card carrying its **exact CLI install command** (`proagent equip
+  <slug>`, `proagent crew install <id>`, `proagent install agent:<id>`), click-to-copy
+  with a ✓ confirmation. Sections follow the landing's voice: mono uppercase PA-LABEL
+  strips with live counts from `catalog.json`, hairline cards, tags, mono commands.
+  The catalog is fetched client-side from `/registry/catalog.json` (the repo IS the
+  database — the static JSON ships beside the page); header, footer and the no-JS/CLI
+  fallback server-render. Machines get the same data:
+  `curl https://proagents.reposell.dev/registry/catalog.json`.
+- **Nav renamed**: the top-bar "Registry" entry (which pointed at the Studio app) is
+  now **"Studio"**, and "Registry" opens the new listing page. The docs sidebar gains
+  a Registry group (Browse the registry / Registry & crews guide). Landing links
+  updated: "Explore the registry" → the listing page, footer "What is ProAgents?"
+  restored to the guide page, and the Profiles nav item now goes to the listing.
+
 ### Fixed — custom-domain asset 404s (site down)
 
 - **Every hashed asset on proagents.reposell.dev returned 404** (blank page: CSS,
