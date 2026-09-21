@@ -43,8 +43,8 @@ const visible = computed(() => frontmatter.value.footer !== false);
         >
           <img
             alt="ProAgents - Give your coding agent a profession. | Product Hunt"
-            width="250"
-            height="54"
+            width="160"
+            height="35"
             src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1257611&amp;theme=light&amp;t=1790033178328"
             loading="lazy"
           />
@@ -103,14 +103,16 @@ html.dark .pa-site-footer__band { background: #060d33; }
   text-decoration: none;
 }
 .pa-site-footer__inner nav a:hover { color: var(--pa-cyan); }
-/* Product Hunt featured badge — a third-party chip, like the harness icons. */
+/* Product Hunt featured badge — a third-party chip, like the harness icons.
+ * The SVG scales cleanly; rendered ~160px so it reads as a footer chip,
+ * not a banner. */
 .pa-site-footer__ph {
   display: flex;
   flex-shrink: 0;
-  border-radius: 6px;
+  border-radius: 4px;
   overflow: hidden;
 }
-.pa-site-footer__ph img { display: block; width: 250px; height: 54px; }
+.pa-site-footer__ph img { display: block; width: 160px; height: auto; }
 .pa-site-footer__inner small {
   color: #7180a6;
   font: 9px var(--pa-font-mono);
