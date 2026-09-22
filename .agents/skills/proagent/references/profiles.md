@@ -11,7 +11,7 @@ each behind one `manifest.json` whose section entries are `.json` paths.
 | `proagent detect --json` | `{ status, command, primary: HarnessSignal, harnesses: HarnessSignal[] }` |
 | `proagent list --json` | `{ status, command, profiles: [{ slug, name, version, description, origin, tags }] }` |
 | `proagent inspect <slug> --json` | `{ status, command, profile: ProfileManifest, origin }` |
-| `proagent equip <slugs…> --json` | `{ status, command, target, profile: string[], files: [{path, mechanism}], limitations: string[] }` — or `{ status: "blocked", conflicts }` |
+| `proagent equip <slugs…> --json` | `{ status, command, target, profile: string[], files: [{path, mechanism}], limitations: string[], enforcement: { enforced: string[], advisory: string[], baseline: string[] } }` — or `{ status: "blocked", conflicts }` |
 | `proagent compile <slug> --target <id> --json` | same as equip with `command: "compile"` |
 | `proagent equip … --dry-run --json` | `{ status, dryRun: true, target, profile, effective }` |
 | `proagent validate --profiles --json` | `{ status, command, reports: ProfileValidationReport[] }` |
@@ -57,6 +57,27 @@ blocked equips need an explicit user decision.
 | `PA036` | A tool is both required and forbidden |
 | `PA037` | Knowledge reference missing, or local-profile notice |
 | `PA038` | Duplicate slug across profile sources |
+| `PA039` | Malformed MCP server entry (name/transport/url/command) |
+| `PA040` | Invalid package/skill registry ref (not npm:/github:) |
+| `PA041` | Reference entry without an https:// URL |
+| `PA042` | Section path entry missing from the profile directory |
+| `PA043` | Malformed or dangling rule enforcement block |
+
+## Rule enforcement
+
+A rule section file may carry a machine-readable `enforcement` block beside its `body` —
+the deny-only kinds `bash` (command patterns), `paths` (protected file globs) and
+`tools` (semantic tool names: shell, filesystem, git, web, network). The loader collects
+them into `ruleEnforcement` (prose + data, paired); composition unions them across
+profiles. The compiler translates per target:
+
+- OpenCode → deny patterns in `opencode.json` (`permission.bash`, `permission.edit`) —
+  plus the manifest's `tools.forbidden`.
+- Claude Code → generated `PreToolUse` hooks in `.claude/settings.json`, replaced by
+  marker on re-equip (user hooks preserved; legacy pre-marker generated hooks cleaned up).
+- Every native equip adds a compiler baseline (`git push --force*`, `rm -rf /*` denied).
+- What cannot compile is reported in `limitations` and the `--json` `enforcement`
+  summary (`enforced` / `advisory` / `baseline`) — never silently dropped.
 
 ## Equip output layout
 

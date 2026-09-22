@@ -289,6 +289,13 @@ async function equipPipeline(
         profile: effective.slugs,
         files: allFiles,
         limitations: allLimits,
+        // Additive: a rule enforced on ≥1 target; advisory where any target
+        // could not compile it.
+        enforcement: {
+          enforced: [...new Set(results.flatMap((r) => r.enforcement.enforced))],
+          advisory: [...new Set(results.flatMap((r) => r.enforcement.advisory))],
+          baseline: results[0]?.enforcement.baseline ?? [],
+        },
       });
     }
     console.log(`\n✓ Equipped ${effective.identity.title} → all harnesses (${results.length} targets)`);
@@ -297,6 +304,10 @@ async function equipPipeline(
       if (seen.has(f.path)) continue;
       seen.add(f.path);
       console.log(`  • ${f.path}  (${f.mechanism})`);
+    }
+    const enforcedAnywhere = new Set(results.flatMap((r) => r.enforcement.enforced));
+    if (enforcedAnywhere.size > 0) {
+      console.log(`  ✓ ${enforcedAnywhere.size} rule(s) enforced at a runtime boundary on at least one target`);
     }
     if (conflicts.length > 0) {
       console.log("\nWarnings:");
@@ -319,11 +330,17 @@ async function equipPipeline(
       profile: effective.slugs,
       files: result.files,
       limitations: result.limitations,
+      // Additive: which rules this target enforces at a runtime boundary vs.
+      // which stay advisory (invariant 6 — never implied, always reported).
+      enforcement: result.enforcement,
     });
   }
 
   console.log(`\n✓ Equipped ${effective.identity.title} → ${harness.name}`);
   for (const f of result.files) console.log(`  • ${f.path}  (${f.mechanism})`);
+  if (result.enforcement.enforced.length > 0) {
+    console.log(`\n  ✓ ${result.enforcement.enforced.length} rule(s) enforced at a runtime boundary (${result.enforcement.advisory.length} advisory)`);
+  }
   if (conflicts.length > 0) {
     console.log("\nWarnings:");
     for (const c of conflicts) console.log(`  ⚠ [${c.code}] ${c.message}`);

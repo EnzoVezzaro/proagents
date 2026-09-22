@@ -41,6 +41,12 @@ composes skills, methods, rules and verification into a coherent operating model
   "methods": ["threat-modeling", "root-cause-analysis"],
   "skills": ["github:obra/superpowers"],
   "rules": ["never expose secrets", "require security verification…"],
+  "ruleEnforcement": [
+    {
+      "rule": "never expose secrets",
+      "enforcement": { "bash": ["cat .env*"], "paths": ["**/.env", "**/*.pem"], "tools": ["web"] }
+    }
+  ],
   "policies": ["responsible disclosure timelines"],
   "standards": ["OWASP Top 10"],
   "references": { "OWASP Top 10": { "url": "https://owasp.org/Top10/" } },
@@ -67,7 +73,7 @@ be added, removed, swapped or extended without touching the others:
 ├── knowledge/**          reference files installed at equip time
 ├── methods/NN-*.json     one file per named method (playbooks)
 ├── skills/NN-*.json      referenced skills (repo ref, install command, uses)
-├── rules/NN-*.json       normative constraints
+├── rules/NN-*.json       normative constraints (optional machine-readable `enforcement`)
 ├── policies/NN-*.json    governing policies of the profession
 ├── standards/NN-*.json   standards with authoritative URL + note
 ├── tools/requirements.json  structured tool requirements (required/optional/mcp/packages)
@@ -223,6 +229,36 @@ Where the target harness supports enforcement mechanisms (Claude Code hooks, Ope
 policies), ProAgents compiles rules into them. Where it does not, ProAgents reports the
 limitation in the equip output and `--json` response and provides the strongest fallback.
 
+A rule file may carry a machine-readable `enforcement` block alongside its prose — the
+three deny-only kinds profile rules support, expressed harness-agnostically:
+
+```json
+{
+  "title": "never expose secrets in logs, errors, or committed files",
+  "enforcement": {
+    "bash": ["cat .env*"],
+    "paths": ["**/.env", "**/*.env.*", "**/*.pem", "**/*.key", "**/id_rsa*"]
+  },
+  "body": "never expose secrets in logs, errors, or committed files"
+}
+```
+
+- **`bash`** — shell command patterns the rule forbids (`*` any run, `?` one character).
+- **`paths`** — file globs the rule forbids modifying (a leading `**` matches any
+  directories, including none).
+- **`tools`** — semantic tool names the rule forbids (`shell`, `filesystem`, `git`,
+  `web`, `network`) — adapters map them to the target's own tools; unmappable names
+  are reported as limitations, never dropped silently.
+
+The compiler translates these per target: OpenCode gets `permission.bash`/`permission.edit`
+deny patterns in `opencode.json`; Claude Code gets generated `PreToolUse` hooks in
+`.claude/settings.json` (idempotently replaced on re-equip, user hooks preserved). The
+manifest's `tools.forbidden` list compiles through the same mechanisms. Every equip also
+carries a compiler baseline (`git push --force*`, `rm -rf /*` denied on native targets)
+and reports exactly which rules were enforced and which stayed advisory — in
+`limitations` and the `--json` `enforcement` field. Malformed enforcement blocks are
+rejected by `PA043`.
+
 **Markdown informs. Runtime boundaries enforce whenever the harness allows it.**
 
 ## Verification
@@ -277,6 +313,11 @@ report the offending profiles and a suggestion.
 | `PA036` | a tool is both required and forbidden |
 | `PA037` | knowledge reference missing from the profile directory / local-profile notice |
 | `PA038` | duplicate slug across profile sources |
+| `PA039` | malformed MCP server entry |
+| `PA040` | invalid package/skill registry reference |
+| `PA041` | reference entry without an https:// URL |
+| `PA042` | section path entry missing from the profile directory |
+| `PA043` | malformed or dangling rule enforcement block |
 
 ## Local and community profiles
 

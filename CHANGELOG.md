@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — profile-driven rule enforcement (rules compile into runtime boundaries)
+
+- **Rule files can carry machine-readable `enforcement` blocks** beside their
+  prose: `bash` (forbidden command patterns), `paths` (protected file globs,
+  leading double-star = any directories incl. none) and `tools` (semantic
+  tool names — shell, filesystem, git, web, network — never a harness's own
+  tool id). Hydration pairs each block with its rule prose into
+  `ruleEnforcement` (folder-standard and remote registry hydration), the
+  composition engine unions entries across profiles (deny-only, so the union
+  is always safe), and the new **PA043** validation code rejects malformed
+  or dangling blocks — gating equip, publish and CI.
+- **The compiler now compiles the profile's actual rules** instead of two
+  hardcoded patterns. OpenCode gets deny entries in `permission.bash` and
+  `permission.edit` (verified against OpenCode's documented pattern maps;
+  existing user config preserved, string values widened to catch-alls);
+  Claude Code gets generated `PreToolUse` hooks — replaced by the
+  `proagent:rule-enforcement` marker on re-equip, which also fixes the
+  pre-existing duplicate-hook accumulation on re-equip and cleans up legacy
+  pre-marker hooks. The manifest's `tools.forbidden` list compiles into the
+  same mechanisms, and every native equip keeps the destructive-op compiler
+  baseline (`git push --force*`, `rm -rf /*`) as defense in depth.
+- **The honesty contract is machine-readable**: `proagent equip --json`
+  gains an additive `enforcement: { enforced, advisory, baseline }` summary,
+  and the console output reports the enforced-rule count. Unmappable tools,
+  prose-only rules and non-native targets surface in `limitations[]` —
+  never silently dropped ("Markdown is not enforcement" now has data behind
+  it).
+- `security-engineer` and `devops-engineer` (both v1.2.0) ship real
+  enforcement data for their secrets rule: writing `.env`, `*.pem`, `*.key`
+  and `id_rsa*` files and running `cat .env*` are denied at the runtime
+  boundary on OpenCode and Claude Code.
+- Generated hook scripts are behaviorally verified: blocked commands and
+  protected paths exit 2 with the rule's reason on stderr, benign payloads
+  pass, and malformed hook JSON fails open (a broken payload never bricks
+  the harness).
+
 ### Added — Product Hunt featured badge in the docs footer
 
 - The official PH featured embed badge joins the site-wide `SiteFooter` nav row

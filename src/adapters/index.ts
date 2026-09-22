@@ -229,6 +229,18 @@ export interface CompileResult {
   files: Array<{ path: string; mechanism: string }>;
   /** Profile requirements the target harness cannot express or enforce. */
   limitations: string[];
+  /**
+   * The honesty contract (invariant 6): which rules this target actually
+   * enforces at a runtime boundary vs. which stay advisory prose.
+   */
+  enforcement: {
+    /** Rule prose compiled into at least one runtime boundary on this target. */
+    enforced: string[];
+    /** Rule prose that remains advisory on this target (prose-only, unmappable, or no native surface). */
+    advisory: string[];
+    /** Compiler baseline patterns applied to every native-enforcement target. */
+    baseline: string[];
+  };
 }
 
 /** Markdown block appended to the target's project instructions file. */
@@ -380,6 +392,173 @@ function profileSkillMarkdown(profile: EffectiveProfile, manifest: ProfileManife
   return lines.join("\n");
 }
 
+// ---------------------------------------------------------------------------
+// Rule enforcement — compiling profile rules into runtime boundaries
+// ---------------------------------------------------------------------------
+
+/** Distinctive marker embedded in generated hook commands (idempotent replacement). */
+const HOOK_MARKER = "proagent:rule-enforcement";
+/** Legacy pre-marker hook signature — replaced when re-equipping an old repo. */
+const LEGACY_HOOK_SIGN = "git push --force|rm -rf";
+
+/**
+ * Compiler baseline: destructive shell operations denied on every target with
+ * native rule enforcement, regardless of profile content. Defense in depth —
+ * never a substitute for the profile's own patterns.
+ */
+const BASELINE_BASH_PATTERNS = ["git push --force*", "rm -rf /*"];
+
+/**
+ * Semantic tool names (the profile tools vocabulary) → target mechanisms.
+ * Harness-specific by design: this is the ONLY place that knows OpenCode's
+ * permission keys or Claude Code's tool ids (invariants 3 and 7 — canonical
+ * profiles never reference a harness). Unmapped names surface as limitations
+ * instead of silently dropping the rule.
+ */
+const OPENCODE_TOOL_MAP: Record<string, { patternKey?: "bash" | "edit"; stringKeys?: string[]; bashPattern?: string }> = {
+  shell: { patternKey: "bash" },
+  filesystem: { patternKey: "edit" },
+  web: { stringKeys: ["webfetch", "websearch"] },
+  network: { stringKeys: ["webfetch", "websearch"] },
+  git: { bashPattern: "git *" },
+};
+
+const CLAUDE_TOOL_MAP: Record<string, { matcher: string; bashPattern?: string }> = {
+  shell: { matcher: "Bash" },
+  filesystem: { matcher: "Edit|Write|NotebookEdit" },
+  web: { matcher: "WebFetch|WebSearch" },
+  network: { matcher: "WebFetch|WebSearch" },
+  git: { matcher: "Bash", bashPattern: "git *" },
+};
+
+/** Escape for embedding inside a regex LITERAL — `/` included, or it ends the literal early. */
+function escapeRegex(input: string): string {
+  return input.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&");
+}
+
+/** Bash command pattern → regex source: `*` any run of chars, `?` one char, whitespace runs match any whitespace. */
+function bashPatternToRegexSource(pattern: string): string {
+  const token = (part: string): string =>
+    [...part].map((ch) => (ch === "*" ? ".*" : ch === "?" ? "." : escapeRegex(ch))).join("");
+  return pattern.split(/\s+/).filter(Boolean).map(token).join("\\s+");
+}
+
+/** Path glob → regex source: a leading double-star matches any directories (incl. none), `*` within a segment, `?` one char. */
+function pathGlobToRegexSource(glob: string): string {
+  let out = "";
+  for (let i = 0; i < glob.length; i++) {
+    if (glob[i] === "*" && glob[i + 1] === "*") {
+      if (glob[i + 2] === "/") {
+        out += "(?:.*\\/)?";
+        i += 2;
+      } else {
+        out += ".*";
+        i += 1;
+      }
+    } else if (glob[i] === "*") out += "[^/]*";
+    else if (glob[i] === "?") out += "[^/]";
+    else out += escapeRegex(glob[i] ?? "");
+  }
+  return out;
+}
+
+/** OpenCode edit patterns are matched against the file path: a leading double-star expands to the root and nested forms. */
+function opencodePathKeys(glob: string): string[] {
+  if (glob.startsWith("**/")) {
+    const rest = glob.slice(3);
+    return [rest, `*/${rest}`];
+  }
+  return [glob];
+}
+
+/**
+ * Union of enforcement data across the effective profile: rule enforcement
+ * entries plus the manifest-level forbidden tools (which compile too, at last).
+ * Deny-only, so the union is always safe. Defensive against malformed data:
+ * invalid entries were blocked by PA043 at equip time, but direct API callers
+ * may bypass validation — bad values are skipped, not trusted.
+ */
+function unionEnforcement(profile: EffectiveProfile): { bash: string[]; tools: string[]; paths: string[] } {
+  const bash: string[] = [];
+  const tools: string[] = [];
+  const paths: string[] = [];
+  const seenTools = new Set<string>();
+  const addTool = (raw: unknown): void => {
+    if (typeof raw !== "string") return;
+    const key = raw.trim().toLowerCase();
+    if (key === "" || seenTools.has(key)) return;
+    seenTools.add(key);
+    tools.push(raw.trim());
+  };
+  for (const tool of profile.tools.forbidden) addTool(tool);
+  for (const entry of profile.ruleEnforcement ?? []) {
+    const e = entry.enforcement as { bash?: unknown; tools?: unknown; paths?: unknown };
+    for (const pattern of Array.isArray(e.bash) ? e.bash : []) {
+      if (typeof pattern === "string" && pattern.trim() !== "" && !bash.includes(pattern)) bash.push(pattern);
+    }
+    for (const glob of Array.isArray(e.paths) ? e.paths : []) {
+      if (typeof glob === "string" && glob.trim() !== "" && !paths.includes(glob)) paths.push(glob);
+    }
+    for (const tool of Array.isArray(e.tools) ? e.tools : []) addTool(tool);
+  }
+  return { bash, tools, paths };
+}
+
+/** Merge deny entries into an OpenCode permission map, preserving the user's existing rules (a string value widens to a catch-all first). */
+function permissionMap(existing: unknown, denies: Record<string, string>): Record<string, string> {
+  const base: Record<string, string> =
+    typeof existing === "object" && existing !== null
+      ? { ...(existing as Record<string, string>) }
+      : typeof existing === "string"
+        ? { "*": existing }
+        : {};
+  return { ...base, ...denies };
+}
+
+/** PreToolUse hook (Claude Code): block Bash commands matching any pattern — exit 2 blocks, stderr explains. */
+function bashHookCommand(patterns: string[]): string {
+  const source = patterns.map(bashPatternToRegexSource).join("|").replace(/"/g, "\\x22");
+  return (
+    `node -e "/* ${HOOK_MARKER} */` +
+    `let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{` +
+    `if(/(?:${source})/.test(d)){process.stderr.write('blocked: proagent profile rule (forbidden command)');process.exit(2)}` +
+    `process.exit(0)})"`
+  );
+}
+
+/** PreToolUse hook (Claude Code): block file edits/writes whose path matches a protected glob. */
+function pathHookCommand(globs: string[]): string {
+  const source = globs.map(pathGlobToRegexSource).join("|").replace(/"/g, "\\x22");
+  return (
+    `node -e "/* ${HOOK_MARKER} */` +
+    `let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{` +
+    `try{const t=JSON.parse(d).tool_input||{};const p=t.file_path||t.notebook_path||'';` +
+    `if(/(?:${source})/.test(p)){process.stderr.write('blocked: proagent profile rule (protected path)');process.exit(2)}}catch(e){}` +
+    `process.exit(0)})"`
+  );
+}
+
+/** PreToolUse hook (Claude Code): unconditionally block a forbidden tool. */
+function denyHookCommand(tool: string): string {
+  return (
+    `node -e "/* ${HOOK_MARKER} */process.stdin.resume();` +
+    `process.stderr.write('blocked: proagent profile rule (forbidden tool: ${tool.replace(/['"]/g, "")})');` +
+    `process.exit(2)"`
+  );
+}
+
+/** True for PreToolUse entries proagent generated (current marker or the legacy hardcoded form). */
+function isProagentHook(entry: unknown): boolean {
+  if (typeof entry !== "object" || entry === null) return false;
+  const hooks = (entry as { hooks?: unknown }).hooks;
+  if (!Array.isArray(hooks)) return false;
+  return hooks.some((h) => {
+    if (typeof h !== "object" || h === null) return false;
+    const command = (h as { command?: unknown }).command;
+    return typeof command === "string" && (command.includes(HOOK_MARKER) || command.includes(LEGACY_HOOK_SIGN));
+  });
+}
+
 /**
  * Compile an effective profile for a target harness. Deterministic given the
  * same repo state: markers use content hashes, not timestamps.
@@ -478,9 +657,28 @@ export async function compileForHarness(
     files.push({ path: instrFile, mechanism: "project-instructions" });
   }
 
-  // 3. Rule enforcement.
+  // 3. Rule enforcement — rules with machine-readable enforcement data
+  // compile into the target's own boundary mechanisms; whatever cannot
+  // compile is reported in limitations (never silently dropped).
+  const union = unionEnforcement(profile);
+  const toolMap = caps.ruleEnforcement === "native" && target.id === "opencode" ? OPENCODE_TOOL_MAP : CLAUDE_TOOL_MAP;
+  const unmappedTools: string[] = [];
+  const enforcedRules = new Set<string>();
+  if (caps.ruleEnforcement === "native") {
+    for (const entry of profile.ruleEnforcement ?? []) {
+      const e = entry.enforcement as { bash?: unknown; tools?: unknown; paths?: unknown };
+      const bashOk = Array.isArray(e.bash) && e.bash.length > 0;
+      const pathsOk = Array.isArray(e.paths) && e.paths.length > 0;
+      const toolsOk = Array.isArray(e.tools) && (e.tools as unknown[]).some(
+        (t) => typeof t === "string" && toolMap[t.trim().toLowerCase()] !== undefined,
+      );
+      if (bashOk || pathsOk || toolsOk) enforcedRules.add(entry.rule);
+    }
+  }
+  const advisoryRules = profile.rules.filter((r) => !enforcedRules.has(r));
+
   if (caps.ruleEnforcement === "native" && target.id === "opencode") {
-    // OpenCode native enforcement: permission deny rules in opencode.json.
+    // OpenCode native enforcement: permission pattern maps in opencode.json.
     // (Claude-style .claude/settings.json hooks are never read by OpenCode.)
     const hooksPath = "opencode.json";
     const abs = path.join(root, hooksPath);
@@ -491,22 +689,44 @@ export async function compileForHarness(
       // New config file.
     }
     const perm = (settings.permission ?? {}) as Record<string, unknown>;
-    const bash = (perm.bash ?? {}) as Record<string, unknown>;
-    // Last matching rule wins in OpenCode; deny rules are appended so they
-    // override an existing catch-all allow.
-    settings.permission = {
-      ...perm,
-      bash: {
-        ...bash,
-        "git push --force*": "deny",
-        "rm -rf /*": "deny",
-      },
-    };
+    const nextPerm: Record<string, unknown> = { ...perm };
+    // bash: command patterns → deny. Last matching rule wins in OpenCode, so
+    // denies are appended after any existing entries (they can only tighten).
+    const bashDenies: Record<string, string> = {};
+    for (const pattern of union.bash) bashDenies[pattern] = "deny";
+    // edit: protected path globs → deny (edit covers edit/write/patch).
+    const editDenies: Record<string, string> = {};
+    for (const glob of union.paths) {
+      for (const key of opencodePathKeys(glob)) editDenies[key] = "deny";
+    }
+    // Semantic forbidden tools → OpenCode mechanisms; unmapped names report below.
+    for (const tool of union.tools) {
+      const mapped = OPENCODE_TOOL_MAP[tool.toLowerCase()];
+      if (!mapped) {
+        unmappedTools.push(tool);
+        continue;
+      }
+      if (mapped.bashPattern) bashDenies[mapped.bashPattern] = "deny";
+      if (mapped.patternKey === "bash") bashDenies["*"] = "deny";
+      if (mapped.patternKey === "edit") editDenies["*"] = "deny";
+      for (const key of mapped.stringKeys ?? []) {
+        nextPerm[key] =
+          typeof perm[key] === "object" && perm[key] !== null
+            ? { ...(perm[key] as Record<string, string>), "*": "deny" }
+            : "deny";
+      }
+    }
+    // The compiler baseline floor lands last: deny-only, never widens.
+    for (const pattern of BASELINE_BASH_PATTERNS) bashDenies[pattern] = "deny";
+    nextPerm.bash = permissionMap(perm.bash, bashDenies);
+    if (Object.keys(editDenies).length > 0) nextPerm.edit = permissionMap(perm.edit, editDenies);
+    settings.permission = nextPerm;
     await fs.writeFile(abs, JSON.stringify(settings, null, 2) + "\n", "utf8");
     files.push({ path: hooksPath, mechanism: "rule-enforcement" });
   } else if (caps.ruleEnforcement === "native") {
-    // Claude Code hooks: deny destructive git ops and secret reads at the
-    // boundary. We write a settings snippet; the harness enforces it.
+    // Claude Code hooks: generated from the profile's enforcement data.
+    // Idempotent — previously generated proagent hooks are replaced (matched
+    // by marker), the user's own hooks are preserved untouched.
     const hooksPath = path.join(".claude", "settings.json");
     const abs = path.join(root, hooksPath);
     let settings: Record<string, unknown> = {};
@@ -516,32 +736,69 @@ export async function compileForHarness(
       // New settings file.
     }
     const existingHooks = (settings.hooks ?? {}) as Record<string, unknown>;
+    const toolBashPatterns = union.tools.flatMap((tool) => {
+      const mapped = CLAUDE_TOOL_MAP[tool.toLowerCase()];
+      return mapped?.bashPattern ? [mapped.bashPattern] : [];
+    });
+    const bashPatterns = [...new Set([...union.bash, ...toolBashPatterns, ...BASELINE_BASH_PATTERNS])];
+    const preToolUse: Array<Record<string, unknown>> = [];
+    if (bashPatterns.length > 0) {
+      preToolUse.push({ matcher: "Bash", hooks: [{ type: "command", command: bashHookCommand(bashPatterns) }] });
+    }
+    if (union.paths.length > 0) {
+      preToolUse.push({
+        matcher: "Edit|Write|NotebookEdit",
+        hooks: [{ type: "command", command: pathHookCommand(union.paths) }],
+      });
+    }
+    for (const tool of union.tools) {
+      const mapped = CLAUDE_TOOL_MAP[tool.toLowerCase()];
+      if (!mapped) {
+        unmappedTools.push(tool);
+        continue;
+      }
+      if (mapped.bashPattern) continue; // enforced via the Bash hook regex
+      preToolUse.push({ matcher: mapped.matcher, hooks: [{ type: "command", command: denyHookCommand(tool) }] });
+    }
+    const existing = (existingHooks.PreToolUse as Array<unknown>) ?? [];
     settings.hooks = {
       ...existingHooks,
-      PreToolUse: [
-        ...((existingHooks.PreToolUse as Array<unknown>) ?? []),
-        {
-          matcher: "Bash",
-          hooks: [
-            {
-              type: "command",
-              // Reads the tool-call JSON on stdin; exit 2 blocks the call.
-              command: "node -e \"let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{process.exit(/(git push --force|rm -rf\\\\s+\\\\/)/.test(d)?2:0)})\"",
-            },
-          ],
-        },
-      ],
+      PreToolUse: [...existing.filter((entry) => !isProagentHook(entry)), ...preToolUse],
     };
     await fs.mkdir(path.dirname(abs), { recursive: true });
     await fs.writeFile(abs, JSON.stringify(settings, null, 2) + "\n", "utf8");
     files.push({ path: hooksPath, mechanism: "rule-enforcement" });
   } else if (caps.ruleEnforcement === "instructions" && profile.rules.length > 0) {
     limitations.push("rule enforcement falls back to project instructions (no native hooks/policy support)");
+    if ((profile.ruleEnforcement ?? []).length > 0) {
+      limitations.push(`${(profile.ruleEnforcement ?? []).length} rule(s) had machine-readable enforcement that could not compile on ${target.name} — advisory in instructions only`);
+    }
   } else if (caps.ruleEnforcement === "none" && profile.rules.length > 0) {
     limitations.push(caps.skills
       ? "target has no rule enforcement — rules are advisory in SKILL.md only"
       : "target has no rule enforcement — rules are advisory in project instructions only");
+    if ((profile.ruleEnforcement ?? []).length > 0) {
+      limitations.push(`${(profile.ruleEnforcement ?? []).length} rule(s) had machine-readable enforcement that could not compile on ${target.name}`);
+    }
   }
+
+  // The honesty contract (invariant 6): report exactly what is enforced,
+  // what stays advisory, and every tool the target could not map.
+  for (const tool of unmappedTools) {
+    limitations.push(`forbidden tool "${tool}" has no verified ${target.name} enforcement mapping — advisory only`);
+  }
+  if (caps.ruleEnforcement === "native" && advisoryRules.length > 0) {
+    limitations.push(
+      `${advisoryRules.length} rule(s) carry no machine-readable enforcement — advisory in ${caps.skills ? "SKILL.md" : "project instructions"} only`,
+    );
+  }
+  const enforcement: CompileResult["enforcement"] = caps.ruleEnforcement === "native"
+    ? {
+        enforced: profile.rules.filter((r) => enforcedRules.has(r)),
+        advisory: advisoryRules,
+        baseline: [...BASELINE_BASH_PATTERNS],
+      }
+    : { enforced: [], advisory: profile.rules, baseline: [] };
 
   // 3b. MCP servers declared by the profile merge into the harness .mcp.json
   // (same mechanism as crew installs; profile server names are the keys).
@@ -579,7 +836,7 @@ export async function compileForHarness(
     (v) => `${v}: executed by the agent within the session; the harness does not gate completion on it`,
   );
 
-  return { target: target.id, files, limitations };
+  return { target: target.id, files, limitations, enforcement };
 }
 
 /**

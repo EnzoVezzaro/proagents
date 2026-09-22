@@ -181,6 +181,40 @@ export function validateProfile(
     }
   }
 
+  // PA043 — rule enforcement blocks must be well-formed machine-readable
+  // data: an object with only bash/tools/paths keys, each a non-empty array
+  // of non-empty strings, referencing a rule that actually exists. Malformed
+  // blocks hydrate through raw (tolerant loading) and land here.
+  const allowedKeys = new Set(["bash", "tools", "paths"]);
+  for (const [i, entry] of (manifest.ruleEnforcement ?? []).entries()) {
+    const label = entry && typeof entry.rule === "string" && entry.rule.trim() !== "" ? `"${entry.rule}"` : `ruleEnforcement[${i}]`;
+    if (!entry || typeof entry.rule !== "string" || entry.rule.trim() === "") {
+      push("PA043", "error", `ruleEnforcement[${i}] is missing its rule text`, [slug], "Each entry pairs one hydrated rule with its enforcement data.");
+      continue;
+    }
+    if (!(manifest.rules ?? []).includes(entry.rule)) {
+      push("PA043", "warning", `enforcement entry ${label} references a rule not present in rules`, [slug, entry.rule], "The enforcement block's rule must match a rules entry (both come from the same rule section file after hydration).");
+    }
+    const e = entry.enforcement;
+    if (typeof e !== "object" || e === null || Array.isArray(e)) {
+      push("PA043", "error", `enforcement on rule ${label} must be an object`, [slug, entry.rule], "Use { \"bash\": […], \"tools\": […], \"paths\": […] }.");
+      continue;
+    }
+    for (const key of Object.keys(e)) {
+      if (!allowedKeys.has(key)) {
+        push("PA043", "error", `enforcement on rule ${label} has unknown key "${key}"`, [slug, entry.rule], "Allowed keys: bash, tools, paths.");
+      }
+    }
+    for (const key of ["bash", "tools", "paths"] as const) {
+      const value = (e as Record<string, unknown>)[key];
+      if (value === undefined) continue;
+      if (!Array.isArray(value) || value.length === 0 || value.some((p) => typeof p !== "string" || p.trim() === "")) {
+        const example = key === "paths" ? '"**/.env"' : key === "tools" ? '"shell"' : '"git push --force*"';
+        push("PA043", "error", `enforcement.${key} on rule ${label} must be a non-empty array of non-empty strings`, [slug, entry.rule], `List concrete patterns (e.g. ${example}) or remove the key — an empty block compiles to nothing.`);
+      }
+    }
+  }
+
   // PA041 — references must carry a credible authoritative URL.
   const httpUrl = /^https:\/\/\S+$/;
   for (const [name, ref] of Object.entries(manifest.references ?? {})) {

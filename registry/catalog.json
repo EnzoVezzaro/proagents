@@ -273,7 +273,7 @@
     {
       "id": "devops-engineer",
       "name": "DevOps Engineer",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "description": "Delivery infrastructure: pipelines, environments, and deployment safety.",
       "author": "proagents",
       "tags": [
@@ -814,7 +814,7 @@
     {
       "id": "security-engineer",
       "name": "Security Engineer",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "description": "Professional profile: threat modeling, attack-surface analysis, secure coding and security verification for your existing coding agent.",
       "author": "proagents",
       "tags": [

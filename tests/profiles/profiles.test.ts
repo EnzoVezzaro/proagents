@@ -185,6 +185,110 @@ describe("profile validation (PROFILES-VAL)", () => {
     const report = validateProfile(m, { checkKnowledge: false, duplicateSlugs: new Set(["shadowed"]) });
     expect(report.findings.map((f) => f.code)).toContain("PA038");
   });
+
+  it("PROFILES-VAL-012: PA043 accepts well-formed enforcement and rejects malformed blocks", () => {
+    const good = manifest("enforced");
+    good.rules = ["never touch the secrets file"];
+    good.ruleEnforcement = [
+      { rule: "never touch the secrets file", enforcement: { bash: ["cat .env*"], paths: ["**/.env"], tools: ["shell"] } },
+    ];
+    expect(validateProfile(good, { checkKnowledge: false }).findings.filter((f) => f.code === "PA043")).toEqual([]);
+
+    const notObject = manifest("enforced-bad");
+    notObject.rules = ["never touch the secrets file"];
+    notObject.ruleEnforcement = [{ rule: "never touch the secrets file", enforcement: "yes" as never }];
+    const r1 = validateProfile(notObject, { checkKnowledge: false });
+    expect(r1.findings.some((f) => f.code === "PA043" && f.severity === "error" && f.message.includes("must be an object"))).toBe(true);
+
+    const unknownKey = manifest("enforced-bad-2");
+    unknownKey.rules = ["never touch the secrets file"];
+    unknownKey.ruleEnforcement = [{ rule: "never touch the secrets file", enforcement: { bash: ["git push*"], regex: "x" } as never }];
+    expect(
+      validateProfile(unknownKey, { checkKnowledge: false }).findings.some((f) => f.code === "PA043" && f.message.includes('unknown key "regex"')),
+    ).toBe(true);
+
+    const emptyList = manifest("enforced-bad-3");
+    emptyList.rules = ["never touch the secrets file"];
+    emptyList.ruleEnforcement = [{ rule: "never touch the secrets file", enforcement: { paths: [] } }];
+    expect(
+      validateProfile(emptyList, { checkKnowledge: false }).findings.some((f) => f.code === "PA043" && f.message.includes("enforcement.paths")),
+    ).toBe(true);
+
+    const dangling = manifest("enforced-bad-4");
+    dangling.rules = ["never touch the secrets file"];
+    dangling.ruleEnforcement = [{ rule: "a rule that is not in the rules list", enforcement: { bash: ["rm -rf *"] } }];
+    expect(
+      validateProfile(dangling, { checkKnowledge: false }).findings.some((f) => f.code === "PA043" && f.severity === "warning" && f.message.includes("not present in rules")),
+    ).toBe(true);
+  });
+});
+
+describe("rule enforcement hydration (PROFILES-ENF)", () => {
+  it("PROFILES-ENF-001: rule section files carry enforcement blocks into ruleEnforcement", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "profiles-enf-"));
+    try {
+      const dir = path.join(root, "registry", "profiles", "guarded");
+      await fs.mkdir(path.join(dir, "rules"), { recursive: true });
+      await fs.mkdir(path.join(dir, "expertise"), { recursive: true });
+      await fs.mkdir(path.join(dir, "tools"), { recursive: true });
+      await fs.mkdir(path.join(dir, "verification", "required"), { recursive: true });
+      await fs.writeFile(
+        path.join(dir, "manifest.json"),
+        JSON.stringify({
+          version: "1.0.0",
+          profile: { name: "Guarded", slug: "guarded" },
+          identity: "identity.json",
+          expertise: ["expertise/01.json"],
+          rules: ["rules/01-protect.json", "rules/02-prose.json"],
+          tools: "tools/requirements.json",
+          verification: { required: ["verification/required/01.json"] },
+        }),
+      );
+      await fs.writeFile(path.join(dir, "identity.json"), JSON.stringify({ title: "Guarded" }));
+      await fs.writeFile(path.join(dir, "expertise", "01.json"), JSON.stringify({ body: "secrets" }));
+      await fs.writeFile(
+        path.join(dir, "rules", "01-protect.json"),
+        JSON.stringify({ title: "protect the env file", enforcement: { paths: ["**/.env"] }, body: "protect the env file" }),
+      );
+      await fs.writeFile(path.join(dir, "rules", "02-prose.json"), JSON.stringify({ body: "be careful out there" }));
+      await fs.writeFile(path.join(dir, "tools", "requirements.json"), JSON.stringify({ required: ["shell"] }));
+      await fs.writeFile(path.join(dir, "verification", "required", "01.json"), JSON.stringify({ body: "tests pass" }));
+
+      const { loadProfileFile } = await import("../../src/profiles/registry.js");
+      const hydrated = await loadProfileFile(path.join(dir, "manifest.json"));
+      expect(hydrated.rules).toEqual(["protect the env file", "be careful out there"]);
+      expect(hydrated.ruleEnforcement).toEqual([
+        { rule: "protect the env file", enforcement: { paths: ["**/.env"] } },
+      ]);
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("PROFILES-ENF-002: the shipped security-engineer profile carries its secrets-rule enforcement", async () => {
+    const [entry] = await resolveProfiles(["security-engineer"]);
+    expect(entry?.manifest.ruleEnforcement).toEqual([
+      {
+        rule: "never expose secrets in logs, errors, or committed files",
+        enforcement: { bash: ["cat .env*"], paths: ["**/.env", "**/*.env.*", "**/*.pem", "**/*.key", "**/id_rsa*"] },
+      },
+    ]);
+  });
+
+  it("PROFILES-ENF-003: composition merges ruleEnforcement across profiles and dedupes identical entries", () => {
+    const a = manifest("profile-a", { rules: ["never expose secrets"] });
+    a.ruleEnforcement = [{ rule: "never expose secrets", enforcement: { paths: ["**/.env"] } }];
+    const b = manifest("profile-b", { rules: ["never expose secrets", "require review"] });
+    b.ruleEnforcement = [
+      { rule: "never expose secrets", enforcement: { paths: ["**/.env"] } }, // identical → deduped
+      { rule: "never expose secrets", enforcement: { bash: ["cat .env*"] } }, // same rule, more data → kept
+    ];
+    const { effective } = composeProfiles([a, b]);
+    expect(effective.ruleEnforcement).toEqual([
+      { rule: "never expose secrets", enforcement: { paths: ["**/.env"] } },
+      { rule: "never expose secrets", enforcement: { bash: ["cat .env*"] } },
+    ]);
+  });
 });
 
 describe("shipped registry catalog (PROFILES-CATALOG)", () => {

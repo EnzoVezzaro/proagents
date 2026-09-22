@@ -44,6 +44,42 @@ export interface ProfileReference {
 }
 
 /**
+ * Machine-readable enforcement attached to a normative rule — the bridge
+ * between "rules are prose" and "runtime boundaries enforce" (invariant 6).
+ * Harness-agnostic by design: only src/adapters knows how each target
+ * compiles these into its own mechanisms.
+ */
+export interface RuleEnforcement {
+  /**
+   * Shell command patterns the rule forbids. Glob syntax: `*` any run of
+   * characters, `?` exactly one (e.g. "git push --force*"). Matched against
+   * the command string; adapters translate per target.
+   */
+  bash?: string[];
+  /**
+   * Semantic tool names the rule forbids — the profile tools vocabulary
+   * ("shell", "filesystem", "git", "web", "network"), never a harness's own
+   * tool id. Adapters map them; unmappable names surface as limitations.
+   */
+  tools?: string[];
+  /**
+   * File path globs the rule forbids modifying. A leading double-star acts
+   * like a directory wildcard: it matches any number of directories,
+   * including none. A single `*` stays within one path segment, `?` is one
+   * character (e.g. root-or-nested ".env" protection).
+   */
+  paths?: string[];
+}
+
+/** One rule's hydrated prose paired with its machine-readable enforcement. */
+export interface RuleEnforcementEntry {
+  /** The rule's prose — matches an entry of `rules` after hydration. */
+  rule: string;
+  /** Raw as authored; PA043 validates the shape (tolerant loading). */
+  enforcement: RuleEnforcement;
+}
+
+/**
  * Which skills inside a referenced skills repository/package this profile
  * composes. Keys mirror entries of `skills` (the registry ref); the named
  * skills stay in their repo — referenced, never duplicated.
@@ -83,6 +119,13 @@ export interface ProfileManifest {
   skillBodies?: Record<string, { description: string; body: string }>;
   /** Normative constraints — enforced by the harness where supported. */
   rules?: string[];
+  /**
+   * Machine-readable enforcement paired with the rules above, collected from
+   * `enforcement` blocks inside rule section files (or authored inline).
+   * The compiler turns these into runtime boundaries where the target
+   * harness supports them; PA043 validates the shape.
+   */
+  ruleEnforcement?: RuleEnforcementEntry[];
   /** Governing policies of the profession (data handling, disclosure, safety). */
   policies?: string[];
   /** Standards bodies / frameworks the profile follows (OWASP, ISO…). */
@@ -159,6 +202,8 @@ export interface EffectiveProfile {
   skills: string[];
   skillsDetail: Record<string, ProfileSkillsDetail>;
   rules: string[];
+  /** Merged rule enforcement entries (deny-only, so the union is always safe). */
+  ruleEnforcement?: RuleEnforcementEntry[];
   policies: string[];
   standards: string[];
   references: Record<string, ProfileReference>;
@@ -197,7 +242,8 @@ export type ProfileValidationCode =
   | "PA039" // invalid MCP server entry (name/transport/url/command)
   | "PA040" // invalid package registry ref (not npm:/github:)
   | "PA041" // reference entry without an https:// URL
-  | "PA042"; // section path entry missing from the profile directory
+  | "PA042" // section path entry missing from the profile directory
+  | "PA043"; // malformed or dangling rule enforcement block
 
 export interface ProfileValidationReport {
   ok: boolean;

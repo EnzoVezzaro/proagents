@@ -7,6 +7,7 @@ import type {
   ProfilePackage,
   ProfileSkillsDetail,
   ProfileValidationReport,
+  RuleEnforcementEntry,
 } from "./types.js";
 import { isPathEntry, validateProfile } from "./validation.js";
 
@@ -72,10 +73,13 @@ function isValidProfile(json: unknown): json is ProfileManifestSource {
 
 /**
  * Read a section file: a JSON object whose keys are the section's metadata
- * plus an optional `body` string (the instructional content). Returns
- * { meta, body }; undefined when missing or unparsable.
+ * plus an optional `body` string (the instructional content) and an optional
+ * `enforcement` object (machine-readable rule enforcement — rules only).
+ * Returns { meta, body, enforcement? }; undefined when missing or unparsable.
  */
-async function readSectionFile(file: string): Promise<{ meta: Record<string, string>; body: string } | undefined> {
+async function readSectionFile(
+  file: string,
+): Promise<{ meta: Record<string, string>; body: string; enforcement?: unknown } | undefined> {
   let raw: string;
   try {
     raw = await fs.readFile(file, "utf8");
@@ -84,10 +88,14 @@ async function readSectionFile(file: string): Promise<{ meta: Record<string, str
   }
   try {
     const parsed = JSON.parse(raw) as Record<string, unknown>;
-    const { body, ...meta } = parsed;
+    const { body, enforcement, ...rest } = parsed;
     const flat: Record<string, string> = {};
-    for (const [k, v] of Object.entries(meta)) flat[k] = typeof v === "string" ? v : (JSON.stringify(v) as string);
-    return { meta: flat, body: typeof body === "string" ? body : "" };
+    for (const [k, v] of Object.entries(rest)) flat[k] = typeof v === "string" ? v : (JSON.stringify(v) as string);
+    return {
+      meta: flat,
+      body: typeof body === "string" ? body : "",
+      ...(enforcement !== undefined ? { enforcement } : {}),
+    };
   } catch {
     return undefined;
   }
@@ -146,7 +154,34 @@ function toolsFromJsonObject(parsed: ToolsFrontmatter | null): ProfileManifest["
   };
 }
 
-const SECTION_LISTS = ["expertise", "methods", "rules", "policies", "standards"] as const;
+const SECTION_LISTS = ["expertise", "methods", "policies", "standards"] as const;
+
+/**
+ * Hydrate the rules section: bodies hydrate like every other section, and a
+ * rule file may also carry a machine-readable `enforcement` block — collected
+ * (raw as authored) into `ruleEnforcement` so PA043 can validate the shape
+ * and the compiler can turn it into runtime boundaries. Tolerant: a missing
+ * file leaves the path in place (PA042) and never blocks hydration.
+ */
+async function hydrateRulesSection(
+  entries: string[],
+  isPath: (entry: string) => boolean,
+  readFile: (rel: string) => Promise<{ meta: Record<string, string>; body: string; enforcement?: unknown } | undefined>,
+): Promise<{ rules: string[]; ruleEnforcement: RuleEnforcementEntry[] }> {
+  const rules: string[] = [];
+  const ruleEnforcement: RuleEnforcementEntry[] = [];
+  for (const entry of entries) {
+    const file = isPath(entry) ? await readFile(entry) : undefined;
+    const prose = file?.body || file?.meta.title || entry;
+    rules.push(prose);
+    if (file?.enforcement !== undefined) {
+      // Raw as authored: malformed blocks flow through so PA043 reports them
+      // instead of the loader silently dropping enforcement data.
+      ruleEnforcement.push({ rule: prose, enforcement: file.enforcement as RuleEnforcementEntry["enforcement"] });
+    }
+  }
+  return { rules, ruleEnforcement };
+}
 
 /**
  * Hydrate a manifest in path format: replace every path-shaped section entry
@@ -176,6 +211,14 @@ export async function hydrateProfileManifest(json: ProfileManifestSource, dir?: 
   for (const section of SECTION_LISTS) {
     const arr = out[section];
     if (Array.isArray(arr)) out[section] = await Promise.all(arr.map(readEntry));
+  }
+
+  // rules — same body hydration, plus `enforcement` collection (see
+  // hydrateRulesSection). Inline entries pass through verbatim.
+  if (Array.isArray(out.rules)) {
+    const h = await hydrateRulesSection(out.rules, isPathEntry, (rel) => readSectionFile(path.join(dir, rel)));
+    out.rules = h.rules;
+    if (h.ruleEnforcement.length > 0) out.ruleEnforcement = h.ruleEnforcement;
   }
 
   // skills — path entries rebuild skills + skillsDetail + skillBodies;
@@ -404,16 +447,20 @@ async function hydrateProfileManifestRemote(
 ): Promise<ProfileManifest> {
   const out = { ...json } as ProfileManifest;
   // Remote sections are JSON objects ({...meta, body}) — same as local.
-  const parseRemoteSection = async (entry: string): Promise<{ meta: Record<string, string>; body: string } | undefined> => {
+  const parseRemoteSection = async (entry: string): Promise<{ meta: Record<string, string>; body: string; enforcement?: unknown } | undefined> => {
     if (typeof entry !== "string" || !isPathEntry(entry)) return undefined;
     const raw = await readFile(entry);
     if (raw === undefined) return undefined;
     try {
       const parsed = JSON.parse(raw) as Record<string, unknown>;
-      const { body, ...meta } = parsed;
+      const { body, enforcement, ...rest } = parsed;
       const flat: Record<string, string> = {};
-      for (const [k, v] of Object.entries(meta)) flat[k] = typeof v === "string" ? v : (JSON.stringify(v) as string);
-      return { meta: flat, body: typeof body === "string" ? body : "" };
+      for (const [k, v] of Object.entries(rest)) flat[k] = typeof v === "string" ? v : (JSON.stringify(v) as string);
+      return {
+        meta: flat,
+        body: typeof body === "string" ? body : "",
+        ...(enforcement !== undefined ? { enforcement } : {}),
+      };
     } catch {
       return undefined;
     }
@@ -430,6 +477,13 @@ async function hydrateProfileManifestRemote(
   for (const section of SECTION_LISTS) {
     const arr = out[section];
     if (Array.isArray(arr)) out[section] = await Promise.all(arr.map(parseRemote));
+  }
+  // rules — same body hydration, plus `enforcement` collection; missing remote
+  // files leave the path in place (PA042 reports it) exactly like local.
+  if (Array.isArray(out.rules)) {
+    const h = await hydrateRulesSection(out.rules, isPathEntry, (rel) => parseRemoteSection(rel));
+    out.rules = h.rules;
+    if (h.ruleEnforcement.length > 0) out.ruleEnforcement = h.ruleEnforcement;
   }
   if (Array.isArray(out.skills)) {
     const skills: string[] = [];

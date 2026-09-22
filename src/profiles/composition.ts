@@ -77,6 +77,13 @@ export function composeProfiles(manifests: ProfileManifest[]): {
     skills: dedupe(unique.flatMap((m) => m.skills ?? [])),
     skillsDetail: Object.fromEntries(unique.flatMap((m) => Object.entries(m.skillsDetail ?? {}))),
     rules: dedupe(unique.flatMap((m) => m.rules ?? [])),
+    // Enforcement is deny-only, so the union across profiles is always safe
+    // (never a conflict — PA022 covers prose polarity). Dedupe exact
+    // duplicates of the same rule + same enforcement data.
+    ruleEnforcement: dedupeBy(
+      unique.flatMap((m) => m.ruleEnforcement ?? []),
+      (e) => `${conceptualKey(e.rule)}\0${JSON.stringify(e.enforcement)}`,
+    ),
     policies: dedupe(unique.flatMap((m) => m.policies ?? [])),
     standards: dedupe(unique.flatMap((m) => m.standards ?? [])),
     references: Object.fromEntries(unique.flatMap((m) => Object.entries(m.references ?? {}))),
