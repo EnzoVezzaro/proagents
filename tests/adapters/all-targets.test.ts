@@ -80,4 +80,23 @@ describe("harness catalog coverage (ADAPT-ALL)", () => {
       await fs.rm(root, { recursive: true, force: true });
     }
   });
+
+  it("ADAPT-ALL-003: skills without skillsDetail compile instead of crashing", async () => {
+    // Regression for the build --all-targets crash: the CLI's synthetic
+    // effective profile carries skills but no skillsDetail map.
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "adapters-all-"));
+    try {
+      const profile: EffectiveProfile = {
+        ...effectiveProfile(),
+        skills: ["apt-frenzy", "patch-parading"],
+      };
+      const results = await compileForAllHarnesses(profile, manifest(), root);
+      expect(results.length).toBeGreaterThan(0);
+      const skill = await fs.readFile(path.join(root, ".agents", "skills", "test-engineer", "SKILL.md"), "utf8");
+      expect(skill).toContain("apt-frenzy");
+      expect(skill).toContain("patch-parading");
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
 });

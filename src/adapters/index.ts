@@ -329,7 +329,7 @@ function profileSkillMarkdown(profile: EffectiveProfile, manifest: ProfileManife
     lines.push("");
     lines.push("## Skills");
     for (const s of profile.skills) {
-      const detail = profile.skillsDetail[s];
+      const detail = (profile.skillsDetail ?? {})[s];
       if (detail) {
         lines.push(`- ${s} — uses: ${detail.skills.join(", ")}${detail.install ? ` · install: ${detail.install}` : ""}${detail.note ? ` · ${detail.note}` : ""}`);
       } else {
@@ -560,6 +560,17 @@ function isProagentHook(entry: unknown): boolean {
 }
 
 /**
+ * The project instructions file a harness reads. Deterministic per harness id;
+ * shared by profile compile and the memory compiler.
+ */
+export function instructionsFileFor(target: HarnessId): string {
+  return target === "claude-code" ? "CLAUDE.md"
+    : target === "gemini-cli" ? "GEMINI.md"
+    : target === "copilot" ? path.join(".github", "copilot-instructions.md")
+    : "AGENTS.md";
+}
+
+/**
  * Compile an effective profile for a target harness. Deterministic given the
  * same repo state: markers use content hashes, not timestamps.
  */
@@ -627,11 +638,7 @@ export async function compileForHarness(
 
   // 2. Project instructions (all harnesses with a known instructions file).
   if (caps.projectInstructions) {
-    const instrFile =
-      target.id === "claude-code" ? "CLAUDE.md"
-      : target.id === "gemini-cli" ? "GEMINI.md"
-      : target.id === "copilot" ? path.join(".github", "copilot-instructions.md")
-      : "AGENTS.md";
+    const instrFile = instructionsFileFor(target.id);
     const abs = path.join(root, instrFile);
     // Nested instructions files (.github/copilot-instructions.md) need their
     // parent dir created; root-level files are no-ops here.
@@ -642,14 +649,18 @@ export async function compileForHarness(
     } catch {
       // New file.
     }
-    // Replace an existing proagent block or append.
+    // Replace an existing proagent block region by its marker pair, or
+    // append. The end marker is found without requiring the exact hash, so
+    // re-equipping with a different profile replaces the stale block instead
+    // of stacking a second one.
     const block = profileInstructionsBlock(profile, target.id);
-    const marker = hashMarker(profile);
     const start = existing.indexOf("<!-- proagent:profile:start");
-    const end = existing.indexOf(`<!-- proagent:profile:end ${marker} -->`);
     let next: string;
-    if (start !== -1 && end !== -1) {
-      next = existing.slice(0, start) + block + existing.slice(end + `<!-- proagent:profile:end ${marker} -->`.length);
+    if (start !== -1) {
+      const end = existing.indexOf("<!-- proagent:profile:end", start);
+      const close = end !== -1 ? existing.indexOf("-->", end) : -1;
+      const cut = close !== -1 ? close + 3 : existing.length;
+      next = existing.slice(0, start) + block + existing.slice(cut);
     } else {
       next = existing ? `${existing.replace(/\n+$/, "")}\n\n${block}\n` : `${block}\n`;
     }
@@ -840,10 +851,10 @@ export async function compileForHarness(
 }
 
 /**
- * Compile a profile for EVERY known harness (plus generic-cli), not just the
- * detected one — a repo equipped this way is ready for any coding agent that
- * opens it. Detection still decides which files ALREADY exist get treated as
- * the primary; this writes the full matrix. Deterministic order = spec order.
+ * Compile a profile for EVERY known harness, not just the detected one — a
+ * repo equipped this way is ready for any coding agent that opens it.
+ * Detection still decides which files ALREADY exist get treated as the
+ * primary; this writes the full matrix. Deterministic order = spec order.
  */
 export async function compileForAllHarnesses(
   profile: EffectiveProfile,

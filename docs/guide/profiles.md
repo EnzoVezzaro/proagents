@@ -171,8 +171,8 @@ harness, using the strongest mechanism available:
 | OpenCode | `.agents/skills/<profile>/SKILL.md` | `AGENTS.md` block | native |
 | Cursor | `.agents/skills/<profile>/SKILL.md` | `AGENTS.md` block | instructions fallback |
 | Gemini CLI | `.agents/skills/<profile>/SKILL.md` | `GEMINI.md` block | instructions fallback |
-| GitHub Copilot | `.agents/skills/<profile>/SKILL.md` | `AGENTS.md` block | instructions fallback |
-| OpenClaude | `.agents/skills/<profile>/SKILL.md` | `AGENTS.md` block | instructions fallback |
+| GitHub Copilot | `.agents/skills/<profile>/SKILL.md` | `.github/copilot-instructions.md` block | instructions fallback |
+| OpenClaude | `.openclaude/skills/<profile>/SKILL.md` | `AGENTS.md` block | instructions fallback |
 | Freebuff | `.agents/skills/<profile>/SKILL.md` | `AGENTS.md` block | none (reported) |
 | generic CLI | — (instructions only) | `AGENTS.md` block | none (reported) |
 
@@ -311,7 +311,7 @@ report the offending profiles and a suggestion.
 | `PA034` | no required tools |
 | `PA035` | no verification requirements |
 | `PA036` | a tool is both required and forbidden |
-| `PA037` | knowledge reference missing from the profile directory / local-profile notice |
+| `PA037` | knowledge reference missing from the profile directory |
 | `PA038` | duplicate slug across profile sources |
 | `PA039` | malformed MCP server entry |
 | `PA040` | invalid package/skill registry reference |

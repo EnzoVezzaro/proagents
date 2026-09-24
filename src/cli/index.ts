@@ -29,9 +29,13 @@ import {
   renderValidation,
 } from "../output/render.js";
 import type { AgentArchitecture, SelfImprovementPolicy } from "../core/types.js";
+import type { EffectiveProfile } from "../profiles/types.js";
 import { scanRepo } from "../core/repo-scan.js";
+import { runAuditCommand } from "./audit.js";
 import { runBenchmarkCommand } from "./benchmark.js";
 import { runCrewCommand } from "./crew.js";
+import { runListInstalledCommand, runDoctorCommand, runRepairCommand } from "./installed.js";
+import { runMemoryCommand } from "./memory.js";
 import { promptLine, warnIfStandalone } from "./interactive.js";
 import {
   printProfilesHelp,
@@ -138,6 +142,7 @@ Agent-building commands:
   inspect                   Dump full session state (for agents/humans)
   improve                   Show or configure self-improvement
   benchmark                 Benchmark subcommands (proagent benchmark help)
+  memory                    Explicit project memory: add/list/show/rm/compile (proagent memory help)
   crew                      Registry crews: create/list/show/validate/install/build/publish/submit (proagent crew help)
   profile                   Registry profiles: create/list/show/install/validate/publish/submit (proagent profile help)
 
@@ -158,6 +163,25 @@ Registry commands (unified artifact model — kinds: profile, crew, agent, workf
     --dry-run               Resolve + plan without writing
   validate --spec           End-to-end PA5xx validation of spec (+ lock)
   help                      Show this help
+
+Security:
+  audit [<dir>]             Deterministic security scan of a repo (secrets, remote-exec
+                            instructions, MCP transports, permission breadth)
+    --path <dir>            Audit this directory instead of the cwd
+                            Exit: 0 clean · 1 warnings · 2 errors
+
+Install lifecycle:
+  list-installed [<dir>]    Show what ProAgents owns in this repo (profiles, crews,
+                            instruction blocks, MCP/enforcement state)
+    --path <dir>            Scan this directory instead of the cwd
+  doctor [<dir>]            Verify installed artifacts vs provenance (manifest.json
+                            beside skill, balanced present-once instruction blocks)
+    --path <dir>            Check this directory instead of the cwd
+                            Exit: 0 healthy · 1 warnings · 2 errors
+  repair                    Deterministically recompile single-profile installs from
+                            the on-disk canonical manifest (restores SKILL.md, blocks,
+                            enforcement). Composed installs are reported as limitations.
+    --target <harness>      Recompile for this harness instead of the detected one
 
 Global options:
   --json                    Machine-readable output on stdout
@@ -495,7 +519,8 @@ async function cmdBuild(flags: Record<string, string | boolean>, args: string[])
   // .openclaude/skills …), not just the detected one.
   if (flags["all-targets"] === true) {
     const { compileForAllHarnesses } = await import("../adapters/index.js");
-    const effective = {
+    const effective: EffectiveProfile = {
+      name: arch.team?.name ?? agents[0]!.name,
       slugs: agents.map((a) => a.id),
       identity: { title: arch.team?.name ?? agents[0]!.name, summary: agents[0]!.purpose },
       expertise: agents.flatMap((a) => a.responsibilities),
@@ -504,10 +529,13 @@ async function cmdBuild(flags: Record<string, string | boolean>, args: string[])
       policies: [],
       standards: [],
       skills: agents.flatMap((a) => a.skills),
+      skillsDetail: {},
       knowledge: [],
+      references: {},
+      ruleEnforcement: [],
       tools: { required: [...new Set(agents.flatMap((a) => a.tools))], optional: [], forbidden: [], mcp: [], packages: [] },
       verification: { required: agents.flatMap((a) => a.validation), optional: [] },
-    } as never;
+    };
     const manifest = {
       version: "0.1.0",
       profile: { name: arch.team?.name ?? agents[0]!.name, slug: agents[0]!.id },
@@ -810,6 +838,10 @@ async function main(): Promise<void> {
     case "compose":
       return runRegistryCompose(args, flags);
     case "setup": return runRegistrySetup(args, flags);
+    case "audit": return runAuditCommand(args, flags);
+    case "list-installed": return runListInstalledCommand(args, flags);
+    case "doctor": return runDoctorCommand(flags);
+    case "repair": return runRepairCommand(flags);
     case "agents": return cmdAgents(flags);
     case "inspect":
       if (args[0]) return runInspectProfile(args[0], isJson(flags));
@@ -821,6 +853,7 @@ async function main(): Promise<void> {
       return cmdImprove(improveArgs, flags);
     }
     case "benchmark": return runBenchmarkCommand(args, flags);
+    case "memory": return runMemoryCommand(args, flags);
     case "crew": return runCrewCommand(args, flags, flagList);
     case "--version":
     case "-v":

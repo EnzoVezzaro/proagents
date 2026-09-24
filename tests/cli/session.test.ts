@@ -497,4 +497,19 @@ describe("session CLI (SESSION-CLI)", () => {
       await fs.rm(root, { recursive: true, force: true });
     }
   });
+
+  it("SESSION-CLI-027: build --all-targets writes the full harness matrix without crashing", async () => {
+    const root = await makeRepo();
+    try {
+      await seedSession(root);
+      const stdout = run(root, ["build", "--all-targets"]);
+      expect(stdout).toContain("All-targets artifacts");
+      await fs.access(path.join(root, "AGENTS.md"));
+      await fs.access(path.join(root, "CLAUDE.md"));
+      await fs.access(path.join(root, ".github", "copilot-instructions.md"));
+      await fs.access(path.join(root, "opencode.json"));
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
 });

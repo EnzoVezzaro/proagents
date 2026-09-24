@@ -55,7 +55,7 @@ blocked equips need an explicit user decision.
 | `PA034` | tools.required is empty |
 | `PA035` | verification.required is empty |
 | `PA036` | A tool is both required and forbidden |
-| `PA037` | Knowledge reference missing, or local-profile notice |
+| `PA037` | Knowledge reference missing from the profile directory |
 | `PA038` | Duplicate slug across profile sources |
 | `PA039` | Malformed MCP server entry (name/transport/url/command) |
 | `PA040` | Invalid package/skill registry ref (not npm:/github:) |
@@ -124,5 +124,5 @@ A repo can define its own professions:
 - Local profiles shadow built-ins with the same slug (resolution: local
   `.proagent/profiles/` first, then a `registry/` checkout, then the packaged catalog).
 - They appear in `list --json` with `origin: "local"`.
-- `validate --profiles` flags them with a PA037 local notice so shipped vs. local is
-  always distinguishable.
+- `validate --profiles` validates them like any profile; PA037 fires for knowledge
+  references missing from the directory, never for being local.

@@ -86,4 +86,6 @@ include a deterministic CLI fallback. Gaps are reported, never papered over:
 
 `proagent validate` runs deterministic checks — cycles, orphaned agents, self-edges,
 production write without approval gates, handoffs without artifacts, unbounded delegation,
-recursive spawning. Errors block `build`. See the [full code table](/context/#validation-codes).
+recursive spawning. Errors block `build`. Findings carry stable `PA###` codes
+(architecture PA001–PA013; crew PA043–PA048) — list them with `proagent validate --json`
+([CLI reference](/cli/)).

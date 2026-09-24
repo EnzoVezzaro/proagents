@@ -235,6 +235,19 @@ environment:
     }
   });
 
+  it("REGISTRY-CLI-022: validate --spec reports an unknown environment kind as PA500", async () => {
+    const root = await makeRepo({
+      "proagents.yaml": SPEC.replace("environment:", "environment:\n  gadgets:\n    - hoverboard"),
+    });
+    try {
+      const parsed = JSON.parse(run(root, ["validate", "--spec", "--json"]));
+      expect(parsed.status).toBe("invalid");
+      expect(parsed.findings.some((f: { code: string }) => f.code === "PA500")).toBe(true);
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
+
   it("REGISTRY-CLI-013: setup compiles the spec's profiles for the target harness", async () => {
     const root = await specRepo();
     try {

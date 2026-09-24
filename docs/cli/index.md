@@ -45,6 +45,82 @@ One artifact model for every kind: `profile · crew · agent · workflow · capa
 
 Full details: [Registry guide](/guide/registry).
 
+### Security (deterministic audit)
+
+| Command | Purpose |
+|---|---|
+| `audit [<dir>]` | Deterministic security scan of a repo or directory (no model calls, no timestamps) |
+| `audit --path <dir>` | Audit a specific directory instead of the cwd |
+| `audit --json` | Machine-readable audit report |
+
+The audit is pure and deterministic: identical trees produce identical
+reports (AGENTS.md invariant 1). It checks:
+
+- **AU001** — exposed secrets / private key material in text files
+- **AU003** — instructions that pipe a remote fetch into a shell (`curl \| bash`, `iwr \| iex`, …)
+- **AU004** — MCP server on a remote (non-localhost) http/sse transport
+- **AU005** — MCP stdio launcher (`npx`/`uvx`/`bunx`) without a pinned version
+- **AU006** — over-broad permission grants (`*`, `bash:*`, `Bash(bash:*)`)
+
+Exit contract: `0` clean · `1` warnings only · `2` errors present. The exit
+code is honored in `--json` mode too, so CI can gate on it. Full machine
+contract: [JSON interface](/cli/json#audit).
+
+### Install lifecycle (verify and repair what's installed)
+
+| Command | Purpose |
+|---|---|
+| `list-installed [<dir>]` | Inventory what ProAgents owns: profiles, crews, instruction blocks |
+| `list-installed --path <dir>` | Scan a specific directory instead of the cwd |
+| `doctor [<dir>]` | Verify installed artifacts against provenance (deterministic) |
+| `doctor --path <dir>` | Check a specific directory instead of the cwd |
+| `repair` | Recompile single-profile installs from the on-disk canonical manifest |
+| `repair --target <id>` | Recompile for this harness instead of the detected one |
+
+Like the audit, `doctor` is pure and deterministic: identical trees produce
+identical reports (AGENTS.md invariant 1). It checks:
+
+- **DG001** — `manifest.json` beside an installed skill is unreadable/invalid
+- **DG002** — manifest present but `SKILL.md` missing (broken install)
+- **DG003** — instruction block start marker without a matching end marker
+- **DG004** — more than one `proagent:` block region in a single instructions file
+- **DG005** — instruction block whose profile is not installed (stale after `remove`)
+- **DG006** — `.claude/settings.json` is not valid JSON (enforcement hooks cannot load)
+- **DG007** — `.mcp.json` is not valid JSON (merged servers cannot load)
+
+Exit contract: `0` healthy · `1` warnings only · `2` errors present — same
+shape as `audit`. `repair` is deterministic too: it recompiles every
+single-profile install (where the skill directory name matches
+`manifest.profile.slug`) and reports composed installs as limitations, since
+a composition cannot be reconstructed from one stored manifest. Full machine
+contracts: [JSON interface](/cli/json#list-installed),
+[doctor](/cli/json#doctor), [repair](/cli/json#repair).
+
+### Memory (explicit project knowledge)
+
+`proagent memory <subcommand>` — explicit, portable project memory. Records are
+JSON-only files under `.proagent/memory/<key>.json`, each scope- and
+provenance-tagged. Nothing is inferred or recorded behind your back; there is
+no raw-session learning.
+
+| Command | Purpose |
+|---|---|
+| `memory add <key> "<value>"` | Record or update a memory entry (bumps the stored version) |
+| `memory add <key> "<value>" --scope <s>` | …tagged with a scope label (e.g. `release`, `api`) |
+| `memory add <key> "<value>" --tags a,b` | …tagged with comma-separated tags |
+| `memory add <key> "<value>" --provenance <p>` | …annotated with who/what recorded it (default `cli`) |
+| `memory list` | List recorded entries, sorted by key |
+| `memory show <key>` | Show one entry |
+| `memory rm <key>` | Delete an entry |
+| `memory compile` | Compile all records into the detected harness's instructions file |
+| `memory compile --target <id>` | …for a specific harness instead of the detected one |
+
+Validation codes (ME001–ME003): invalid key shape, empty/oversized value,
+invalid scope or tag. Memory is part of the deterministic core: the compiled
+block's marker is a content hash, so the same store always compiles
+byte-identically (AGENTS.md invariant 1). Full machine contract:
+[JSON interface](/cli/json#memory).
+
 ### Agent building (progressive interview)
 
 | Command | Purpose |

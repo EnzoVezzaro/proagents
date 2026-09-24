@@ -194,6 +194,156 @@ Steps report each pipeline stage; blocked setups write nothing.
 
 Every finding carries `severity`, `message`, `suggestion`, and where applicable `entities`.
 
+## audit
+
+```bash
+proagent audit --json
+proagent audit --path ./my-repo --json
+```
+
+Deterministic security scan — same tree, same bytes, no model calls, no
+timestamps. Exit contract: `0` clean · `1` warnings only · `2` errors present
+(honored in `--json` mode too, so CI can gate on it).
+
+```json
+{
+  "status": "ok",
+  "root": "/abs/path",
+  "findings": [
+    {
+      "code": "AU001",
+      "severity": "error",
+      "file": "AGENTS.md",
+      "line": 3,
+      "message": "GitHub classic PAT detected in AGENTS.md",
+      "suggestion": "Rotate the credential now, remove it from the tree, and keep secrets out of version control (e.g. .env + gitignore)."
+    }
+  ],
+  "summary": { "total": 1, "errors": 1, "warnings": 0 },
+  "exit": 2
+}
+```
+
+Audit codes:
+
+| Code | Severity | Meaning |
+|---|---|---|
+| `AU001` | error | exposed secret / private key material in a text file |
+| `AU003` | error | instruction pipes a remote fetch into a shell (`curl \| bash`, `iwr \| iex`, …) |
+| `AU004` | warning | MCP server on a remote (non-localhost) http/sse transport |
+| `AU005` | warning | MCP stdio launcher (`npx`/`uvx`/`bunx`) without a pinned version |
+| `AU006` | error | over-broad permission grant (`*`, `bash:*`, `Bash(bash:*)`) |
+
+## list-installed
+
+```bash
+proagent list-installed --json
+proagent list-installed --path ./my-repo --json
+```
+
+Inventory of what ProAgents owns in the repo. Pure provenance scan: no writes,
+no model calls, deterministic `sort` by path.
+
+```json
+{
+  "status": "ok",
+  "root": "/abs/path",
+  "profiles": [
+    { "dir": ".agents/skills/senior-engineer", "slug": "senior-engineer", "version": "1.1.0", "hasManifest": true, "hasSkill": true, "canonical": true }
+  ],
+  "crews": [
+    { "dir": ".agents/crews/guard", "id": "guard", "version": "1.0.0", "hasSkill": true }
+  ],
+  "blocks": [
+    { "file": "AGENTS.md", "marker": "ab12cd34ef56", "line": 3, "closed": true, "title": "Senior Engineer" }
+  ],
+  "summary": { "profiles": 1, "crews": 1, "blocks": 1 }
+}
+```
+
+- `profiles[].hasManifest` — the canonical `manifest.json` beside the skill
+  parsed and passed PA0xx validation (the owner marker).
+- `profiles[].canonical` — skill directory name equals `manifest.profile.slug`
+  (a single-profile install, reconstructible by `repair`). Composed installs
+  (dir is `slug1-slug2`) store only the first profile's manifest, so they
+  cannot be canonical.
+- `blocks[].closed` — a matching `<!-- proagent:profile:end <marker> -->`
+  exists in the same file.
+
+## doctor
+
+```bash
+proagent doctor --json
+proagent doctor --path ./my-repo --json
+```
+
+Verification of installed artifacts against provenance — deterministic
+(same tree, same report), no writes. Exit contract mirrors `audit`:
+`0` healthy · `1` warnings only · `2` errors present (honored in `--json`).
+
+```json
+{
+  "status": "ok",
+  "root": "/abs/path",
+  "findings": [
+    {
+      "code": "DG002",
+      "severity": "error",
+      "file": ".agents/skills/senior-engineer/SKILL.md",
+      "line": 1,
+      "message": "profile \"senior-engineer\" is installed (manifest present) but its SKILL.md is missing",
+      "suggestion": "repair restores it from the on-disk manifest: proagent repair"
+    }
+  ],
+  "summary": { "total": 1, "errors": 1, "warnings": 0 },
+  "exit": 2
+}
+```
+
+Doctor codes (DG — deterministic, the same family the audit uses for AU):
+
+| Code | Severity | Meaning |
+|---|---|---|
+| `DG001` | error | `manifest.json` beside an installed skill is unreadable/invalid |
+| `DG002` | error | manifest present but `SKILL.md` missing |
+| `DG003` | error | instruction block start marker without a matching end marker |
+| `DG004` | error | more than one `proagent:` block region in one instructions file |
+| `DG005` | warning | instruction block whose profile is not installed (stale after `remove`) |
+| `DG006` | warning | `.claude/settings.json` is not valid JSON |
+| `DG007` | warning | `.mcp.json` is not valid JSON |
+
+## repair
+
+```bash
+proagent repair --json
+proagent repair --target codex --json
+```
+
+Deterministic reconstruction of broken installs from the on-disk canonical
+manifest. Recompiles every canonical single-profile install for the target
+harness (detected by default, `--target` overrides), which rewrites
+`SKILL.md`, `manifest.json`, the instruction block, enforcement hooks and the
+MCP merge — all idempotently (same input, same bytes).
+
+```json
+{
+  "status": "ok",
+  "root": "/abs/path",
+  "target": "codex",
+  "repaired": [
+    ".agents/skills/senior-engineer/SKILL.md",
+    ".agents/skills/senior-engineer/manifest.json",
+    "AGENTS.md"
+  ],
+  "limitations": []
+}
+```
+
+Composed installs are never silently mangled: their directory name
+(`slug1-slug2`) differs from the single stored manifest's `profile.slug`, so a
+composition cannot be reconstructed from one manifest. They are reported in
+`limitations` with a pointer to re-equip with the full profile set.
+
 ## init
 
 ```bash
@@ -282,6 +432,83 @@ proagent context "auth architecture" --context-framework filesystem --json
 - `validate --json` → `{ ok, errors, warnings, findings: [{ code, severity, message, entities, suggestion }] }`
 - `build --json` → `{ status, runtime: { id, gaps }, agents: [paths], architecture }`
 - `inspect --json` → `{ state, architecture, runtime }` — everything, for programmatic resume
+
+## memory
+
+Explicit project memory (`proagent memory`). Records are JSON-only files under
+`.proagent/memory/<key>.json`; the same CLI invocation always produces the same
+canonical bytes (deterministic core — AGENTS.md invariant 1). Provenance is an
+input you supply; timestamps never appear in compiled artifacts.
+
+```bash
+proagent memory add deploy-window "Ship on Thursdays; freeze Wednesday noon." --scope release --tags release,ops --provenance "docs planning session"
+```
+
+```json
+{
+  "status": "ok",
+  "command": "memory add",
+  "key": "deploy-window",
+  "updated": false,
+  "version": 1,
+  "record": {
+    "key": "deploy-window",
+    "value": "Ship on Thursdays; freeze Wednesday noon.",
+    "scope": "release",
+    "tags": ["release", "ops"],
+    "provenance": "docs planning session",
+    "version": 1
+  }
+}
+```
+
+Updating the same key bumps `version` and merges your input:
+
+```bash
+proagent memory add deploy-window "…" --provenance "team sync" --json
+```
+
+```json
+{ "status": "ok", "command": "memory add", "key": "deploy-window", "updated": true, "version": 2 }
+```
+
+```bash
+proagent memory list
+proagent memory show api-rate-limit --json
+proagent memory rm api-rate-limit
+```
+
+`memory list` returns records sorted by key; `memory show <key> --json` returns
+one record (`{ status, command, record }`) or exits 1 with `not_found` when the
+key is unknown. `memory rm` reports `{ status, key, removed }`.
+
+Validation findings use codes **ME001–ME004** (invalid key, empty/oversized
+value, invalid scope, invalid tag). An invalid record is never silently
+accepted: the CLI prints the finding and exits, or reports it in `--json`
+mode with a non-zero exit code.
+
+### memory compile
+
+```bash
+proagent memory compile --target codex
+```
+
+```json
+{
+  "status": "ok",
+  "command": "memory compile",
+  "target": "codex",
+  "file": "AGENTS.md",
+  "records": ["deploy-window"],
+  "block": "<!-- proagent:memory:start <!-- hash -->…<!-- proagent:memory:end -->"
+}
+```
+
+Compiled memory is injected as a deterministic instruction block into the
+target harness's instructions file, marked with a content-derived marker so
+compiling the same store always emits the same bytes. The block is advisory
+project knowledge — it does not grant permissions, and the compiler never
+prompts.
 
 ## Error contract
 

@@ -161,8 +161,9 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
     page = <BuilderPage ctx={ctx} />;
   } else if (route === "build-profile") {
     page = <ProfileBuilderPage ctx={ctx} />;
-  } else if (route === "discover") {
+  } else if (route === "discover" || route === "catalog") {
     // DISCOVER — secondary; the catalog gains "Use in Project" actions.
+    // "catalog" is a legacy route the registry UI and docs still link to.
     page = <CatalogPage ctx={ctx} />;
   } else {
     // Legacy default (was the catalog) and unknown routes → Build primary.

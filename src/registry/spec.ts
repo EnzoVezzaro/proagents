@@ -58,7 +58,7 @@ export function parseSpec(raw: string): ParsedSpec {
   const environment: SpecEnvironment = {};
   for (const [key, value] of Object.entries(envRaw)) {
     if (!(ENV_KINDS as readonly string[]).includes(key)) {
-      findings.push(pa501(`unknown environment key "${key}" (expected one of: ${ENV_KINDS.join(", ")})`, [`environment.${key}`]));
+      findings.push(pa500(`unknown artifact kind "${key}" (expected one of: ${ENV_KINDS.join(", ")})`, [`environment.${key}`]));
       continue;
     }
     if (!Array.isArray(value) || value.some((v) => typeof v !== "string")) {
@@ -122,6 +122,16 @@ function pa501(message: string, entities?: string[]): SpecFinding {
     severity: "error",
     message,
     suggestion: "Fix the proagents.yaml structure — see docs (Registry guide, spec reference).",
+    ...(entities ? { entities } : {}),
+  };
+}
+
+function pa500(message: string, entities?: string[]): SpecFinding {
+  return {
+    code: "PA500",
+    severity: "error",
+    message,
+    suggestion: "Use one of the known artifact kinds in the environment section.",
     ...(entities ? { entities } : {}),
   };
 }

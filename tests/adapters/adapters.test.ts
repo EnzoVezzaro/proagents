@@ -102,6 +102,19 @@ describe("profile compilation (ADAPT-COMPILE)", () => {
     expect(agentsMd.match(/proagent:profile:start/g)?.length).toBe(1);
   });
 
+  it("ADAPT-COMPILE-011: re-equipping with a different profile replaces the stale block", async () => {
+    const root = await makeRepo({ "AGENTS.md": "# App\n" });
+    const detected = await detectHarnesses(root, {});
+    const first = await loadEffective("senior-engineer");
+    await compileForHarness(first.effective, first.manifest, detected.primary, root);
+    const second = await loadEffective("security-engineer");
+    await compileForHarness(second.effective, second.manifest, detected.primary, root);
+    const agentsMd = await fs.readFile(path.join(root, "AGENTS.md"), "utf8");
+    expect(agentsMd.match(/proagent:profile:start/g)?.length).toBe(1);
+    expect(agentsMd).toContain("Security Engineer");
+    expect(agentsMd).not.toContain("Senior Engineer");
+  });
+
   it("ADAPT-COMPILE-003: output is deterministic for identical inputs", async () => {
     const rootA = await makeRepo({ "CLAUDE.md": "# Same\n" });
     const rootB = await makeRepo({ "CLAUDE.md": "# Same\n" });

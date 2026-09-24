@@ -332,8 +332,9 @@ The loader hydrates path entries to content at read time, so equip, compile, cre
 the Studio SPA all see the same plain manifest.
 
 Profiles live in one place — the registry catalog (`registry/profiles/<slug>/`),
-which ships with the npm package and is updated through PRs. A repo's own checkout of
-that folder wins over the packaged snapshot; there is no separate local profiles folder.
+which ships with the npm package and is updated through PRs. Lookup order: a repo's own
+local profiles (`.proagent/profiles/`, where `build --kind profile` and `profile create`
+write) win, then the repo's checkout of `registry/profiles/`, then the packaged snapshot.
 
 ---
 
@@ -491,15 +492,17 @@ proagent equip \
 
 Composition produces a single effective professional operating model.
 
-ProAgents must detect:
+ProAgents detects composition conflicts with validation codes — never silently:
 
-* conflicting rules
-* conflicting policies
-* incompatible tools
-* duplicate skills
-* incompatible verification requirements
-* circular dependencies
-* capability gaps
+* conflicting rules (PA022)
+* a tool required by one profile and forbidden by another (PA023)
+* circular method dependencies (PA024)
+* verification that names a capability none of the required tools provide (PA025)
+* the same profile listed twice in one composition (PA026)
+
+Conflicting policies and duplicate-skill definition conflicts are not yet
+machine-detectable; expertise, methods, skills, rules, standards and policies dedupe
+(first occurrence wins), and policy/skill conflicts stay on the operator to review.
 
 Serious conflicts must never be silently ignored.
 

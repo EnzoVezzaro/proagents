@@ -17,7 +17,7 @@ import { HARNESS_SPECS } from "../../src/adapters/index.js";
 
 const ROOT = process.cwd();
 const TARGETS = [...HARNESS_SPECS.map((s) => s.id), "generic-cli"];
-const GROUPS = ["profile", "crew", "benchmark"] as const;
+const GROUPS = ["profile", "crew", "benchmark", "memory"] as const;
 
 function read(rel: string): string {
   return fs.readFileSync(path.join(ROOT, rel), "utf8");
@@ -47,6 +47,7 @@ const SUB_COMMANDS: Record<string, Set<string>> = {
   profile: new Set(scrapeCases("src/cli/profiles.ts").filter((c) => c !== "help")),
   crew: new Set(scrapeCases("src/cli/crew.ts").filter((c) => c !== "help")),
   benchmark: new Set(scrapeCases("src/cli/benchmark.ts").filter((c) => c !== "help")),
+  memory: new Set(scrapeCases("src/cli/memory.ts").filter((c) => c !== "help")),
 };
 
 // ---------------------------------------------------------------------------
@@ -128,6 +129,10 @@ const COMMAND_FLAGS: Record<string, string[]> = {
   lock: ["select", "file"],
   compose: [],
   setup: ["harness", "dry-run", "file"],
+  audit: ["path"],
+  "list-installed": ["path"],
+  doctor: ["path"],
+  repair: ["path", "target"],
   agents: [],
   inspect: [],
   improve: ["improvement-policy"],
@@ -167,6 +172,13 @@ const SUB_FLAGS: Record<string, Record<string, string[]>> = {
     regressions: [],
     inspect: [],
     evaluators: [],
+  },
+  memory: {
+    add: ["scope", "tags", "provenance"],
+    list: [],
+    show: [],
+    rm: [],
+    compile: ["target"],
   },
 };
 
@@ -212,7 +224,7 @@ describe("docs alignment (DOCS-ALIGN)", () => {
     const missing = [...TOP_COMMANDS]
       .filter((c) => !["help", "version"].includes(c))
       .filter((c) => !new RegExp(`\\b${c}\\b`).test(cliIndex));
-    const missingSubs = (["profile", "crew", "benchmark"] as const).flatMap((group) =>
+    const missingSubs = (["profile", "crew", "benchmark", "memory"] as const).flatMap((group) =>
       [...SUB_COMMANDS[group]].filter((sub) => !new RegExp(`\\b${sub}\\b`).test(cliIndex)).map((sub) => `${group} ${sub}`),
     );
     expect({ missing, missingSubs }).toEqual({ missing: [], missingSubs: [] });

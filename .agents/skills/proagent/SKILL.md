@@ -83,7 +83,8 @@ proagent equip <slug> --dry-run --json          # plan without writing
 proagent validate --profiles --json
 ```
 
-- All shipped profiles must pass. Local profiles appear with a local-source notice (PA037).
+- All shipped profiles must pass. PA037 flags knowledge references missing from the
+  profile directory — it is not a local/shipped signal.
 - Then confirm in the target harness: instructions block present once (idempotent markers),
   skill present under `.agents/skills/<slug>/SKILL.md`.
 
