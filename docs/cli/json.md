@@ -7,6 +7,10 @@ description: 'The deterministic --json contract: stable shapes for every operati
 Every important operation supports `--json`. Output is deterministic for a given session
 state — same state, same bytes. Agents must never scrape terminal prose.
 
+These contracts are the source of truth the Studio's **Console** surface renders
+read-only: paste or load any `--json` output there and it is validated against the
+shapes below and the pinned DG/AU code tables (see `docs/studio.md`).
+
 ## Profile commands
 
 ### detect

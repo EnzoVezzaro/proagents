@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { CatalogPage } from "./pages/CatalogPage.js";
+import { ConsolePage } from "./pages/ConsolePage.js";
+import { PlanViewPage } from "./pages/PlanViewPage.js";
 import { CrewDetailPage } from "./pages/CrewDetailPage.js";
 import { DashboardPage } from "./pages/DashboardPage.js";
 import { BuildEntryPage } from "./pages/BuildEntryPage.js";
@@ -165,6 +167,12 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
     // DISCOVER — secondary; the catalog gains "Use in Project" actions.
     // "catalog" is a legacy route the registry UI and docs still link to.
     page = <CatalogPage ctx={ctx} />;
+  } else if (route === "console") {
+    // CONSOLE — read-only viewer for the CLI's --json introspection output.
+    page = <ConsolePage ctx={ctx} />;
+  } else if (route === "plan") {
+    // PLAN — read-only render of the Build flow's project spec.
+    page = <PlanViewPage ctx={ctx} navigate={navigate} />;
   } else {
     // Legacy default (was the catalog) and unknown routes → Build primary.
     page = <ProjectBuilderPage ctx={ctx} />;
@@ -199,10 +207,61 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
         </div>
       )}
 
+      <RouteBar route={route} navigate={navigate} />
+
       <main style={{ padding: "32px 0 24px" }}>{page}</main>
       {/* No island footer: the island only renders on /studio, which is
           a VitePress page and carries the theme's VPFooter — no duplication. */}
       {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} user={user} />}
     </div>
+  );
+}
+
+/** Studio surfaces — Build (primary), then the catalog, insights and plan. */
+const ROUTES: Array<{ to: string; label: string }> = [
+  { to: "build-environment", label: "Build" },
+  { to: "discover", label: "Discover" },
+  { to: "console", label: "Console" },
+  { to: "plan", label: "Plan" },
+];
+
+function RouteBar(props: { route: string; navigate: (to: string) => void }): React.JSX.Element {
+  const { route, navigate } = props;
+  return (
+    <nav
+      aria-label="Studio sections"
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        gap: 4,
+        marginTop: 12,
+        paddingBottom: 10,
+        borderBottom: "1px solid var(--vp-c-divider)",
+      }}
+    >
+      {ROUTES.map((r) => {
+        const active = route === r.to;
+        return (
+          <button
+            key={r.to}
+            onClick={() => navigate(r.to)}
+            style={{
+              background: active ? "var(--accent-soft)" : "transparent",
+              color: active ? "var(--cyan)" : "var(--cream-dim)",
+              border: active ? "1px solid var(--cyan)" : "1px solid transparent",
+              borderRadius: 6,
+              padding: "5px 12px",
+              fontSize: 12.5,
+              fontWeight: 600,
+              cursor: "pointer",
+              fontFamily: "inherit",
+              transition: "border-color .15s ease, background .15s ease, color .15s ease",
+            }}
+          >
+            {r.label}
+          </button>
+        );
+      })}
+    </nav>
   );
 }

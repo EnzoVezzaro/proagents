@@ -6,6 +6,7 @@ import { callModel } from "../../llm.js";
 import type { MarketplaceCatalog, MarketplaceItem, SpecDocument, SpecFinding } from "../../types.js";
 import { CATALOG_URL, catalogUrl } from "../../catalog.js";
 import { buildIntentReviewPrompt, parseIntentReview, deriveCapabilities, serializeSpecYaml, serializeAgentBrief, toggleIn, validateSpecClient, copyText, downloadText, type CapabilityDef } from "../../project-spec.js";
+import { SPEC_DRAFT_KEY } from "./PlanViewPage.js";
 
 /**
  * ProjectBuilderPage — the Studio BUILD mode (NEW_CHANGES.md §10):
@@ -681,6 +682,16 @@ proagent setup      # install the environment for your harness`}
               style={{ ...btnGhost, cursor: "pointer" }}
             >
               Download proagents.yaml
+            </button>
+            <button
+              onClick={() => {
+                sessionStorage.setItem(SPEC_DRAFT_KEY, JSON.stringify(spec));
+                setExported(true);
+                props.ctx.navigate("plan");
+              }}
+              style={{ ...btnGhost, cursor: "pointer" }}
+            >
+              View plan →
             </button>
             <button onClick={() => setStep("policies")} style={{ ...btnGhost, cursor: "pointer" }}>← Back</button>
           </div>
