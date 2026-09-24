@@ -306,6 +306,17 @@ const FOLLOW_UPS: Array<QuestionTemplate & { requires: QuestionTopic[] }> = [
 
 let questionCounter = 0;
 
+// Highest numeric suffix already persisted (q_003 → 3), so a fresh process
+// never re-issues an id that already exists in the session state.
+function maxQuestionNumber(state: KnowledgeState): number {
+  let max = 0;
+  for (const q of state.questions) {
+    const m = /^q_(\d+)$/.exec(q.id);
+    if (m) max = Math.max(max, Number(m[1]));
+  }
+  return max;
+}
+
 function makeQuestion(t: QuestionTemplate, derivedFrom: string[], now: string): Question {
   questionCounter += 1;
   return {
@@ -327,6 +338,10 @@ function makeQuestion(t: QuestionTemplate, derivedFrom: string[], now: string): 
  */
 export function deriveQuestions(state: KnowledgeState): Question[] {
   const now = new Date().toISOString();
+  // Continue the id sequence from what is already persisted: a session
+  // answered in one process then resumed in a fresh one must not re-derive
+  // ids that already exist (those would be silently dropped on sync).
+  questionCounter = maxQuestionNumber(state);
   const open = state.questions.filter((q) => q.status === "open");
   const askedTemplates = new Set(state.questions.map((q) => q.template));
   const coveredTopics = new Set<QuestionTopic>();

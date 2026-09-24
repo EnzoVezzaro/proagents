@@ -105,6 +105,10 @@ export class InterviewOrchestrator {
     const known = new Set(state.questions.map((q) => q.id));
     for (const q of derived) {
       if (!known.has(q.id)) state.questions.push(q);
+      else if (q.derivedFrom.length > 0)
+        // Collision is a bug (ids derive from the persisted state), but make
+        // the drop observable instead of silent when it somehow reappears.
+        process.stderr.write(`[proagent] warning: derived question ${q.id} (${q.template}) already exists; dropping\n`);
     }
   }
 

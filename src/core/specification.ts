@@ -423,29 +423,77 @@ export function buildGraph(
   const operator = byRole("operations");
   const monitor = byRole("monitoring");
   const documenter = byRole("documentation");
-  const coordinator = agents[0];
+  const coordinator = agents[0]!;
+
+  // Self-edge guard: a coordinator that also fills a role must never be wired
+  // to itself (PA004 — the `documenter → coordinator` and `reviewer →
+  // coordinator` cases collapse this way).
+  const link = (from: string | undefined, to: string | undefined, kind: EdgeKind, artifacts: string[], contextScopes: string[], parallel: boolean) => {
+    if (from !== undefined && to !== undefined && from !== to) {
+      edges.push(edge(from, to, kind, artifacts, contextScopes, parallel));
+    }
+  };
 
   if (researcher && implementer) {
-    edges.push(edge(researcher.id, implementer.id, "handoff", ["research-findings"], ["architecture-relevant"], false));
+    link(researcher.id, implementer.id, "handoff", ["research-findings"], ["architecture-relevant"], false);
   }
   if (infra && researcher) {
-    edges.push(edge(researcher.id, infra.id, "delegates", ["diagnosis-questions"], ["infrastructure-config"], true));
+    link(researcher.id, infra.id, "delegates", ["diagnosis-questions"], ["infrastructure-config"], true);
   }
   if (implementer && reviewer) {
-    edges.push(edge(implementer.id, reviewer.id, "review", ["patches", "change-description"], ["diff-relevant"], false));
+    link(implementer.id, reviewer.id, "review", ["patches", "change-description"], ["diff-relevant"], false);
   }
-  if (reviewer && coordinator) {
-    edges.push(edge(reviewer.id, coordinator.id, "aggregates", ["review-verdict"], [], false));
+  if (reviewer) {
+    link(reviewer.id, coordinator.id, "aggregates", ["review-verdict"], [], false);
   }
   if (operator) {
     const source = reviewer ?? coordinator;
-    if (source) edges.push(edge(source.id, operator.id, "handoff", ["approved-change-plan"], ["runbook"], false));
+    link(source?.id, operator.id, "handoff", ["approved-change-plan"], ["runbook"], false);
   }
-  if (monitor && coordinator) {
-    edges.push(edge(monitor.id, coordinator.id, "escalates", ["anomaly-report"], ["metrics", "logs"], true));
+  if (monitor) {
+    link(monitor.id, coordinator.id, "escalates", ["anomaly-report"], ["metrics", "logs"], true);
   }
-  if (documenter && coordinator) {
-    edges.push(edge(documenter.id, coordinator.id, "aggregates", ["documentation-update"], [], true));
+  if (documenter) {
+    link(documenter.id, coordinator.id, "aggregates", ["documentation-update"], [], true);
+  }
+
+  // Duplicate role matches (PA007): the catalog can legitimately map several
+  // professions onto one role, and `byRole` above only wires the first. Give
+  // every extra member a peer: reviewers review the implementer, extra
+  // operators receive the release handoff, anything else aggregates to the
+  // coordinator.
+  const connected = new Set(edges.flatMap((e) => [e.from, e.to]));
+  for (const agent of agents) {
+    if (connected.has(agent.id)) continue;
+    let pushed: AgentGraphEdge | null = null;
+    if (agent.role === "review") {
+      if (implementer && agent.id !== implementer.id) {
+        pushed = edge(implementer.id, agent.id, "review", ["patches", "change-description"], ["diff-relevant"], false);
+      }
+    } else if (agent.role === "operations") {
+      const source = reviewer ?? coordinator;
+      if (source && agent.id !== source.id) {
+        pushed = edge(source.id, agent.id, "handoff", ["approved-change-plan"], ["runbook"], false);
+      }
+    } else if (coordinator && agent.id !== coordinator.id) {
+      pushed = edge(agent.id, coordinator.id, "aggregates", [`${agent.role}-report`], [], true);
+    }
+    if (pushed) {
+      edges.push(pushed);
+      connected.add(pushed.from);
+      connected.add(pushed.to);
+      connected.add(agent.id);
+    }
+  }
+
+  // The coordinator itself must never be orphaned (PA007): when every would-be
+  // edge toward it collapsed into a self-edge, peer it into the first non-self
+  // member so it stays a routing hub.
+  if (coordinator && agents.length > 1 && !edges.some((e) => e.from === coordinator.id || e.to === coordinator.id)) {
+    const peer = agents.find((a) => a.id !== coordinator.id);
+    if (peer) {
+      edges.push(edge(peer.id, coordinator.id, "aggregates", ["findings-report"], [], true));
+    }
   }
   return edges;
 }

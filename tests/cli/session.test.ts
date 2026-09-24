@@ -512,4 +512,52 @@ describe("session CLI (SESSION-CLI)", () => {
       await fs.rm(root, { recursive: true, force: true });
     }
   });
+
+  it("SESSION-CLI-028: follow-up questions survive resuming a session across CLI processes (issue #17)", async () => {
+    // Seeds are persisted as q_001…; when a session is resumed in a fresh
+    // process the derived follow-up must get a NEW id — not q_001 again (which
+    // collides with the persisted seed and is silently dropped, stranding the
+    // interview with no open questions while gaps remain).
+    const root = await makeRepo();
+    try {
+      await seedSession(root, "An agent that deploys service releases to our Kubernetes cluster");
+      const readIds = async (): Promise<Array<{ id: string; status: string; template: string }>> => {
+        const session = JSON.parse(await fs.readFile(path.join(root, ".proagent", "session.json"), "utf8")) as {
+          questions: Array<{ id: string; status: string; template: string }>;
+        };
+        return session.questions;
+      };
+      const numeric = (id: string): number => {
+        const m = id.match(/^q_(\d+)$/);
+        return m ? Number(m[1]) : 0;
+      };
+
+      // Snapshot persisted ids BEFORE the cross-process answer.
+      const beforeIds = (await readIds()).map((q) => q.id);
+      expect(beforeIds.length).toBeGreaterThan(0);
+      const beforeMax = Math.max(...beforeIds.map(numeric));
+      const beforeTemplates = new Set((await readIds()).map((q) => q.template));
+
+      // Answer the first open seed in a brand-new CLI process (fresh module
+      // counter under the buggy build).
+      const seedToAnswer = beforeIds[0]!;
+      run(root, ["answer", seedToAnswer, "It is triggered on demand and deploys packaged releases to our EKS clusters", "--json"]);
+
+      // After the answer, every derived follow-up must extend past the max id
+      // that existed before the resume — never re-issued (and dropped) ids.
+      const after = (await readIds()).map((q) => q.id);
+      expect(new Set(after).size).toBe(after.length);
+      const followUps = after.filter((id) => !beforeIds.includes(id));
+      expect(followUps.length).toBeGreaterThan(0);
+      for (const id of followUps) {
+        expect(numeric(id)).toBeGreaterThan(beforeMax);
+        // Derived questions are new follow-up templates, never re-issued seeds.
+        const template = (await readIds()).find((q) => q.id === id)?.template;
+        expect(template && !["objective", "environment", "write-access"].includes(template)).toBe(true);
+      }
+      expect(beforeTemplates.size).toBeGreaterThan(0);
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
 });
