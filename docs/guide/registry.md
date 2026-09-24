@@ -29,7 +29,7 @@ repo, and any item pulls into your repository with one command.
 ## Install a profile (the one-liner)
 
 ```bash
-npx proagent equip security-engineer
+npx @reposell/proagent equip security-engineer
 ```
 
 That's it. The command resolves the profile (built-in, local, or the Git-backed catalog),
@@ -54,7 +54,7 @@ proagent compile security-engineer --target codex # explicit harness
 
 ### Remote vs local equip
 
-`npx proagent equip <slug>` resolves in order: your repo's `.proagent/profiles/` local
+`npx @reposell/proagent equip <slug>` resolves in order: your repo's `.proagent/profiles/` local
 creations (written by `proagent profile create`) → a `registry/profiles/` checkout →
 the packaged snapshot shipped with the npm package → the remote catalog (fetched from the
 catalog repo). Consequence: a profile you just scaffolded **works locally immediately**,
@@ -121,7 +121,7 @@ time:
 ## Install a crew (the one-liner)
 
 ```bash
-npx proagent crew install incidere-incident-response
+npx @reposell/proagent crew install incidere-incident-response
 ```
 
 That's it. The command fetches the crew definition from the Git-backed catalog, validates

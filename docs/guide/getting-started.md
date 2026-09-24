@@ -7,9 +7,9 @@ description: 'Install the CLI, equip your first professional profile and verify 
 ## Install
 
 ```bash
-npm install -g proagent
+npm install -g @reposell/proagent
 # or run without installing:
-npx proagent --help
+npx @reposell/proagent --help
 ```
 
 Requires Node.js 20+.

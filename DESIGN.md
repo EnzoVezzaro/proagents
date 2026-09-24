@@ -1129,7 +1129,7 @@ This section should have the strongest “instrument panel” feel.
 Bring the page back to simplicity.
 
 ```text
-npm install -g proagent
+npm install -g @reposell/proagent
 ```
 
 Then:
@@ -1283,7 +1283,7 @@ PROAGENT / QUICKSTART             COPY
 Content:
 
 ```bash
-npm install -g proagent
+npm install -g @reposell/proagent
 proagent equip security-engineer
 ```
 
@@ -1881,7 +1881,7 @@ profile
 The visitor knows how to start:
 
 ```bash
-npm install -g proagent
+npm install -g @reposell/proagent
 ```
 
 ### Visual quality

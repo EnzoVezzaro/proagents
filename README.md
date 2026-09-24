@@ -36,7 +36,7 @@ Existing Harness
 Professional Agent
 ```
 
-`npm i -g proagent` · [Documentation](https://proagents.reposell.dev/) · [Registry](https://proagents.reposell.dev/) · MIT
+`npm i -g @reposell/proagent` · [Documentation](https://proagents.reposell.dev/) · [Registry](https://proagents.reposell.dev/) · MIT
 
 [![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-%E2%9D%A4-db61a2?logo=githubsponsors\&logoColor=white)](https://github.com/sponsors/EnzoVezzaro)
 
@@ -438,7 +438,7 @@ The canonical profile remains independent from any provider.
 
 ```bash
 # Install
-npm install -g proagent
+npm install -g @reposell/proagent
 
 # Detect available coding agents
 proagent detect

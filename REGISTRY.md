@@ -509,7 +509,7 @@ as their profession, profile specs and crew specs feed each other.
 Installing a profile should produce the complete configuration the target harness needs to operate as that profession — the CLI translates the spec into the harness's native artifacts.
 
 ```bash
-npx proagent profile install security-engineer
+npx @reposell/proagent profile install security-engineer
 ```
 
 ProAgents resolves:
@@ -581,7 +581,7 @@ Choose:
 > have the same trio (`crew validate/submit/publish`). Multi-file profile bundles and
 > provenance manifests are specified below.
 >
-> **Remote vs local equip:** `npx proagent equip <slug>` resolves built-ins → local
+> **Remote vs local equip:** `npx @reposell/proagent equip <slug>` resolves built-ins → local
 > `.proagent/profiles/` → the registry catalog. A profile only works remotely once it is
 > merged into the catalog repo — until then, use the local folder.
 
