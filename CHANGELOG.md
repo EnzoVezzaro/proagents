@@ -7,6 +7,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0] — 2026-09-24
+
+### Added — explicit project memory (`proagent memory`)
+
+- JSON-only memory records under `.proagent/memory/<key>.json`, each scope-
+  and provenance-tagged by design. `memory add`/`list`/`show`/`rm` keep the
+  store explicit — no raw-session learning — and every update bumps the
+  record's version (never a timestamp). Invalid input is rejected loudly with
+  **ME001–ME003** codes plus a suggestion, so a bad record is never silently
+  accepted.
+- **`memory compile`** renders the store as a deterministic, content-addressed
+  instruction block (`<!-- proagent:memory:start <12-hex sha256> -->` …)
+  compiled into the target harness's instructions file. Compiling the same
+  store always yields byte-identical output — memory is part of the
+  deterministic core, so the block survives re-equip/repair churn.
+
+### Added — repo audit (`proagent audit`)
+
+- Deterministic security scan of the repo, no model calls: secrets/private-key
+  leakage (**AU001**), remote-fetch-into-shell pipes (**AU003**), remote MCP
+  transports (**AU004**), unpinned MCP stdio launchers (**AU005**) and
+  over-broad permission grants (**AU006**). Same tree, same bytes; exit
+  contract `0` clean · `1` warnings · `2` errors, honored in `--json` so CI
+  can gate on it.
+
+### Added — install lifecycle (`list-installed`, `doctor`, `repair`)
+
+- **`list-installed`** inventories everything ProAgents owns in the repo —
+  profile/crew installs with their ownership markers plus instruction blocks —
+  a pure provenance scan (no writes, deterministic order).
+- **`doctor`** verifies those markers with pinned **DG001–DG007** codes
+  (unparseable manifest, missing SKILL.md, unclosed/stale blocks, invalid
+  `.claude/settings.json`/`.mcp.json`) and the same exit contract.
+- **`repair`** deterministically recompiles broken single-profile installs
+  from the on-disk canonical manifest — skills, manifest, instruction block,
+  enforcement hooks, MCP merge — idempotently. Composed installs are never
+  silently mangled: they surface in `limitations` with the re-equip pointer.
+
+### Added — Studio surfaces: Console and Plan
+
+- **Studio Console** is a read-only viewer for the CLI's `--json` introspection
+  output (`doctor`, `audit`, `list-installed`, `memory`). The Studio runs
+  entirely in your browser and cannot read your checkout, so you paste (or
+  load) the CLI's JSON and it renders against the pinned code tables — the
+  browser never fabricates repository state.
+- **Plan** renders the Build flow's spec draft as a browsable plan:
+  canonical-ordered environment sections, PA5xx-derived status, findings,
+  next CLI steps and the `proagents.yaml` preview with download. Reachable
+  from the builder's export step via "View plan".
+- The Studio island gains a route bar (Build / Discover / Console / Plan) so
+  the surfaces are reachable from anywhere.
+
 ## [0.15.0] — 2026-09-22
 
 ### Added — profile-driven rule enforcement (rules compile into runtime boundaries)
