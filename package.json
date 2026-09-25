@@ -87,7 +87,7 @@
     "@fontsource-variable/nunito": "^5.3.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "vue": "^3.5.13",
+    "vue": "^3.5.43",
     "yaml": "^2.6.0"
   },
   "optionalDependencies": {
