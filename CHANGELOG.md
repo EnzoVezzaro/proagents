@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.1] — 2026-09-25
+
+### Fixed — question ids resume across processes; duplicated roles wire correctly
+
+- The question engine now resumes the numeric question-id sequence from the highest
+  persisted `q_<n>` id instead of restarting at `q_001`. A fresh process answering a
+  follow-up no longer re-issues ids already written into `.proagent/session.json`, so
+  derived questions stay deterministic (closes the cross-process collision). When a
+  derived question would be dropped for the collision, the orchestrator prints a
+  `[proagent] warning:` on stderr — agents see it, `--json` is untouched.
+- Branching builds were hardened: every graph edge routes through a self-edge-guarded
+  helper; duplicated same-role team members are wired instead of dropping their edges
+  (review duplication links implementer→agent-review; operations duplication links
+  reviewer/coordinator→agent-handoff; otherwise agent→coordinator aggregates); and the
+  coordinator can no longer be left orphaned — it is always guaranteed a peer edge.
+
+### Changed — the npm package moved to the `@reposell` organization scope
+
+- The package is now published as **`@reposell/proagent`**. The CLI binary (`proagent`),
+  the `.proagent/` session dir and all module internals are unchanged — only the
+  npm package identity moved. Install docs reference the scoped name, and the legacy
+  `proagent` package is deprecated on npm pointing at `@reposell/proagent`.
+
+### Added — agent installation runbook
+
+- `docs/guide/installation.md`: a complete, agent-driven install & setup procedure for
+  profiles, crews and whole environments — detect, dry-run, install, the deterministic
+  verification trio (`validate --profiles`, `list-installed`, `doctor`) and a fixed
+  report shape, so an AI agent finishes an install job entirely instead of half-way.
+
 ## [0.16.0] — 2026-09-24
 
 ### Added — explicit project memory (`proagent memory`)

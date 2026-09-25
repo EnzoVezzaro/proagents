@@ -166,6 +166,7 @@ export default defineConfig({
           items: [
             { text: "What is ProAgents?", link: "/guide/what-is-proagents" },
             { text: "Getting started", link: "/guide/getting-started" },
+            { text: "Install & setup runbook", link: "/guide/installation" },
             { text: "Agent operating guide", link: "/guide/agent-guide" },
           ],
         },
