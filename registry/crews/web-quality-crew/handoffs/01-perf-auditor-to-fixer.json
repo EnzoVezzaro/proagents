@@ -1,0 +1,6 @@
+{
+  "from": "perf-auditor",
+  "to": "fixer",
+  "artifact": "perf-findings.md",
+  "body": "`perf-auditor` hands **perf-findings.md** to `fixer`."
+}

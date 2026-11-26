@@ -1,16 +1,14 @@
 <script setup lang="ts">
 // Branded not-found view (replaces VitePress's default "keep looking" quote).
-// Also recovers stale URLs: pre-merge bookmarks like /proagents/docs/guide/…
-// land here (no such file) and are redirected into the merged URL space.
+// Also recovers stale URLs: pre-merge bookmarks like /docs/guide/… (and the
+// older /proagents/docs/… form) land here and are redirected into the site.
 import { onMounted } from "vue";
 
-// Runtime binding (not a static src) so Vue's asset pipeline leaves the
-// base-prefixed public path alone.
-const logo = "/proagents/logo.png";
+const logo = "/logo.png";
 
 onMounted(() => {
   const m = window.location.pathname.match(/^\/(?:proagents\/)?docs\/(.*)$/);
-  if (m) window.location.replace(`/proagents/${m[1]}`);
+  if (m) window.location.replace(`/${m[1]}`);
 });
 </script>
 
@@ -20,11 +18,11 @@ onMounted(() => {
     <p class="pa-404-code">404</p>
     <h1>Page not found</h1>
     <p class="pa-404-copy">
-      The page you asked for does not exist — but the marketplace and the docs do.
+      The page you asked for does not exist — but the registry and the docs do.
     </p>
     <div class="pa-404-actions">
-      <a class="pa-404-cta" href="/proagents/">Open the marketplace</a>
-      <a class="pa-404-alt" href="/proagents/guide/getting-started">Read the docs</a>
+      <a class="pa-404-cta" href="/studio">Open the Studio</a>
+      <a class="pa-404-alt" href="/guide/getting-started">Read the docs</a>
     </div>
   </div>
 </template>
@@ -45,7 +43,7 @@ onMounted(() => {
   font-family: var(--pa-font-mono);
   font-size: 13px;
   letter-spacing: 0.2em;
-  color: var(--pa-cyan-bright);
+  color: var(--pa-accent);
 }
 .pa-404 h1 {
   margin: 0;
@@ -73,22 +71,22 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   padding: 9px 18px;
-  border-radius: 9px;
-  background-image: var(--pa-grad);
-  color: #ffffff;
+  border-radius: 6px;
+  background: var(--pa-accent);
+  color: var(--pa-on-accent, #fff);
   font-weight: 600;
   font-size: 14px;
   text-decoration: none;
 }
 .pa-404-cta:hover {
-  color: #ffffff;
-  filter: brightness(1.12);
+  color: var(--pa-on-accent, #fff);
+  background: var(--pa-accent-strong);
 }
 .pa-404-alt {
   display: inline-flex;
   align-items: center;
   padding: 9px 18px;
-  border-radius: 9px;
+  border-radius: 6px;
   border: 1px solid var(--vp-c-border);
   color: var(--vp-c-text-1);
   font-weight: 600;
@@ -96,8 +94,11 @@ onMounted(() => {
   text-decoration: none;
 }
 .pa-404-alt:hover {
-  border-color: var(--vp-c-brand-1);
-  color: var(--vp-c-brand-1);
+  border-color: var(--pa-accent);
+  color: var(--pa-accent-strong);
+}
+html.dark .pa-404-alt:hover {
+  color: var(--pa-accent);
 }
 @media (prefers-reduced-motion: no-preference) {
   .pa-404 { transition: opacity 0.15s ease; }

@@ -1,0 +1,38 @@
+{
+  "profile": "code-reviewer",
+  "role": "reviewer",
+  "name": "Code Reviewer",
+  "permissions": {
+    "read": "repo",
+    "write": "none",
+    "production": "none",
+    "secrets": "none",
+    "tools": [
+      "read_file",
+      "git_diff",
+      "git_log"
+    ],
+    "approvalGates": []
+  },
+  "mcpServers": [
+    "github"
+  ],
+  "context": [
+    {
+      "framework": "filesystem",
+      "scope": "src/**, web/**, tests/**"
+    },
+    {
+      "framework": "git",
+      "scope": "history of changed files"
+    }
+  ],
+  "receivesFrom": [
+    "backend",
+    "frontend",
+    "test-automator"
+  ],
+  "emits": [
+    "review-verdict.md"
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "from": "deployer",
+  "to": "watcher",
+  "artifact": "rollout-log.md",
+  "body": "`deployer` hands **rollout-log.md** to `watcher`."
+}

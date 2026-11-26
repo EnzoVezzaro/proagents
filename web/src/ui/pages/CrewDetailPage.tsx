@@ -3,10 +3,18 @@ import type { AppCtx } from "../AppShell.js";
 import { ErrorNote } from "../cards.js";
 import type { CrewDefinition, MarketplaceCatalog, ProfileManifest } from "../../types.js";
 import { catalogUrl } from "../../catalog.js";
+import { hydrateProfile } from "../../profile-hydrate.js";
+import { hydrateCrew } from "../../crew-hydrate.js";
 import { ProfileDetail } from "./ProfileDetailPage.js";
 
 function itemUrl(id: string): string {
-  return catalogUrl(`items/${id}.json`);
+  // Unified registry format (profiles/<id>/manifest.json).
+  return catalogUrl(`profiles/${id}/manifest.json`);
+}
+
+function crewUrl(id: string): string {
+  // Unified registry format (crews/<id>/manifest.json).
+  return catalogUrl(`crews/${id}/manifest.json`);
 }
 
 export function CrewDetailPage(props: { id: string; ctx: AppCtx }): React.JSX.Element {
@@ -17,22 +25,36 @@ export function CrewDetailPage(props: { id: string; ctx: AppCtx }): React.JSX.El
 
   useEffect(() => {
     let cancelled = false;
-    // Kind dispatch: the catalog index names the kind; the item file may be a
-    // crew definition or a profile manifest. Sniff as a fallback for stale indexes.
+    // Kind dispatch: the catalog index names the kind; the item file is a
+    // profile manifest (profiles/<id>/manifest.json) or a crew definition
+    // (crews/<id>/manifest.json).
+    const loadItem = async (): Promise<{ item: unknown; base: string }> => {
+      for (const url of [itemUrl(id), crewUrl(id)]) {
+        const res = await fetch(url);
+        if (res.ok) return { item: await res.json(), base: url.replace(/[^/]*$/, "") };
+        if (res.status !== 404) throw new Error(`HTTP ${res.status}`);
+      }
+      throw new Error("item not found");
+    };
     Promise.all([
       fetch(catalogUrl("catalog.json")).then((r) => (r.ok ? (r.json() as Promise<MarketplaceCatalog>) : null)),
-      fetch(itemUrl(id)).then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json() as Promise<CrewDefinition | ProfileManifest>;
-      }),
+      loadItem(),
     ])
-      .then(([catalog, item]) => {
+      .then(async ([catalog, loaded]) => {
         if (cancelled) return;
+        const { item, base } = loaded;
         const meta = catalog?.items.find((i) => i.id === id);
-        if (meta?.kind === "profile" || !(item as CrewDefinition).workers) {
-          setProfile(item as ProfileManifest);
+        const isProfile = meta?.kind === "profile" || (typeof item === "object" && item !== null && "profile" in item);
+        if (isProfile) {
+          // Folder-standard manifests hold section paths — hydrate to content
+          // (relative to items/<id>/) before rendering.
+          const manifest = await hydrateProfile(item as ProfileManifest, base);
+          if (!cancelled) setProfile(manifest);
         } else {
-          setCrew(item as CrewDefinition);
+          // Crew folder manifests hold worker/mcp/graph paths — hydrate the
+          // same way before rendering.
+          const def = await hydrateCrew(item as Parameters<typeof hydrateCrew>[0], base);
+          if (!cancelled) setCrew(def);
         }
       })
       .catch((err) => {
@@ -87,7 +109,7 @@ export function CrewDetailPage(props: { id: string; ctx: AppCtx }): React.JSX.El
             Preview on your repo
           </a>
           <a
-            href="https://github.com/sponsors/EnzoVezzaro"
+            href="https://buy.stripe.com/6oU6oI4XIdDs80t6701Nu02"
             target="_blank"
             rel="noreferrer"
             style={{ display: "block", textAlign: "center", marginTop: 10, border: "1px solid var(--line)", color: "var(--cream)", borderRadius: 10, padding: "10px 0", textDecoration: "none", fontSize: 13 }}

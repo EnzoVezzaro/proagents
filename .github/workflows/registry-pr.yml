@@ -1,0 +1,152 @@
+name: Registry PR validation
+
+# Publishing path #2: pull requests. The Studio's "Publish via pull request"
+# flow and manual contributions both land as PRs touching
+# registry/profiles/** or registry/crews/** (+ catalog.json). Every
+# changed item is run through the same deterministic validators the CLI and
+# Studio use; the catalog index must stay consistent with the item files.
+
+on:
+  pull_request:
+    paths:
+      - "registry/**"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: registry-pr-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    # Belt-and-braces: this workflow validates pull requests only. A
+    # push-triggered run (e.g. from a trigger-parse fallback) has no
+    # github.base_ref to diff against and must skip, not go red.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci && npm run build
+
+      - name: List changed registry items
+        id: changed
+        run: |
+          git diff --name-only --diff-filter=ACM "origin/${{ github.base_ref }}...HEAD" -- 'registry/profiles/*/profile.json' 'registry/crews/*/crew.json' > /tmp/items.txt || true
+          echo "count=$(wc -l < /tmp/items.txt | tr -d ' ')" >> "$GITHUB_OUTPUT"
+          echo "files<<FILES_EOF" >> "$GITHUB_OUTPUT"
+          cat /tmp/items.txt >> "$GITHUB_OUTPUT"
+          echo "FILES_EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Validate changed items
+        id: validate
+        if: steps.changed.outputs.count != '0'
+        run: |
+          set -e
+          FAIL=0
+          : > /tmp/problems.txt
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            echo "::checking $f"
+            kind=$(node --input-type=module -e "
+              import fs from 'node:fs';
+              const j = JSON.parse(fs.readFileSync('$f', 'utf8'));
+              console.log(j.profile ? 'profile' : (j.crew ? 'crew' : 'unknown'));
+            ")
+            node --input-type=module -e "
+              import fs from 'node:fs';
+              import path from 'node:path';
+              import { crewProblems } from './dist/crew/validate.js';
+              import { loadCrewFile } from './dist/crew/hydrate.js';
+              import { asCrewSource } from './dist/crew/hydrate.js';
+              import { profileProblems } from './dist/profiles/publish.js';
+              const f = '$f';
+              const kind = '$kind';
+              let problems = [];
+              if (kind === 'profile') {
+                // Folder items get their directory so section-path checks (PA042) run.
+                const item = JSON.parse(fs.readFileSync(f, 'utf8'));
+                problems = profileProblems(item, path.dirname(f));
+              } else if (kind === 'crew') {
+                // Hydrate the folder-standard manifest first; PA043–PA047 run
+                // against the hydrated definition, PA047/PA048 against the
+                // folder and the raw source manifest.
+                const crew = await loadCrewFile(f);
+                problems = crewProblems(crew, {
+                  crewDir: path.dirname(f),
+                  workerEntries: asCrewSource(JSON.parse(fs.readFileSync(f, 'utf8'))).members,
+                  source: JSON.parse(fs.readFileSync(f, 'utf8')),
+                });
+              } else {
+                problems = ['unrecognized registry item shape'];
+              }
+              if (problems.length > 0) {
+                for (const p of problems) console.error(f + ': ' + p);
+                process.exit(1);
+              }
+            " || FAIL=1
+          done < /tmp/items.txt
+          exit $FAIL
+
+      - name: Catalog index consistency
+        id: catalog
+        if: steps.changed.outputs.count != '0'
+        run: |
+          node --input-type=module <<'NODE'
+            import fs from "node:fs";
+            const catalog = JSON.parse(fs.readFileSync("registry/catalog.json", "utf8"));
+            const indexIds = new Set(catalog.items.map((i) => i.id));
+            const problems = [];
+            const changed = fs.readFileSync("/tmp/items.txt", "utf8").split("\n").filter(Boolean);
+            for (const f of changed) {
+              const item = JSON.parse(fs.readFileSync(f, "utf8"));
+              const id = item.profile?.slug ?? item.crew?.id ?? item.id;
+              const rel = f.replace("registry/profiles/", "").replace("registry/crews/", "");
+              const expectedName = rel.endsWith("/profile.json")
+                ? rel.replace(/\/profile\.json$/, "")
+                : rel.endsWith("/crew.json")
+                  ? rel.replace(/\/crew\.json$/, "")
+                  : rel.replace(/\.json$/, "");
+              if (id !== expectedName) problems.push(`${f}: item id "${id}" does not match folder/file name "${expectedName}"`);
+              if (!indexIds.has(id)) problems.push(`${f}: catalog.json has no index entry for "${id}" — regenerate the index`);
+              const entry = catalog.items.find((i) => i.id === id);
+              const version = item.version ?? item.profile?.version;
+              if (entry && version && entry.version !== version) {
+                problems.push(`${f}: catalog version ${entry.version} != manifest version ${version}`);
+              }
+            }
+            for (const p of problems) console.error(p);
+            process.exit(problems.length === 0 ? 0 : 1);
+          NODE
+
+      - name: Comment verdict
+        if: always() && steps.changed.outputs.count != '0'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const count = '${{ steps.changed.outputs.count }}';
+            const valid = '${{ steps.validate.outcome }}' !== 'failure' && '${{ steps.catalog.outcome }}' !== 'failure';
+            const s = count === '1' ? '' : 's';
+            const L = [];
+            if (valid) {
+              L.push(`✅ **${count} registry item${s} pass the deterministic validator(s).**`);
+              L.push('', 'Maintainers: verify the design, then merge to publish.');
+            } else {
+              L.push('❌ **Registry validation failed** — see the "Validate changed items" step for the exact PA03x/CREW problems.');
+              L.push('', 'Push a fix commit to this branch to re-run automatically.');
+            }
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: L.join('\n'),
+            });

@@ -1,0 +1,6 @@
+{
+  "from": "threat-modeler",
+  "to": "code-auditor",
+  "artifact": "threat-model.md",
+  "body": "`threat-modeler` hands **threat-model.md** to `code-auditor`."
+}

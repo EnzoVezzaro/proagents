@@ -57,9 +57,9 @@ string. Add tests with a minimal broken architecture.
 ### Docs
 
 The site is one VitePress project in `docs/` — the marketplace app mounts as
-a client-only island (`web/src/ui`) on the home page. Keep the brand palette
-(navy/blue/violet, cyan as the signal color) and run `npm run site:build`
-before opening a PR.
+a client-only island (`web/src/ui`) on the `/marketplace` page. Keep the
+brand palette (navy/blue/violet, cyan as the signal color) and run
+`npm run site:build` before opening a PR.
 
 ## Commit style
 

@@ -1,0 +1,6 @@
+{
+  "from": "api-designer",
+  "to": "frontend",
+  "artifact": "api-contract.md",
+  "body": "`api-designer` hands **api-contract.md** to `frontend`."
+}

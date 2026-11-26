@@ -1,3 +1,7 @@
+---
+description: 'Benchmarks measure the generated agent system — architecture, permissions, tool discipline and artifacts — not the LLM.'
+---
+
 # Benchmark system
 
 ProAgents benchmarks the **generated agent system** — architecture, permissions, tool discipline, artifacts and execution behavior — not an LLM. The lifecycle reads:
@@ -13,7 +17,7 @@ Two principles govern everything:
 
 ## Shipped suites
 
-Three reference suites ship in `.agents/benchmarks/` and run fully offline:
+Six reference suites ship in `.agents/benchmarks/` and run fully offline:
 
 | Suite | Styles exercised | Focus |
 |---|---|---|
@@ -21,6 +25,8 @@ Three reference suites ship in `.agents/benchmarks/` and run fully offline:
 | `api-contract-validator` | schema, predicate (no judges) | OpenAPI-style conformance, required fields, secret-leakage detection |
 | `migration-reviewer` | **patch**, **test**, predicate | Destructive-op detection, reviewed-patch reproduction, test honesty |
 | `incident-responder` | multi-agent, approval gates | Team participation, handoff integrity, approval-gated production actions |
+| `privacy-guardrails` | schema, predicate (no judges) | PII log hygiene, data-flow review completeness, fixture hygiene |
+| `release-guardrails` | schema, predicate (no judges) | Rollback-first planning, changelog discipline, dirty-tree refusal |
 
 ## Quick start
 

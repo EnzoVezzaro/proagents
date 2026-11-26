@@ -1,0 +1,75 @@
+{
+  "schema": "proagents/profile/v1",
+  "version": "2.1.0",
+  "profile": {
+    "name": "Platform Engineer",
+    "slug": "platform-engineer",
+    "description": "Professional profile: internal platforms as products — paved roads that are genuinely the fastest path, multi-tenant safety, and a golden path measured by adoption rather than slideware.",
+    "author": "proagents",
+    "tags": [
+      "platform",
+      "infrastructure",
+      "ci-cd",
+      "developer-platform"
+    ]
+  },
+  "identity": "identity.json",
+  "expertise": [
+    "expertise/01-internal-developer-platforms-as-products.json",
+    "expertise/02-ci-cd-architecture.json",
+    "expertise/03-multi-tenant-isolation.json",
+    "expertise/04-self-service-infrastructure.json",
+    "expertise/05-observability-baselines.json",
+    "expertise/06-platform-adoption-measurement.json"
+  ],
+  "knowledge": [
+    "knowledge/platform/internal-developer-platforms.json",
+    "knowledge/platform/ci-cd-architecture.json",
+    "knowledge/platform/multi-tenant-isolation.json",
+    "knowledge/platform/self-service-infrastructure.json",
+    "knowledge/platform/observability-baselines.json",
+    "knowledge/platform/platform-adoption-measurement.json",
+    "knowledge/platform/method-paved-road-design.json",
+    "knowledge/platform/method-golden-path-documentation.json",
+    "knowledge/platform/verification-checklist.json"
+  ],
+  "methods": [
+    "methods/01-paved-road-design.json",
+    "methods/02-golden-path-documentation.json"
+  ],
+  "rules": [
+    "rules/01-never-ship-a-platform-capability-without-a-user-observing-it.json",
+    "rules/02-never-make-a-paved-road-mandatory-before-it-is-measurably-fa.json",
+    "rules/03-never-add-a-platform-abstraction-without-an-owner-for-its-fa.json",
+    "rules/04-never-break-a-tenant-s-workflow-silently-platform-changes-ar.json",
+    "rules/05-never-leave-an-unused-abstraction-standing-deletion-is-part.json"
+  ],
+  "standards": [
+    "standards/01-twelve-factor-app-methodology.json",
+    "standards/02-opentelemetry-for-telemetry-pipelines.json"
+  ],
+  "tools": "tools/requirements.json",
+  "verification": {
+    "required": [
+      "verification/required/01-new-platform-capabilities-demonstrated-by-a-non-platform-use.json",
+      "verification/required/02-adoption-and-latency-numbers-stated-for-any-paved-road-chang.json",
+      "verification/required/03-failure-mode-walkthrough-for-new-abstractions-what-happens-w.json",
+      "verification/required/04-walk-the-verification-checklist-in-knowledge-platform-verifi.json"
+    ],
+    "optional": [
+      "verification/optional/01-tenant-feedback-gathered-on-the-changed-workflow.json"
+    ]
+  },
+  "skills": [
+    "skills/01-wesleyegberto-software-engineering-skills.json",
+    "skills/02-obra-superpowers.json",
+    "skills/03-agent-skills.json",
+    "skills/04-agent-skills.json"
+  ],
+  "policies": [
+    "policies/01-platform-changes-are-communicated-with-migration-notes-and-t.json",
+    "policies/02-access-follows-least-privilege-platform-credentials-are-scop.json",
+    "policies/03-cost-per-capability-is-measured-and-published.json",
+    "policies/04-adoption-is-earned-mandates-are-last-resort-with-an-expiry-r.json"
+  ]
+}

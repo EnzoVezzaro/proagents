@@ -5,7 +5,7 @@ import path from "node:path";
 import { listProfiles, resolveProfiles, validateAllProfiles } from "../../src/profiles/registry.js";
 import { composeProfiles } from "../../src/profiles/composition.js";
 import { validateProfile } from "../../src/profiles/validation.js";
-import { profileProblems } from "../../src/profiles/marketplace.js";
+import { profileProblems } from "../../src/profiles/publish.js";
 import type { ProfileManifest } from "../../src/profiles/types.js";
 
 /**
@@ -55,39 +55,30 @@ describe("profile registry (PROFILES-REG)", () => {
     await expect(resolveProfiles(["no-such-profile"])).rejects.toThrow(/unknown profile/);
   });
 
-  it("PROFILES-REG-004: local profiles shadow built-ins and are flagged during validation", async () => {
+  it("PROFILES-REG-004: a registry checkout wins over the packaged snapshot", async () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), "profiles-reg-"));
     try {
-      const local = manifest("senior-engineer");
-      await fs.mkdir(path.join(root, "profiles"), { recursive: true });
-      await fs.writeFile(path.join(root, "profiles", "senior-engineer.json"), JSON.stringify(local));
-      const entries = await listProfiles(root);
-      const shadowed = entries.find((e) => e.manifest.profile.slug === "senior-engineer");
-      expect(shadowed?.origin).toBe("local");
-    } finally {
-      await fs.rm(root, { recursive: true, force: true });
-    }
-  });
-
-  it("PROFILES-REG-005: marketplace items fill gaps but never shadow built-ins", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "profiles-reg-"));
-    try {
-      await fs.mkdir(path.join(root, ".marketplace", "items"), { recursive: true });
-      // A marketplace copy of a built-in slug must NOT win…
+      // A checkout copy of a packaged slug wins (it is what the repo manages).
+      const checkoutCopy = manifest("senior-engineer");
+      await fs.mkdir(path.join(root, "registry", "profiles", "senior-engineer"), { recursive: true });
       await fs.writeFile(
-        path.join(root, ".marketplace", "items", "senior-engineer.json"),
-        JSON.stringify(manifest("senior-engineer")),
+        path.join(root, "registry", "profiles", "senior-engineer", "manifest.json"),
+        JSON.stringify(checkoutCopy),
       );
-      // …and a marketplace-only profile must appear.
+      // A registry-only profile must appear from the checkout.
+      await fs.mkdir(path.join(root, "registry", "profiles", "marketplace-only"), { recursive: true });
       await fs.writeFile(
-        path.join(root, ".marketplace", "items", "marketplace-only.json"),
+        path.join(root, "registry", "profiles", "marketplace-only", "manifest.json"),
         JSON.stringify(manifest("marketplace-only")),
       );
       const entries = await listProfiles(root);
       const senior = entries.find((e) => e.manifest.profile.slug === "senior-engineer");
-      expect(senior?.origin).toBe("builtin");
+      expect(senior?.origin).toBe("marketplace");
       const only = entries.find((e) => e.manifest.profile.slug === "marketplace-only");
       expect(only?.origin).toBe("marketplace");
+      // The packaged snapshot still fills gaps for slugs the checkout lacks.
+      const builtin = entries.find((e) => e.manifest.profile.slug === "security-engineer");
+      expect(builtin?.origin).toBe("builtin");
     } finally {
       await fs.rm(root, { recursive: true, force: true });
     }
@@ -118,7 +109,7 @@ describe("profile validation (PROFILES-VAL)", () => {
     expect(report.findings.map((f) => f.code)).toContain("PA030");
   });
 
-  it("PROFILES-VAL-007: profileProblems gates marketplace publishing (CI contract)", async () => {
+  it("PROFILES-VAL-007: profileProblems gates registry publishing (CI contract)", async () => {
     const entries = await listProfiles();
     const good = entries.find((e) => e.manifest.profile.slug === "security-engineer");
     expect(profileProblems(good!.manifest)).toEqual([]);
@@ -137,7 +128,7 @@ describe("profile validation (PROFILES-VAL)", () => {
 
   it("PROFILES-VAL-004: PA032 rejects non-semver versions", () => {
     const m = manifest("some-profile");
-    m.profile.version = "v1";
+    m.version = "v1";
     const report = validateProfile(m, { checkKnowledge: false });
     expect(report.findings.map((f) => f.code)).toContain("PA032");
   });
@@ -194,27 +185,139 @@ describe("profile validation (PROFILES-VAL)", () => {
     const report = validateProfile(m, { checkKnowledge: false, duplicateSlugs: new Set(["shadowed"]) });
     expect(report.findings.map((f) => f.code)).toContain("PA038");
   });
+
+  it("PROFILES-VAL-012: PA043 accepts well-formed enforcement and rejects malformed blocks", () => {
+    const good = manifest("enforced");
+    good.rules = ["never touch the secrets file"];
+    good.ruleEnforcement = [
+      { rule: "never touch the secrets file", enforcement: { bash: ["cat .env*"], paths: ["**/.env"], tools: ["shell"] } },
+    ];
+    expect(validateProfile(good, { checkKnowledge: false }).findings.filter((f) => f.code === "PA043")).toEqual([]);
+
+    const notObject = manifest("enforced-bad");
+    notObject.rules = ["never touch the secrets file"];
+    notObject.ruleEnforcement = [{ rule: "never touch the secrets file", enforcement: "yes" as never }];
+    const r1 = validateProfile(notObject, { checkKnowledge: false });
+    expect(r1.findings.some((f) => f.code === "PA043" && f.severity === "error" && f.message.includes("must be an object"))).toBe(true);
+
+    const unknownKey = manifest("enforced-bad-2");
+    unknownKey.rules = ["never touch the secrets file"];
+    unknownKey.ruleEnforcement = [{ rule: "never touch the secrets file", enforcement: { bash: ["git push*"], regex: "x" } as never }];
+    expect(
+      validateProfile(unknownKey, { checkKnowledge: false }).findings.some((f) => f.code === "PA043" && f.message.includes('unknown key "regex"')),
+    ).toBe(true);
+
+    const emptyList = manifest("enforced-bad-3");
+    emptyList.rules = ["never touch the secrets file"];
+    emptyList.ruleEnforcement = [{ rule: "never touch the secrets file", enforcement: { paths: [] } }];
+    expect(
+      validateProfile(emptyList, { checkKnowledge: false }).findings.some((f) => f.code === "PA043" && f.message.includes("enforcement.paths")),
+    ).toBe(true);
+
+    const dangling = manifest("enforced-bad-4");
+    dangling.rules = ["never touch the secrets file"];
+    dangling.ruleEnforcement = [{ rule: "a rule that is not in the rules list", enforcement: { bash: ["rm -rf *"] } }];
+    expect(
+      validateProfile(dangling, { checkKnowledge: false }).findings.some((f) => f.code === "PA043" && f.severity === "warning" && f.message.includes("not present in rules")),
+    ).toBe(true);
+  });
 });
 
-describe("shipped marketplace catalog (PROFILES-CATALOG)", () => {
+describe("rule enforcement hydration (PROFILES-ENF)", () => {
+  it("PROFILES-ENF-001: rule section files carry enforcement blocks into ruleEnforcement", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "profiles-enf-"));
+    try {
+      const dir = path.join(root, "registry", "profiles", "guarded");
+      await fs.mkdir(path.join(dir, "rules"), { recursive: true });
+      await fs.mkdir(path.join(dir, "expertise"), { recursive: true });
+      await fs.mkdir(path.join(dir, "tools"), { recursive: true });
+      await fs.mkdir(path.join(dir, "verification", "required"), { recursive: true });
+      await fs.writeFile(
+        path.join(dir, "manifest.json"),
+        JSON.stringify({
+          version: "1.0.0",
+          profile: { name: "Guarded", slug: "guarded" },
+          identity: "identity.json",
+          expertise: ["expertise/01.json"],
+          rules: ["rules/01-protect.json", "rules/02-prose.json"],
+          tools: "tools/requirements.json",
+          verification: { required: ["verification/required/01.json"] },
+        }),
+      );
+      await fs.writeFile(path.join(dir, "identity.json"), JSON.stringify({ title: "Guarded" }));
+      await fs.writeFile(path.join(dir, "expertise", "01.json"), JSON.stringify({ body: "secrets" }));
+      await fs.writeFile(
+        path.join(dir, "rules", "01-protect.json"),
+        JSON.stringify({ title: "protect the env file", enforcement: { paths: ["**/.env"] }, body: "protect the env file" }),
+      );
+      await fs.writeFile(path.join(dir, "rules", "02-prose.json"), JSON.stringify({ body: "be careful out there" }));
+      await fs.writeFile(path.join(dir, "tools", "requirements.json"), JSON.stringify({ required: ["shell"] }));
+      await fs.writeFile(path.join(dir, "verification", "required", "01.json"), JSON.stringify({ body: "tests pass" }));
+
+      const { loadProfileFile } = await import("../../src/profiles/registry.js");
+      const hydrated = await loadProfileFile(path.join(dir, "manifest.json"));
+      expect(hydrated.rules).toEqual(["protect the env file", "be careful out there"]);
+      expect(hydrated.ruleEnforcement).toEqual([
+        { rule: "protect the env file", enforcement: { paths: ["**/.env"] } },
+      ]);
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("PROFILES-ENF-002: the shipped security-engineer profile carries its secrets-rule enforcement", async () => {
+    const [entry] = await resolveProfiles(["security-engineer"]);
+    expect(entry?.manifest.ruleEnforcement).toEqual([
+      {
+        rule: "never expose secrets in logs, errors, or committed files",
+        enforcement: { bash: ["cat .env*"], paths: ["**/.env", "**/*.env.*", "**/*.pem", "**/*.key", "**/id_rsa*"] },
+      },
+    ]);
+  });
+
+  it("PROFILES-ENF-003: composition merges ruleEnforcement across profiles and dedupes identical entries", () => {
+    const a = manifest("profile-a", { rules: ["never expose secrets"] });
+    a.ruleEnforcement = [{ rule: "never expose secrets", enforcement: { paths: ["**/.env"] } }];
+    const b = manifest("profile-b", { rules: ["never expose secrets", "require review"] });
+    b.ruleEnforcement = [
+      { rule: "never expose secrets", enforcement: { paths: ["**/.env"] } }, // identical → deduped
+      { rule: "never expose secrets", enforcement: { bash: ["cat .env*"] } }, // same rule, more data → kept
+    ];
+    const { effective } = composeProfiles([a, b]);
+    expect(effective.ruleEnforcement).toEqual([
+      { rule: "never expose secrets", enforcement: { paths: ["**/.env"] } },
+      { rule: "never expose secrets", enforcement: { bash: ["cat .env*"] } },
+    ]);
+  });
+});
+
+describe("shipped registry catalog (PROFILES-CATALOG)", () => {
   it("PROFILES-CATALOG-001: every kind:\"profile\" catalog item passes the profile validator", async () => {
     // The catalog is data, not code — a bad manifest can be committed without
     // any type error. Gate the shipped items here so CI catches it.
-    const catalog = JSON.parse(await fs.readFile(path.resolve(".marketplace", "catalog.json"), "utf8")) as {
+    const catalog = JSON.parse(await fs.readFile(path.resolve("registry", "catalog.json"), "utf8")) as {
       items: Array<{ id: string; kind: string }>;
     };
     const profileIds = catalog.items.filter((i) => i.kind === "profile").map((i) => i.id);
     expect(profileIds.length).toBeGreaterThanOrEqual(13);
     for (const id of profileIds) {
-      const raw = await fs.readFile(path.resolve(".marketplace", "items", `${id}.json`), "utf8");
-      const manifest = JSON.parse(raw) as ProfileManifest;
+      // Folder layout (profiles/<id>/manifest.json) with flat legacy fallback.
+      const folderPath = path.resolve("registry", "profiles", id, "manifest.json");
+      const flatPath = path.resolve("registry", "profiles", `${id}.json`);
+      const filePath = await fs
+        .access(folderPath)
+        .then(() => folderPath)
+        .catch(() => flatPath);
+      // Load through the registry so path-format sections hydrate first.
+      const { loadProfileFile } = await import("../../src/profiles/registry.js");
+      const manifest = await loadProfileFile(filePath);
       const problems = profileProblems(manifest);
       expect(problems, `catalog item ${id} has problems: ${JSON.stringify(problems)}`).toEqual([]);
     }
   });
 
   it("PROFILES-CATALOG-002: every catalog index entry has the identity fields the SPA renders", async () => {
-    const catalog = JSON.parse(await fs.readFile(path.resolve(".marketplace", "catalog.json"), "utf8")) as {
+    const catalog = JSON.parse(await fs.readFile(path.resolve("registry", "catalog.json"), "utf8")) as {
       items: Array<{ id: string; name?: string; version?: string; description?: string; author?: string; tags?: string[]; kind: string }>;
     };
     expect(catalog.items.length).toBeGreaterThan(0);
@@ -272,6 +375,25 @@ describe("profile composition (PROFILES-COMP)", () => {
     });
     const { conflicts } = composeProfiles([a]);
     expect(conflicts.map((c) => c.code)).toContain("PA025");
+  });
+
+  it("PROFILES-COMP-007: PA025 never fires on prose outcomes — only named capabilities", () => {
+    // Prose verification (what registry profiles ship) is agent-executed
+    // within the session and cannot be matched to tools — no warning.
+    const prose = manifest("prose-profile", {
+      tools: { required: ["filesystem"] },
+      verification: { required: ["new-contributor setup under 15 minutes", "CI green on the release commit"] },
+    });
+    const proseResult = composeProfiles([prose]);
+    expect(proseResult.conflicts.filter((c) => c.code === "PA025")).toHaveLength(0);
+
+    // A named capability with no matching tool is still a real gap.
+    const keyword = manifest("keyword-profile", {
+      tools: { required: ["filesystem"] },
+      verification: { required: ["typecheck"] },
+    });
+    const keywordResult = composeProfiles([keyword]);
+    expect(keywordResult.conflicts.some((c) => c.code === "PA025" && c.message.includes("typecheck"))).toBe(true);
   });
 
   it("PROFILES-COMP-006: composition is deterministic", () => {

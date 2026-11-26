@@ -2,8 +2,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 const SRC = "/tmp/profiles";
-const ITEMS = path.resolve(".marketplace/items");
-const CATALOG = path.resolve(".marketplace/catalog.json");
+const ITEMS = path.resolve("registry/profiles");
+const CATALOG = path.resolve("registry/catalog.json");
 
 // Reader-facing one-liners for the catalog (derived from each profile's summary).
 const DESCRIPTIONS = {
@@ -29,7 +29,7 @@ for (const file of (await fs.readdir(SRC)).sort()) {
   if (!("knowledge" in m)) m.knowledge = [];
   const out = path.join(ITEMS, `${slug}.json`);
   await fs.writeFile(out, JSON.stringify(m, null, 2) + "\n");
-  manifests.push({ slug, name: m.profile.name ?? m.identity.title, version: m.profile.version });
+  manifests.push({ slug, name: m.profile.name ?? m.identity.title, version: m.version });
   console.log("wrote", out);
 }
 

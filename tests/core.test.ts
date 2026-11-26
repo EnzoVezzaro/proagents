@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   computeConfidence,
   computeReadiness,
@@ -6,9 +6,9 @@ import {
   detectContradictions,
   extractFacts,
 } from "../src/core/engine.js";
-import { buildArchitecture, decideSingleVsTeam } from "../src/core/specification.js";
+import { buildAgentSpec, buildArchitecture, buildGraph, decideSingleVsTeam } from "../src/core/specification.js";
 import { validateArchitecture } from "../src/core/validation.js";
-import type { KnowledgeState } from "../src/core/types.js";
+import type { AgentArchitecture, KnowledgeState, Role } from "../src/core/types.js";
 
 function emptyState(intent: string): KnowledgeState {
   const now = new Date().toISOString();
@@ -250,5 +250,144 @@ describe("specification and multi-agent", () => {
     const arch = buildArchitecture(state);
     expect(arch.decision.singleAgentSufficient).toBe(false);
     expect(arch.agents.length).toBeGreaterThan(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Issue #17 — cross-process follow-up id collisions
+// ---------------------------------------------------------------------------
+//
+// Seeds are persisted as q_001..q_003. When a session is *resumed in a fresh
+// CLI process*, the module-level question counter used to reset to zero and a
+// derived follow-up would be assigned q_001 again — colliding with the
+// persisted seed and being silently dropped by syncQuestions. The counter must
+// instead resume from the highest id already persisted.
+describe("cross-process question ids (issue #17)", () => {
+  function baseStateWithAnsweredSeeds(resume: typeof import("../src/core/engine.js")): KnowledgeState {
+    const state = emptyState("I want an agent that deploys service releases to our Kubernetes cluster.");
+    const seedFacts = resume.extractFacts("Deploy packaged releases to our Kubernetes cluster on demand.", "intent");
+    if (seedFacts[0]) seedFacts[0].category = "objective";
+    state.facts.push(...seedFacts);
+
+    // Answer the three seeds one at a time, exactly as a human or agent would.
+    const answers = [
+      "It deploys packaged releases to our staging and production clusters; humans approve every production rollout.",
+      "AWS EKS staging and production; kubectl and helm available.",
+      "It may write manifests and run kubectl, but every production change needs explicit human approval.",
+    ];
+    for (const answer of answers) {
+      const next = resume.deriveQuestions(state);
+      expect(next.length).toBeGreaterThan(0);
+      const question = next[0]!;
+      const facts = resume.extractFacts(answer, question.id);
+      question.answer = { questionId: question.id, raw: answer, facts: facts.map((f) => f.statement), answeredAt: new Date().toISOString(), by: "test" };
+      question.status = "answered";
+      state.questions.push(question);
+      state.contradictions.push(...resume.detectContradictions(state, facts));
+      state.facts.push(...facts);
+      if (question.id.startsWith("q_resolve_")) {
+        const contradiction = state.contradictions.find((c) => c.id === question.id.replace("q_resolve_", ""));
+        if (contradiction) {
+          contradiction.status = "resolved";
+          contradiction.resolution = answer;
+          contradiction.resolutionQuestionId = question.id;
+        }
+      }
+    }
+    return state;
+  }
+
+  it("resumes the id sequence from persisted ids in a fresh process", async () => {
+    // Simulate two processes: a seed the first process persisted survives into
+    // a fresh module instance (fresh module-level counter).
+    const first = await import("../src/core/engine.js");
+    const stateA = baseStateWithAnsweredSeeds(first);
+    const persistedIds = new Set(stateA.questions.map((q) => q.id));
+    expect([...persistedIds].some((id) => /^q_\d{3}$/.test(id))).toBe(true);
+
+    vi.resetModules();
+    const fresh = await import("../src/core/engine.js");
+    const next = fresh.deriveQuestions(stateA);
+    // The value-add: every freshly derived question must not reuse a persisted id.
+    for (const q of next) {
+      expect(persistedIds.has(q.id)).toBe(false);
+    }
+    // And the follow-ups are actually still offered (fresh, not seed, templates).
+    const templates = new Set(next.map((q) => q.template));
+    for (const t of templates) {
+      expect(["objective", "environment", "write-access"]).not.toContain(t);
+    }
+    expect(next.length).toBeGreaterThan(0);
+  });
+
+  it("seeds a follow-up deterministically right after the persisted max", async () => {
+    const first = await import("../src/core/engine.js");
+    const stateA = baseStateWithAnsweredSeeds(first);
+    const persistedIds = new Set(stateA.questions.map((q) => q.id));
+
+    vi.resetModules();
+    const fresh = await import("../src/core/engine.js");
+    const nextA = fresh.deriveQuestions(stateA);
+    // Same state must reproduce the same follow-ups (determinism invariant).
+    const nextB = fresh.deriveQuestions(stateA);
+    expect(nextA.map((q) => q.id)).toEqual(nextB.map((q) => q.id));
+    expect(nextA.map((q) => q.id)).not.toEqual([...persistedIds]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Issue #16 — graph wiring with role duplicates and a documenter coordinator
+// ---------------------------------------------------------------------------
+//
+// buildGraph used to (1) unconditionally draw documenter → coordinator, which
+// self-edges when the coordinator is the documentation member (PA004), and
+// (2) look up only the first member per role via `.find()`, orphaning
+// legitimate duplicate same-role catalog matches (PA007).
+describe("buildGraph role duplication (issue #16)", () => {
+  function teamOfRoles(roles: Role[], names: string[]): AgentArchitecture {
+    const state = emptyState("I want a team that builds and releases our services.");
+    const agents = roles.map((role, i) => buildAgentSpec(state, role, { name: names[i] ?? `agent-${i}` }));
+    const edges = buildGraph(agents, { singleAgentSufficient: false });
+    return {
+      version: 1,
+      generatedAt: new Date().toISOString(),
+      sessionId: "test",
+      decision: { singleAgentSufficient: false, reason: "issue16-repro", separatedResponsibilities: [] },
+      agents,
+      edges,
+      runtime: { multiAgent: true, subAgents: true, parallelExecution: true, handoffs: true, delegation: true, toolUse: true, persistentAgents: true, agentTeams: true },
+    };
+  }
+
+  it("does not self-edge when the coordinator is also the documentation member (PA004)", () => {
+    const arch = teamOfRoles(["documentation", "implementation", "review"], ["docs", "impl", "review"]);
+    const report = validateArchitecture(arch);
+    const selfEdges = arch.edges.filter((e) => e.from === e.to);
+    expect(selfEdges).toHaveLength(0);
+    expect(report.findings.some((f) => f.code === "PA004")).toBe(false);
+    expect(report.ok).toBe(true);
+  });
+
+  it("connects duplicate same-role members instead of orphaning them (PA007)", () => {
+    // Two review + two operations members — the catalog can legitimately match
+    // several professions onto one role.
+    const arch = teamOfRoles(["review", "operations", "review", "operations", "implementation", "documentation"], ["r1", "op1", "r2", "op2", "impl", "docs"]);
+    const report = validateArchitecture(arch);
+    const connected = new Set(arch.edges.flatMap((e) => [e.from, e.to]));
+    for (const a of arch.agents) {
+      expect(connected.has(a.id)).toBe(true);
+    }
+    expect(report.findings.some((f) => f.code === "PA007")).toBe(false);
+    expect(report.ok).toBe(true);
+  });
+
+  it("always wires a team whose every would-be coordinator edge self-guarded away", () => {
+    // Entire team organized the same roles twice with no distinct coordinator routes.
+    const arch = teamOfRoles(["documentation", "review", "operations"], ["coordinator", "review", "ops"]);
+    const report = validateArchitecture(arch);
+    expect(arch.edges.some((e) => e.from === e.to)).toBe(false);
+    expect(report.findings.some((f) => f.code === "PA004")).toBe(false);
+    expect(report.findings.some((f) => f.code === "PA007")).toBe(false);
+    expect(report.ok).toBe(true);
   });
 });

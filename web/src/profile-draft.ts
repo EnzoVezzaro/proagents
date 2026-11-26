@@ -13,7 +13,7 @@ export function validateProfileDraft(p: ProfileManifest, takenSlugs?: ReadonlySe
   const problems: string[] = [];
   if (!p.profile.slug || !SLUG_OK.test(p.profile.slug)) problems.push("Slug must be a lowercase kebab-case slug (PA031).");
   if (!p.profile.name) problems.push("Name is required (PA030).");
-  if (!/^\d+\.\d+\.\d+/.test(p.profile.version)) problems.push("Profile version must be semver (PA032).");
+  if (!/^\d+\.\d+\.\d+/.test(p.version)) problems.push("Profile version must be semver (PA032).");
   if (!p.identity.title) problems.push("Identity title is required (PA030).");
   if (!p.expertise || p.expertise.length === 0) problems.push("Add at least one expertise area (PA033).");
   if (!p.tools.required || p.tools.required.length === 0) problems.push("Add at least one required tool (PA034).");
@@ -43,8 +43,8 @@ export function validateProfileDraft(p: ProfileManifest, takenSlugs?: ReadonlySe
   for (const [i, sk] of (p.skills ?? []).entries()) {
     if (sk.includes(":") && !REGISTRY_REF.test(sk)) problems.push(`skills[${i}] "${sk}" looks like a registry ref but is not npm:/github: (PA040).`);
   }
-  // Marketplace collision — a slug that already exists cannot be published.
-  if (takenSlugs?.has(p.profile.slug)) problems.push(`Slug "${p.profile.slug}" already exists in the marketplace — pick another (PA038).`);
+  // Registry collision — a slug that already exists cannot be published.
+  if (takenSlugs?.has(p.profile.slug)) problems.push(`Slug "${p.profile.slug}" already exists in the registry — pick another (PA038).`);
   return problems;
 }
 

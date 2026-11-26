@@ -29,9 +29,13 @@ import {
   renderValidation,
 } from "../output/render.js";
 import type { AgentArchitecture, SelfImprovementPolicy } from "../core/types.js";
+import type { EffectiveProfile } from "../profiles/types.js";
 import { scanRepo } from "../core/repo-scan.js";
+import { runAuditCommand } from "./audit.js";
 import { runBenchmarkCommand } from "./benchmark.js";
 import { runCrewCommand } from "./crew.js";
+import { runListInstalledCommand, runDoctorCommand, runRepairCommand } from "./installed.js";
+import { runMemoryCommand } from "./memory.js";
 import { promptLine, warnIfStandalone } from "./interactive.js";
 import {
   printProfilesHelp,
@@ -43,17 +47,41 @@ import {
   runProfileCommand,
   runValidateProfiles,
 } from "./profiles.js";
+import {
+  buildKindSpec,
+  runRegistryCompose,
+  runRegistryInfo,
+  runRegistryInstall,
+  runRegistryList,
+  runRegistryLock,
+  runRegistryRemove,
+  runRegistryResolve,
+  runRegistrySearch,
+  runRegistrySetup,
+  runRegistryUpdate,
+  runRegistryValidateSpec,
+} from "./registry.js";
 
 interface ParsedArgs {
   command: string;
   args: string[];
   flags: Record<string, string | boolean>;
+  /** Every `--flag value` occurrence in order — repeatable flags (e.g. crew
+   *  create --role) collapse to last-wins in `flags`, so order-sensitive
+   *  commands read from here instead. */
+  flagList: Map<string, string[]>;
 }
 
 function parseArgs(argv: string[]): ParsedArgs {
   const [command = "help", ...rest] = argv;
   const flags: Record<string, string | boolean> = {};
+  const flagList = new Map<string, string[]>();
   const args: string[] = [];
+  const pushValue = (key: string, value: string): void => {
+    const list = flagList.get(key);
+    if (list) list.push(value);
+    else flagList.set(key, [value]);
+  };
   for (let i = 0; i < rest.length; i++) {
     const token = rest[i] ?? "";
     if (token.startsWith("--")) {
@@ -61,6 +89,7 @@ function parseArgs(argv: string[]): ParsedArgs {
       const next = rest[i + 1];
       if (next !== undefined && !next.startsWith("--")) {
         flags[key] = next;
+        pushValue(key, next);
         i++;
       } else {
         flags[key] = true;
@@ -69,7 +98,7 @@ function parseArgs(argv: string[]): ParsedArgs {
       args.push(token);
     }
   }
-  return { command, args, flags };
+  return { command, args, flags, flagList };
 }
 
 function printHelp(): void {
@@ -79,9 +108,15 @@ proagent ${VERSION} — professional profiles for existing coding agents
 Usage:
   proagent <command> [options]
 
+Two paths, one registry:
+  A) BUILD custom → proagent init → question/answer → build
+     (or scaffold directly: profile create / crew create)
+  B) EQUIP registry → equip <slug> / crew install <id>
+
 Profile commands:
   detect                    Detect coding-agent harnesses and capabilities
   list                      List available professional profiles
+    --kind <k>              …or list registry items of one kind (search/info/install accept kind:id refs)
   inspect <profile>         Inspect a professional profile
   equip <slug> [slug…]      Equip the detected harness with professional profiles
   compile <slug>            Compile a profile for a specific harness (--target)
@@ -95,14 +130,58 @@ Agent-building commands:
   context frameworks        List available context frameworks
   spec                      Generate the agent architecture specification
   validate                  Validate the architecture (or --profiles)
-  build                     Generate deployable agent skills
+  build                     Compile the session into agent skills (default)
+    --kind profile          …or materialize it as a custom profile (.proagent/profiles/)
+    --kind crew             …or as a custom crew (.proagent/crews/)
+    --kind spec             …or emit a proagents.yaml draft from the session
+    --all-targets           …also write artifacts for EVERY harness (all agents dirs)
+  discover                  Search registries (MCP, npm, skills, GitHub) for tooling
+                            matching the session intent; findings are staged and
+                            baked into the built profile/crew
   agents                    List agents in the generated architecture
   inspect                   Dump full session state (for agents/humans)
   improve                   Show or configure self-improvement
   benchmark                 Benchmark subcommands (proagent benchmark help)
-  crew                      Marketplace crews: list/show/validate/install/publish (proagent crew help)
-  profile                   Marketplace profiles: list/show/install/validate/publish/submit (proagent profile help)
+  memory                    Explicit project memory: add/list/show/rm/compile (proagent memory help)
+  crew                      Registry crews: create/list/show/validate/install/build/publish/submit (proagent crew help)
+  profile                   Registry profiles: create/list/show/install/validate/publish/submit (proagent profile help)
+
+Registry commands (unified artifact model — kinds: profile, crew, agent, workflow, skill, tool, mcp, …):
+  search "<query>"          Federated search (native catalog + allowed sources)
+    --type <kind>           Restrict to one artifact kind
+  info <kind:id>            Inspect one catalog artifact
+  install <kind:id>         Install an artifact (delegates to equip / crew install)
+  remove <kind:id>          Remove an installed artifact from this repo
+  update                    Re-resolve a stale proagents.lock
+  list --kind <k>           List registry items by kind
+  resolve                   Capability → implementation graph for proagents.yaml
+    --select c=kind:id      Pin a capability's implementation
+  lock                      Persist the resolution as proagents.lock
+  compose <kind:id>…        Validate a cross-kind composition (PA02x)
+  setup                     proagents.yaml → resolve → validate → equip/install
+    --harness <id>          Target a specific harness (default: detected)
+    --dry-run               Resolve + plan without writing
+  validate --spec           End-to-end PA5xx validation of spec (+ lock)
   help                      Show this help
+
+Security:
+  audit [<dir>]             Deterministic security scan of a repo (secrets, remote-exec
+                            instructions, MCP transports, permission breadth)
+    --path <dir>            Audit this directory instead of the cwd
+                            Exit: 0 clean · 1 warnings · 2 errors
+
+Install lifecycle:
+  list-installed [<dir>]    Show what ProAgents owns in this repo (profiles, crews,
+                            instruction blocks, MCP/enforcement state)
+    --path <dir>            Scan this directory instead of the cwd
+  doctor [<dir>]            Verify installed artifacts vs provenance (manifest.json
+                            beside skill, balanced present-once instruction blocks)
+    --path <dir>            Check this directory instead of the cwd
+                            Exit: 0 healthy · 1 warnings · 2 errors
+  repair                    Deterministically recompile single-profile installs from
+                            the on-disk canonical manifest (restores SKILL.md, blocks,
+                            enforcement). Composed installs are reported as limitations.
+    --target <harness>      Recompile for this harness instead of the detected one
 
 Global options:
   --json                    Machine-readable output on stdout
@@ -198,6 +277,14 @@ async function resolveIntent(flags: Record<string, string | boolean>, args: stri
     console.error(`note: no --intent given; using repo-derived proposal: "${scan.proposedIntent}"`);
     return scan.proposedIntent;
   }
+  if (isJson(flags)) {
+    // Machine contract (docs/cli/json.md): a JSON caller gets a parseable
+    // needs_input instead of failing silently — but the exit stays non-zero
+    // and stderr carries the usage guidance, so scripts and humans both see
+    // why no session was started.
+    printJson({ status: "needs_input", error: "intent_required" });
+    fail(`No intent provided. Use: proagent init --intent "..."`);
+  }
   fail("No intent provided. Use: proagent init --intent \"...\"");
 }
 
@@ -253,13 +340,18 @@ async function cmdQuestion(flags: Record<string, string | boolean>): Promise<voi
   const orchestrator = new InterviewOrchestrator(new SessionStore());
   const questions = await orchestrator.nextQuestions();
   if (isJson(flags)) {
+    const list = flags.all === true ? questions : questions.slice(0, 1);
     return printJson({
       status: "needs_input",
-      questions: questions.map((q) => ({ id: q.id, question: q.question, reason: q.reason, impact: q.impact, topics: q.topics })),
+      questions: list.map((q) => ({ id: q.id, question: q.question, reason: q.reason, impact: q.impact, topics: q.topics })),
     });
   }
   if (questions.length === 0) {
     console.log("No open questions. Run `proagent spec` to generate the architecture.");
+    return;
+  }
+  if (flags.all === true) {
+    for (const [i, q] of questions.entries()) console.log(renderQuestion(q, i + 1, questions.length));
     return;
   }
   console.log(renderQuestion(questions[0]!, 1, questions.length));
@@ -338,17 +430,24 @@ async function cmdSpec(flags: Record<string, string | boolean>, args: string[]):
 async function cmdValidate(flags: Record<string, string | boolean>, args: string[]): Promise<void> {
   let arch: AgentArchitecture;
   const orchestrator = new InterviewOrchestrator(new SessionStore());
-  try {
-    arch = await orchestrator.spec();
-  } catch {
-    const file = args[0] ?? (typeof flags.file === "string" ? flags.file : null);
-    if (!file) fail("No session found. Run `proagent init` first, or pass an architecture file: proagent validate arch.json");
+  const file = args[0] ?? (typeof flags.file === "string" ? flags.file : null);
+  if (file) {
+    // An explicit file always wins over the session — silent fallback would
+    // validate the wrong artifact while reporting "ok".
     arch = JSON.parse(await fs.readFile(file, "utf8")) as AgentArchitecture;
+  } else {
+    try {
+      arch = await orchestrator.spec();
+    } catch {
+      fail("No session found. Run `proagent init` first, or pass an architecture file: proagent validate arch.json");
+    }
   }
   const report = validateArchitecture(arch);
+  // Non-zero on errors in BOTH modes — the JSON contract is CI-friendly
+  // (docs/cli/json.md: "validate exits non-zero when errors exist").
+  if (!report.ok) process.exitCode = 1;
   if (isJson(flags)) return printJson(report);
   console.log(renderValidation(report));
-  if (!report.ok) process.exitCode = 1;
 }
 
 async function cmdBuild(flags: Record<string, string | boolean>, args: string[]): Promise<void> {
@@ -362,12 +461,26 @@ async function cmdBuild(flags: Record<string, string | boolean>, args: string[])
     return;
   }
 
+  // `build --kind profile|crew` materializes the derived architecture as a
+  // custom registry item instead of agent skills (the default).
+  if (flags.kind === "profile" || flags.kind === "crew") {
+    const { buildKindProfile, buildKindCrew } = await import("./build-kind.js");
+    if (flags.kind === "profile") return buildKindProfile(arch, flags, isJson(flags));
+    return buildKindCrew(arch, flags, isJson(flags));
+  }
+
   const runtime = detectRuntimeCapabilities();
   const gaps = capabilityGaps(arch.runtime, runtime).filter((g) => g.required && !g.available);
   const outDir = typeof flags.output === "string" ? flags.output : path.join(".agents", "skills");
   const agentFilter = typeof flags.agent === "string" ? flags.agent : args[0] ?? null;
   const agents = agentFilter ? arch.agents.filter((a) => a.id === agentFilter) : arch.agents;
   if (agents.length === 0) fail(`No agent matching: ${agentFilter}`);
+
+  // --all-targets: after generating the canonical skills, compile the
+  // profile-shaped output for EVERY known harness so the repo is ready for
+  // any coding agent that opens it (AGENTS.md + CLAUDE.md +
+  // copilot-instructions + GEMINI.md + opencode.json + .openclaude/skills + …).
+  const writtenAll: string[] = [];
 
   const written: string[] = [];
   for (const agent of agents) {
@@ -398,6 +511,54 @@ async function cmdBuild(flags: Record<string, string | boolean>, args: string[])
     console.log(`\n⚠ Runtime capability gaps (${runtime.runtimeId}):`);
     for (const gap of gaps) console.log(`  ✗ ${gap.capability} — required but not available`);
     console.log("  → the generated skills include a deterministic CLI fallback for each gap");
+  }
+
+  // --all-targets: additionally compile profile-shaped artifacts for EVERY
+  // known harness so the repo is ready for any coding agent (AGENTS.md +
+  // CLAUDE.md + copilot-instructions + GEMINI.md + opencode.json +
+  // .openclaude/skills …), not just the detected one.
+  if (flags["all-targets"] === true) {
+    const { compileForAllHarnesses } = await import("../adapters/index.js");
+    const effective: EffectiveProfile = {
+      name: arch.team?.name ?? agents[0]!.name,
+      slugs: agents.map((a) => a.id),
+      identity: { title: arch.team?.name ?? agents[0]!.name, summary: agents[0]!.purpose },
+      expertise: agents.flatMap((a) => a.responsibilities),
+      methods: [],
+      rules: agents.flatMap((a) => a.constraints),
+      policies: [],
+      standards: [],
+      skills: agents.flatMap((a) => a.skills),
+      skillsDetail: {},
+      knowledge: [],
+      references: {},
+      ruleEnforcement: [],
+      tools: { required: [...new Set(agents.flatMap((a) => a.tools))], optional: [], forbidden: [], mcp: [], packages: [] },
+      verification: { required: agents.flatMap((a) => a.validation), optional: [] },
+    };
+    const manifest = {
+      version: "0.1.0",
+      profile: { name: arch.team?.name ?? agents[0]!.name, slug: agents[0]!.id },
+      identity: { title: arch.team?.name ?? agents[0]!.name, summary: agents[0]!.purpose },
+      expertise: [],
+      methods: [],
+      rules: [],
+      standards: [],
+      skills: [],
+      tools: { required: [] },
+      verification: { required: [], optional: [] },
+    } as never;
+    const allFiles: Array<{ path: string; mechanism: string }> = [];
+    for (const result of await compileForAllHarnesses(effective, manifest, process.cwd())) {
+      allFiles.push(...result.files);
+    }
+    console.log(`\n✓ All-targets artifacts for every harness:`);
+    const seen = new Set<string>();
+    for (const f of allFiles) {
+      if (seen.has(f.path)) continue;
+      seen.add(f.path);
+      console.log(`  • ${f.path}  (${f.mechanism})`);
+    }
   }
 }
 
@@ -543,6 +704,54 @@ async function cmdInspect(flags: Record<string, string | boolean>): Promise<void
   console.log(renderArchitecture(arch));
 }
 
+async function cmdDiscover(args: string[], flags: Record<string, string | boolean>): Promise<void> {
+  const store = new SessionStore();
+  const state = await store.load();
+  const query = args.join(" ").trim();
+  if (!state && !query) {
+    fail("No session found. Run `proagent init` first, or pass a query: proagent discover \"<what the agent needs>\"");
+  }
+  const { stageTooling, deriveQueries } = await import("../discovery/session.js");
+  const { renderFindings } = await import("../discovery/registry.js");
+
+  if (state && !query) {
+    // Session mode: derive queries from the interview and stage findings.
+    const queries = state.tooling?.queries.length ? state.tooling.queries : deriveQueries(state);
+    if (queries.length === 0) fail("Nothing to search — answer a few questions or pass a query: proagent discover \"<query>\"");
+    state.tooling = { ...(state.tooling ?? { findings: [] }), queries };
+    const results = await stageTooling(state);
+    await store.save(state);
+    const total = state.tooling?.findings.length ?? 0;
+    if (isJson(flags)) {
+      return printJson({ status: "ok", command: "discover", queries, staged: total, findings: state.tooling?.findings ?? [], registries: results });
+    }
+    console.log(`Discovery queries: ${queries.map((q) => `"${q}"`).join(", ")}`);
+    console.log(renderFindings(results, queries.join(" | ")));
+    console.log(`Staged ${total} finding(s) in .proagent/session.json — baked into build by default.`);
+    return;
+  }
+
+  // Ad-hoc query mode: search, render, and stage into the session when one exists.
+  const { discoverTooling } = await import("../discovery/registry.js");
+  const results = await discoverTooling({ query });
+  if (state) {
+    state.tooling = {
+      queries: [...new Set([...(state.tooling?.queries ?? []), query.toLowerCase()])],
+      findings: [
+        ...(state.tooling?.findings ?? []),
+        ...results.flatMap((r) => r.results.map((f) => ({ kind: f.kind, name: f.name, description: f.description, source: f.source, reference: f.reference, query }))),
+      ].filter((f, i, arr) => arr.findIndex((o) => `${o.kind}:${o.name}` === `${f.kind}:${f.name}`) === i).slice(0, 48),
+      discoveredAt: new Date().toISOString(),
+    };
+    await store.save(state);
+  }
+  if (isJson(flags)) {
+    return printJson({ status: "ok", command: "discover", query, findings: results.flatMap((r) => r.results), registries: results, staged: state ? true : false });
+  }
+  console.log(renderFindings(results, query));
+  if (state) console.log("Staged into .proagent/session.json — `proagent build` bakes these into the profile.");
+}
+
 async function cmdImprove(args: string[], flags: Record<string, string | boolean>): Promise<void> {
   const store = new SessionStore();
   const state = await store.load();
@@ -582,12 +791,16 @@ async function cmdImprove(args: string[], flags: Record<string, string | boolean
 }
 
 async function main(): Promise<void> {
-  const { command, args, flags } = parseArgs(process.argv.slice(2));
+  const { command, args, flags, flagList } = parseArgs(process.argv.slice(2));
   warnIfStandalone(command, isJson(flags));
 
   switch (command) {
     case "detect": return runDetect(isJson(flags), flags.quiet === true);
-    case "list": return runListProfiles(isJson(flags));
+    case "list":
+      // `list --kind <k>` is the registry listing; bare `list` stays the
+      // profile listing (additive contract — old commands unchanged).
+      if (typeof flags.kind === "string" && flags.kind) return runRegistryList(flags);
+      return runListProfiles(isJson(flags));
     case "equip": return runEquip(args, flags);
     case "compile": return runCompile(args, flags);
     case "profile": return runProfileCommand(args, flags);
@@ -598,12 +811,37 @@ async function main(): Promise<void> {
     case "context": return cmdContext(args, flags);
     case "spec": return cmdSpec(flags, args);
     case "validate":
+      if (flags.spec === true) return runRegistryValidateSpec(flags);
       if (flags.profiles === true) return runValidateProfiles(isJson(flags));
+      // An explicit architecture file always wins (documented: `proagent
+      // validate arch.json` validates that file, session or not).
+      const vFile = args[0] ?? (typeof flags.file === "string" ? flags.file : null);
+      if (vFile) return cmdValidate(flags, args);
       // No agent-building session → fall back to profile validation, so the
       // equip quickstart (`detect → equip → validate`) works as documented.
       if (!(await new SessionStore().load())) return runValidateProfiles(isJson(flags));
       return cmdValidate(flags, args);
-    case "build": return cmdBuild(flags, args);
+    case "build":
+      if (flags.kind === "spec") return buildKindSpec(flags, isJson(flags));
+      return cmdBuild(flags, args);
+    case "discover": return cmdDiscover(args, flags);
+    // Registry command group (additive; legacy commands unchanged).
+    case "search": return runRegistrySearch(args, flags);
+    case "info": return runRegistryInfo(args[0], flags);
+    case "install": return runRegistryInstall(args[0], flags);
+    case "remove":
+      return runRegistryRemove(args[0], flags);
+    case "update":
+      return runRegistryUpdate(flags);
+    case "resolve": return runRegistryResolve(flags);
+    case "lock": return runRegistryLock(flags);
+    case "compose":
+      return runRegistryCompose(args, flags);
+    case "setup": return runRegistrySetup(args, flags);
+    case "audit": return runAuditCommand(args, flags);
+    case "list-installed": return runListInstalledCommand(args, flags);
+    case "doctor": return runDoctorCommand(flags);
+    case "repair": return runRepairCommand(flags);
     case "agents": return cmdAgents(flags);
     case "inspect":
       if (args[0]) return runInspectProfile(args[0], isJson(flags));
@@ -615,7 +853,8 @@ async function main(): Promise<void> {
       return cmdImprove(improveArgs, flags);
     }
     case "benchmark": return runBenchmarkCommand(args, flags);
-    case "crew": return runCrewCommand(args, flags);
+    case "memory": return runMemoryCommand(args, flags);
+    case "crew": return runCrewCommand(args, flags, flagList);
     case "--version":
     case "-v":
     case "version":

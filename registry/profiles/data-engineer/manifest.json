@@ -1,0 +1,75 @@
+{
+  "schema": "proagents/profile/v1",
+  "version": "2.1.0",
+  "profile": {
+    "name": "Data Engineer",
+    "slug": "data-engineer",
+    "description": "Professional profile: pipelines that are reproducible, idempotent and observable — warehouse models that answer questions, data quality enforced at the boundary, and schema evolution without surprises.",
+    "author": "proagents",
+    "tags": [
+      "data",
+      "pipelines",
+      "warehouse",
+      "etl",
+      "quality"
+    ]
+  },
+  "identity": "identity.json",
+  "expertise": [
+    "expertise/01-batch-and-streaming-pipeline-design.json",
+    "expertise/02-warehouse-modeling.json",
+    "expertise/03-data-quality-enforcement.json",
+    "expertise/04-idempotency-and-replay.json",
+    "expertise/05-schema-evolution.json",
+    "expertise/06-cost-and-performance-of-data-systems.json"
+  ],
+  "knowledge": [
+    "knowledge/data/batch-streaming-pipeline-design.json",
+    "knowledge/data/warehouse-modeling.json",
+    "knowledge/data/data-quality-enforcement.json",
+    "knowledge/data/idempotency-and-replay.json",
+    "knowledge/data/schema-evolution.json",
+    "knowledge/data/cost-and-performance.json",
+    "knowledge/data/method-idempotent-pipeline-design.json",
+    "knowledge/data/method-schema-evolution-planning.json",
+    "knowledge/data/verification-checklist.json"
+  ],
+  "methods": [
+    "methods/01-idempotent-pipeline-design.json",
+    "methods/02-schema-evolution-planning.json"
+  ],
+  "rules": [
+    "rules/01-never-write-a-pipeline-that-cannot-be-safely-rerun-for-any-w.json",
+    "rules/02-never-land-a-dataset-without-an-owner-a-freshness-expectatio.json",
+    "rules/03-never-change-a-schema-without-classifying-consumers-what-bre.json",
+    "rules/04-never-fix-data-with-a-one-off-script-that-isn-t-versioned-an.json",
+    "rules/05-never-let-a-pipeline-fail-silently-into-stale-data-freshness.json"
+  ],
+  "standards": [
+    "standards/01-dbt-coding-conventions-or-equivalent-sql-modeling-standards.json",
+    "standards/02-data-contracts-schema-semantics-slo-between-producers-and-co.json"
+  ],
+  "tools": "tools/requirements.json",
+  "verification": {
+    "required": [
+      "verification/required/01-pipelines-demonstrated-rerunnable-kill-mid-run-rerun-identic.json",
+      "verification/required/02-quality-tests-exist-and-pass-for-every-new-dataset-row-count.json",
+      "verification/required/03-schema-changes-shipped-with-consumer-impact-analysis-and-mig.json",
+      "verification/required/04-walk-the-verification-checklist-in-knowledge-data-verificati.json"
+    ],
+    "optional": [
+      "verification/optional/01-cost-delta-estimated-for-new-recurring-workloads.json"
+    ]
+  },
+  "skills": [
+    "skills/01-wesleyegberto-software-engineering-skills.json",
+    "skills/02-obra-superpowers.json",
+    "skills/03-awesome-copilot.json"
+  ],
+  "policies": [
+    "policies/01-pii-is-classified-before-collection-and-minimized-at-the-bou.json",
+    "policies/02-every-dataset-has-a-named-owner-retention-rule-and-access-po.json",
+    "policies/03-data-fixes-are-reviewed-pipeline-changes-never-out-of-band-s.json",
+    "policies/04-consumer-notification-precedes-breaking-schema-changes.json"
+  ]
+}

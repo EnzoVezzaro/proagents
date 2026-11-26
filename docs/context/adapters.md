@@ -1,3 +1,7 @@
+---
+description: 'Plug a third-party context framework into ProAgents without touching the core — the adapter interface, signals and registration.'
+---
+
 # Write an adapter
 
 Third parties can plug a context framework into ProAgents **without modifying the core

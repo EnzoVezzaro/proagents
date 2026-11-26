@@ -36,11 +36,15 @@ Existing Harness
 Professional Agent
 ```
 
-`npm i -g proagent` · [Documentation](https://enzovezzaro.github.io/proagents/) · [Marketplace](https://enzovezzaro.github.io/proagents/) · MIT
+`npm i -g @reposell/proagent` · [Documentation](https://proagents.reposell.dev/) · [Registry](https://proagents.reposell.dev/) · MIT
 
 [![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-%E2%9D%A4-db61a2?logo=githubsponsors\&logoColor=white)](https://github.com/sponsors/EnzoVezzaro)
 
 [![Ko-fi](https://img.shields.io/badge/Support%20on-Ko--fi-ff5e5b?logo=ko-fi\&logoColor=white)](https://ko-fi.com/enzojuniorvezzaro)
+
+[![Donate via Stripe](https://img.shields.io/badge/Donate-Stripe-635bff?logo=stripe\&logoColor=white)](https://buy.stripe.com/6oU6oI4XIdDs80t6701Nu02)
+
+<div style="font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif; border: 1px solid rgb(224, 224, 224); border-radius: 12px; padding: 20px; max-width: 500px; margin: 20px auto 0; background: rgb(255, 255, 255); box-shadow: rgba(0, 0, 0, 0.05) 0px 2px 8px;"><div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;"><img alt="ProAgents" src="https://ph-files.imgix.net/3cd95755-ac81-4efc-8787-2c67646c1ca0.png?auto=compress,format&amp;codec=mozjpeg&amp;cs=strip&amp;fit=crop&amp;h=80&amp;w=80" style="width: 64px; height: 64px; border-radius: 8px; object-fit: cover; flex-shrink: 0;"><div style="flex: 1 1 0%; min-width: 0px;"><h3 style="margin: 0px; font-size: 18px; font-weight: 600; color: rgb(26, 26, 26); line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">ProAgents</h3><p style="margin: 4px 0px 0px; font-size: 14px; color: rgb(102, 102, 102); line-height: 1.4; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">Give your coding agent a profession.</p></div></div><a href="https://www.producthunt.com/products/proagents?embed=true&amp;utm_source=embed&amp;utm_medium=post_embed" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; gap: 4px; margin-top: 12px; padding: 8px 16px; background: rgb(255, 97, 84); color: rgb(255, 255, 255); text-decoration: none; border-radius: 9999px; font-size: 16px; font-weight: 600; line-height: 1.5;">Check it out on Product Hunt →</a></div>
 
 </div>
 
@@ -266,56 +270,71 @@ systems-architect
 
 A profile can contain:
 
-```yaml
-version: "1"
+```json
+{
+  "schema": "proagents/profile/v1",
+  "version": "1.1.0",
 
-profile:
-  name: Security Engineer
-  slug: security-engineer
-  version: "1.0.0"
+  "profile": {
+    "name": "Security Engineer",
+    "slug": "security-engineer",
+    "description": "Application security: threat modeling, secure coding, security verification.",
+    "author": "proagents",
+    "tags": ["security", "owasp", "threat-modeling"]
+  },
 
-identity:
-  title: Security Engineer
+  "identity": "identity.json",
 
-expertise:
-  - application security
-  - threat modeling
-  - secure architecture
+  "expertise": [
+    "expertise/01-application-security.json",
+    "expertise/02-threat-modeling.json"
+  ],
 
-knowledge:
-  - references/owasp/
-  - references/authentication/
+  "knowledge": [
+    "knowledge/owasp.json",
+    "knowledge/authentication.json"
+  ],
 
-methods:
-  - threat-modeling
-  - root-cause-analysis
-  - attack-surface-analysis
+  "methods": [
+    "methods/01-threat-modeling.json",
+    "methods/02-root-cause-analysis.json"
+  ],
 
-skills:
-  - security-audit
-  - secure-code-review
-  - vulnerability-analysis
+  "skills": [
+    "skills/01-security-audit.json"
+  ],
 
-rules:
-  - never-expose-secrets
-  - require-security-verification
+  "rules": [
+    "rules/01-never-expose-secrets.json",
+    "rules/02-require-security-verification.json"
+  ],
 
-standards:
-  - OWASP
+  "standards": [
+    "standards/01-owasp.json"
+  ],
 
-tools:
-  required:
-    - filesystem
-    - shell
-    - git
+  "tools": "tools/requirements.json",
 
-verification:
-  required:
-    - tests
-    - security-scan
+  "verification": {
+    "required": [
+      "verification/required/01-tests.json",
+      "verification/required/02-security-scan.json"
+    ]
+  }
+}
 ```
 
+Every section entry is a path to a file in the profile's folder — the manifest is the
+index, the folders are the source, and every section is JSON (never prose).
+
 The schema is provider-agnostic and independent of any particular coding-agent harness.
+The loader hydrates path entries to content at read time, so equip, compile, crews and
+the Studio SPA all see the same plain manifest.
+
+Profiles live in one place — the registry catalog (`registry/profiles/<slug>/`),
+which ships with the npm package and is updated through PRs. Lookup order: a repo's own
+local profiles (`.proagent/profiles/`, where `build --kind profile` and `profile create`
+write) win, then the repo's checkout of `registry/profiles/`, then the packaged snapshot.
 
 ---
 
@@ -419,7 +438,7 @@ The canonical profile remains independent from any provider.
 
 ```bash
 # Install
-npm install -g proagent
+npm install -g @reposell/proagent
 
 # Detect available coding agents
 proagent detect
@@ -473,15 +492,17 @@ proagent equip \
 
 Composition produces a single effective professional operating model.
 
-ProAgents must detect:
+ProAgents detects composition conflicts with validation codes — never silently:
 
-* conflicting rules
-* conflicting policies
-* incompatible tools
-* duplicate skills
-* incompatible verification requirements
-* circular dependencies
-* capability gaps
+* conflicting rules (PA022)
+* a tool required by one profile and forbidden by another (PA023)
+* circular method dependencies (PA024)
+* verification that names a capability none of the required tools provide (PA025)
+* the same profile listed twice in one composition (PA026)
+
+Conflicting policies and duplicate-skill definition conflicts are not yet
+machine-detectable; expertise, methods, skills, rules, standards and policies dedupe
+(first occurrence wins), and policy/skill conflicts stay on the operator to review.
 
 Serious conflicts must never be silently ignored.
 
@@ -674,22 +695,12 @@ A professional profile can compile into the native structure of the target codin
 For example:
 
 ```text
-.agents/
-├── profiles/
-│   └── security-engineer/
-│       ├── profile.json
-│       ├── rules/
-│       ├── methods/
-│       ├── knowledge/
-│       ├── skills/
-│       └── verification/
-│
-├── skills/
-│   ├── security-audit/
-│   ├── threat-modeling/
-│   └── secure-code-review/
-│
-└── agent-architecture.json
+.agents/skills/security-engineer/
+├── SKILL.md         # the compiled agent skill (lean operating summary)
+└── manifest.json    # the canonical manifest (provenance + structured detail)
+
+AGENTS.md            # marked profile block in the project-instructions file
+.claude/settings.json  # native rule enforcement (where the harness supports it)
 ```
 
 The exact generated structure depends on the target harness.
@@ -849,7 +860,7 @@ Profiles must never silently mutate in destructive ways.
 
 ---
 
-## Marketplace & Crews
+## Registry & Crews
 
 ProAgents can distribute ready-made professional profiles and specialized multi-agent systems.
 
@@ -875,7 +886,12 @@ MCP
 Context
 ```
 
-The marketplace is therefore an ecosystem for distributing reusable professional capabilities and complete agent systems.
+The registry is therefore an ecosystem for distributing reusable professional capabilities and complete agent systems.
+
+It is also the single source of profiles: the catalog lives in `registry/`
+(profiles in `profiles/<slug>/`, crews in `crews/<id>/`, plus a `catalog.json` index),
+the npm package ships it for offline use, and contributions land through PRs to the
+same files.
 
 ```bash
 proagent crew list
@@ -991,7 +1007,7 @@ npm test
 
 npm run typecheck
 
-# site (marketplace + docs in one dev server)
+# site (Studio + docs in one dev server)
 npm run dev        # everything: core watcher + the merged VitePress site (SPA + docs) on :5173
 
 # docs alone (the app mounts inside them)
@@ -1015,12 +1031,13 @@ npm run site:build
 │   └── output/          # terminal rendering
 │
 ├── .agents/              # ProAgents Agent Skill + generated skills
-├── profiles/             # built-in professional profiles
-├── .marketplace/         # Git-backed catalog: profiles & crews
-├── web/                  # marketplace app source (mounted as a client-only
-│   │                     #   island on the VitePress home page)
-├── docs/                 # the site — one VitePress project: app island at
-│   │                     #   the root, docs pages under guide/ cli/ context/
+├── registry/             # THE source of truth: Git-backed catalog of profiles & crews
+│                         #   (shipped with the npm package so offline equip works)
+├── web/                  # Studio app source (mounted as a client-only
+│   │                     #   island on the /studio page)
+├── docs/                 # the site — one VitePress project: home at the
+│   │                     #   root, Studio island under /studio,
+│   │                     #   docs pages under guide/ cli/ context/
 ├── scripts/              # site:build assembly + unified dev runner
 └── tests/                # unit, integration, e2e
 ```
@@ -1055,10 +1072,11 @@ ProAgents is free and open-source software.
 
 If it saves you time, consider supporting development:
 
+* 💳 [Stripe — one-time donation](https://buy.stripe.com/6oU6oI4XIdDs80t6701Nu02)
 * ❤ [GitHub Sponsors — EnzoVezzaro](https://github.com/sponsors/EnzoVezzaro)
 * ☕ [Ko-fi — enzojuniorvezzaro](https://ko-fi.com/enzojuniorvezzaro)
 
-Sponsorships support maintenance, new professional profiles, benchmark suites, harness adapters and context frameworks.
+Donations support maintenance, new professional profiles, benchmark suites, harness adapters and context frameworks.
 
 ---
 

@@ -1,31 +1,36 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { CatalogPage } from "./pages/CatalogPage.js";
+import { ConsolePage } from "./pages/ConsolePage.js";
+import { PlanViewPage } from "./pages/PlanViewPage.js";
 import { CrewDetailPage } from "./pages/CrewDetailPage.js";
 import { DashboardPage } from "./pages/DashboardPage.js";
 import { BuildEntryPage } from "./pages/BuildEntryPage.js";
 import { BuilderPage } from "./pages/BuilderPage.js";
 import { ProfileBuilderPage } from "./pages/ProfileBuilderPage.js";
+import { ProjectBuilderPage } from "./pages/ProjectBuilderPage.js";
 import { PreviewPage } from "./pages/PreviewPage.js";
 import { SettingsModal } from "./SettingsModal.js";
 import { loadSettings, saveSettings, githubTokenNeedsRefresh, githubRefreshExpired, type AppSettings } from "../settings.js";
-import { DOCS_URL, SOURCE_URL, docsUrl } from "../links.js";
 import { getAuthenticatedUser, refreshAccessToken } from "../github.js";
 
 export interface AppCtx {
   settings: AppSettings;
   navigate: (to: string) => void;
+  /** The signed-in GitHub account, when the session-ensure has verified one. */
+  user: { login: string; avatar_url: string } | null;
 }
 
 /**
- * The marketplace app runs as a client-only island inside VitePress: VitePress
+ * The Studio app (registry frontend) runs as a client-only island inside VitePress: VitePress
  * owns the document chrome (navbar, dark mode), this shell owns the app
  * surface below it. Routing is hash-based — VitePress owns real URLs — so
  * the app works under any base path and never fights the host router.
  */
 export function AppIsland(): React.JSX.Element {
-  const [route, setRoute] = useState(() => window.location.hash.replace(/^#\/?/, "") || "catalog");
+  const [route, setRoute] = useState(() => window.location.hash.replace(/^#\/?/, "") || "build-environment");
   useEffect(() => {
-    const onHash = () => setRoute(window.location.hash.replace(/^#\/?/, "") || "catalog");
+    const onHash = () => setRoute(window.location.hash.replace(/^#\/?/, "") || "build-environment");
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
@@ -114,7 +119,33 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
   }, [settings.githubToken]);
 
   const openSettings = useCallback(() => setSettingsOpen(true), []);
-  const ctx: AppCtx = { settings, navigate };
+  const ctx: AppCtx = { settings, navigate, user };
+
+  // Header actions: the /studio page reserves a slot in its static header
+  // row (#pa-mp-actions) — the chips portal into it so title, lede and actions
+  // share one row. On any other surface (deep-linked hash routes, tests) the
+  // slot is absent and the chips fall back to a local row below the navbar.
+  const [actionsSlot, setActionsSlot] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    setActionsSlot(document.getElementById("pa-mp-actions"));
+  }, []);
+
+  const actionChips = (
+    <>
+      <a
+        href="https://buy.stripe.com/6oU6oI4XIdDs80t6701Nu02"
+        target="_blank"
+        rel="noreferrer"
+        className="pa-app-chip"
+        style={{ textDecoration: "none" }}
+      >
+        Donate
+      </a>
+      <button onClick={openSettings} className="pa-app-chip" style={{ cursor: "pointer" }}>
+        Settings
+      </button>
+    </>
+  );
 
   let page: React.JSX.Element;
   if (route.startsWith("item/")) {
@@ -123,29 +154,29 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
     page = <PreviewPage id={decodeURIComponent(route.slice("preview/".length))} ctx={ctx} />;
   } else if (route === "dashboard") {
     page = <DashboardPage ctx={ctx} user={user} onOpenSettings={openSettings} />;
+  } else if (route === "build-environment") {
+    // BUILD — the primary Studio experience (NEW_CHANGES.md §10).
+    page = <ProjectBuilderPage ctx={ctx} />;
   } else if (route === "build") {
     page = <BuildEntryPage ctx={ctx} navigate={navigate} />;
   } else if (route === "builder") {
     page = <BuilderPage ctx={ctx} />;
   } else if (route === "build-profile") {
     page = <ProfileBuilderPage ctx={ctx} />;
-  } else {
+  } else if (route === "discover" || route === "catalog") {
+    // DISCOVER — secondary; the catalog gains "Use in Project" actions.
+    // "catalog" is a legacy route the registry UI and docs still link to.
     page = <CatalogPage ctx={ctx} />;
+  } else if (route === "console") {
+    // CONSOLE — read-only viewer for the CLI's --json introspection output.
+    page = <ConsolePage ctx={ctx} />;
+  } else if (route === "plan") {
+    // PLAN — read-only render of the Build flow's project spec.
+    page = <PlanViewPage ctx={ctx} navigate={navigate} />;
+  } else {
+    // Legacy default (was the catalog) and unknown routes → Build primary.
+    page = <ProjectBuilderPage ctx={ctx} />;
   }
-
-  const nav = (to: string, label: string) => (
-    <a
-      href={`#/${to}`}
-      aria-current={route === to || route.startsWith(to + "/") ? "page" : undefined}
-      style={{
-        color: route === to || route.startsWith(to + "/") ? "var(--vp-c-brand-1)" : "var(--vp-c-text-2)",
-        textDecoration: "none",
-        fontWeight: route === to || route.startsWith(to + "/") ? 700 : 400,
-      }}
-    >
-      {label}
-    </a>
-  );
 
   return (
     <div
@@ -156,72 +187,81 @@ export function AppShell(props: { route: string; navigate: (to: string) => void 
         fontFamily: "var(--vp-font-family-base)",
       }}
     >
-      {/* App rail — the VitePress navbar stays above (with the site logo);
-          this rail is the app's own sub-navigation only, like the docs'
-          local nav. */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 20,
-          flexWrap: "wrap",
-          padding: "10px 2px",
-          borderBottom: "1px solid var(--vp-c-divider)",
-        }}
-      >
-        <nav aria-label="Marketplace" style={{ display: "flex", gap: 16, fontSize: 14 }}>
-          {nav("catalog", "Catalog")}
-          {nav("dashboard", "Dashboard")}
-          <a
-            href={DOCS_URL}
-            style={{ color: "var(--vp-c-text-2)", textDecoration: "none" }}
-          >
-            Docs
-          </a>
-        </nav>
-        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12 }}>
-          <a
-            href="https://github.com/sponsors/EnzoVezzaro"
-            target="_blank"
-            rel="noreferrer"
-            className="pa-app-chip"
-            style={{ textDecoration: "none" }}
-          >
-            Donate
-          </a>
-          <button onClick={openSettings} className="pa-app-chip" style={{ cursor: "pointer" }}>
-            Settings
-          </button>
+      {/* Account actions — portaled into the page header's reserved slot on
+          /studio (one row: title left, actions right), local row
+          elsewhere. */}
+      {actionsSlot ? (
+        createPortal(actionChips, actionsSlot, "pa-mp-actions")
+      ) : (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+            gap: 12,
+            padding: "10px 2px",
+            borderBottom: "1px solid var(--vp-c-divider)",
+          }}
+        >
+          {actionChips}
         </div>
-      </div>
+      )}
 
-      <main style={{ padding: "32px 0 64px" }}>{page}</main>
-      {/* Home-page footer: VitePress's themeConfig footer only renders on
-          doc pages, so the island owns the home page's footer. Doc pages get
-          the VPFooter instead — no duplication either way. */}
-      <footer
-        style={{
-          borderTop: "1px solid var(--vp-c-divider)",
-          padding: "20px 2px 28px",
-          color: "var(--vp-c-text-2)",
-          fontSize: 12,
-          textAlign: "center",
-        }}
-      >
-        Fully open source (MIT) · runs entirely in your browser ·{" "}
-        <a href={docsUrl("guide/marketplace")} style={{ color: "var(--vp-c-brand-1)", textDecoration: "none" }}>
-          docs
-        </a>{" "}
-        ·{" "}
-        <a href={SOURCE_URL} style={{ color: "var(--vp-c-brand-1)", textDecoration: "none" }}>
-          source
-        </a>{" "}
-        ·{" "}
-        <a href="https://github.com/sponsors/EnzoVezzaro" style={{ color: "var(--vp-c-brand-1)", textDecoration: "none" }}>
-          Sponsor
-        </a>
-      </footer>
+      <RouteBar route={route} navigate={navigate} />
+
+      <main style={{ padding: "32px 0 24px" }}>{page}</main>
+      {/* No island footer: the island only renders on /studio, which is
+          a VitePress page and carries the theme's VPFooter — no duplication. */}
       {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} user={user} />}
     </div>
+  );
+}
+
+/** Studio surfaces — Build (primary), then the catalog, insights and plan. */
+const ROUTES: Array<{ to: string; label: string }> = [
+  { to: "build-environment", label: "Build" },
+  { to: "discover", label: "Discover" },
+  { to: "console", label: "Console" },
+  { to: "plan", label: "Plan" },
+];
+
+function RouteBar(props: { route: string; navigate: (to: string) => void }): React.JSX.Element {
+  const { route, navigate } = props;
+  return (
+    <nav
+      aria-label="Studio sections"
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        gap: 4,
+        marginTop: 12,
+        paddingBottom: 10,
+        borderBottom: "1px solid var(--vp-c-divider)",
+      }}
+    >
+      {ROUTES.map((r) => {
+        const active = route === r.to;
+        return (
+          <button
+            key={r.to}
+            onClick={() => navigate(r.to)}
+            style={{
+              background: active ? "var(--accent-soft)" : "transparent",
+              color: active ? "var(--cyan)" : "var(--cream-dim)",
+              border: active ? "1px solid var(--cyan)" : "1px solid transparent",
+              borderRadius: 6,
+              padding: "5px 12px",
+              fontSize: 12.5,
+              fontWeight: 600,
+              cursor: "pointer",
+              fontFamily: "inherit",
+              transition: "border-color .15s ease, background .15s ease, color .15s ease",
+            }}
+          >
+            {r.label}
+          </button>
+        );
+      })}
+    </nav>
   );
 }

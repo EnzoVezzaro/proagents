@@ -17,14 +17,14 @@ updates:
       - "dependencies"
     open-pull-requests-limit: 5
 
-  # Marketplace SPA
+  # Studio SPA (registry frontend)
   - package-ecosystem: "npm"
     directory: "/web"
     schedule:
       interval: "weekly"
     labels:
       - "dependencies"
-      - "marketplace"
+      - "studio"
     open-pull-requests-limit: 5
 
   # GitHub Actions

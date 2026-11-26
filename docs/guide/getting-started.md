@@ -1,11 +1,15 @@
+---
+description: 'Install the CLI, equip your first professional profile and verify it — running in five minutes.'
+---
+
 # Getting started
 
 ## Install
 
 ```bash
-npm install -g proagent
+npm install -g @reposell/proagent
 # or run without installing:
-npx proagent --help
+npx @reposell/proagent --help
 ```
 
 Requires Node.js 20+.
@@ -69,19 +73,21 @@ silently ignored. See [profiles](/guide/profiles#composition).
 
 Every profile is a versioned, inspectable file:
 
-```yaml
-version: "1"
-profile:  { slug: security-engineer, version: 1.0.0 }
-identity: { title: Security Engineer }
-expertise: [application security, threat modeling]
-methods:  [threat-modeling, root-cause-analysis]
-rules:    [never expose secrets, require security verification…]
-tools:    { required: [filesystem, shell, git] }
-verification: { required: [tests, security-scan] }
+```json
+{
+  "version": "1.0.0",
+  "profile": { "slug": "security-engineer" },
+  "identity": { "title": "Security Engineer" },
+  "expertise": ["application security", "threat modeling"],
+  "methods": ["threat-modeling", "root-cause-analysis"],
+  "rules": ["never expose secrets", "require security verification…"],
+  "tools": { "required": ["filesystem", "shell", "git"] },
+  "verification": { "required": ["tests", "security-scan"] }
+}
 ```
 
-Drop your own into `./profiles/*.json` in your repo — local profiles shadow built-ins and
-are flagged as local during validation.
+Drop your own under `registry/profiles/<slug>/` in your repo — a checkout copy wins over
+the packaged snapshot for the same slug.
 
 ## The interview path: build a specialized agent
 
@@ -134,9 +140,26 @@ proagent status            # human view
 proagent inspect --json    # full state + architecture + runtime (for agents)
 ```
 
+## Or: resolve a whole environment
+
+For a project that needs several professions at once, declare the environment as a spec —
+capabilities, not implementations — and let the registry resolve it:
+
+```bash
+proagent build --kind spec   # draft proagents.yaml from an interview session (optional)
+proagent resolve             # capability → implementation graph
+proagent lock                # persist proagents.lock (reproducible, checksummed)
+proagent setup               # equip/install everything for your harness
+proagent setup --harness codex   # same environment, another adapter
+```
+
+In the browser, [Studio → Build](/studio) walks the same flow and exports the
+`proagents.yaml`. Full reference: [Registry → Projects](/guide/registry).
+
 ## Next steps
 
 - [Professional profiles](/guide/profiles) — schema, composition, validation codes
 - [The question engine](/guide/question-engine) — how derivation and confidence work
+- [Registry](/guide/registry) — projects, sources, publishing
 - [JSON interface](/cli/json) — the machine contract
-- [Marketplace](/guide/marketplace) — ready-made profiles and crews
+- [Registry](/guide/registry) — ready-made profiles and crews

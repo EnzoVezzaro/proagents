@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { execFileSync } from "node:child_process";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { runCli } from "../helpers/run-cli.js";
 
 /**
  * INIT-CLI — `proagent init` entry-point contract (end-to-end).
@@ -12,8 +12,6 @@ import path from "node:path";
  * tests/cli/interactive.test.ts — a real pty cannot be spawned from an
  * automated test sandbox (`script` requires its own stdin to be a TTY).
  */
-
-const CLI = path.resolve("dist/cli/index.js");
 
 function makeRepo(files: Record<string, string>): Promise<string> {
   return fs.mkdtemp(path.join(os.tmpdir(), "init-cli-")).then(async (root) => {
@@ -42,7 +40,7 @@ describe("init CLI (INIT-CLI)", () => {
   it("INIT-CLI-001: non-interactive in a repo auto-accepts the repo-derived proposal", async () => {
     const root = await makeRepo(DEMO_FILES);
     try {
-      const out = execFileSync("node", [CLI, "init", "--json"], { cwd: root, encoding: "utf8", input: "" });
+      const out = runCli(root, ["init", "--json"], { input: "" });
       const parsed = JSON.parse(out.replace(/^note:.*$/m, ""));
       expect(parsed.status).toBe("ok");
       expect(await readIntent(root)).toContain("Processes orders over a REST API");
@@ -54,11 +52,7 @@ describe("init CLI (INIT-CLI)", () => {
   it("INIT-CLI-002: explicit --intent wins over the repo proposal", async () => {
     const root = await makeRepo(DEMO_FILES);
     try {
-      execFileSync("node", [CLI, "init", "--json", "--intent", "A PR security reviewer"], {
-        cwd: root,
-        encoding: "utf8",
-        input: "",
-      });
+      runCli(root, ["init", "--json", "--intent", "A PR security reviewer"], { input: "" });
       expect(await readIntent(root)).toBe("A PR security reviewer");
     } finally {
       await fs.rm(root, { recursive: true, force: true });
@@ -68,11 +62,7 @@ describe("init CLI (INIT-CLI)", () => {
   it("INIT-CLI-003: --non-interactive never prompts and still seeds repo facts", async () => {
     const root = await makeRepo(DEMO_FILES);
     try {
-      const out = execFileSync("node", [CLI, "init", "--json", "--non-interactive"], {
-        cwd: root,
-        encoding: "utf8",
-        input: "",
-      });
+      const out = runCli(root, ["init", "--json", "--non-interactive"], { input: "" });
       const parsed = JSON.parse(out.replace(/^note:.*$/m, ""));
       expect(parsed.status).toBe("ok");
       const session = JSON.parse(await fs.readFile(path.join(root, ".proagent", "session.json"), "utf8")) as {
@@ -94,7 +84,7 @@ describe("init CLI (INIT-CLI)", () => {
       let failed = false;
       let message = "";
       try {
-        execFileSync("node", [CLI, "init", "--json"], { cwd: root, encoding: "utf8", input: "" });
+        runCli(root, ["init", "--json"], { input: "" });
       } catch (err) {
         failed = true;
         message = String((err as { stderr?: Buffer }).stderr ?? "");

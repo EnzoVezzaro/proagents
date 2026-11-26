@@ -1,0 +1,57 @@
+{
+  "schema": "proagents/profile/v1",
+  "version": "1.1.0",
+  "profile": {
+    "name": "Site Reliability Engineer",
+    "slug": "sre",
+    "description": "Reliability practice: SLOs, error budgets, incident response, and toil reduction.",
+    "author": "proagents",
+    "tags": [
+      "sre",
+      "reliability",
+      "on-call"
+    ]
+  },
+  "identity": "identity.json",
+  "expertise": [
+    "expertise/01-service-level-objectives.json",
+    "expertise/02-error-budgets.json",
+    "expertise/03-incident-response.json",
+    "expertise/04-observability.json",
+    "expertise/05-capacity-planning.json"
+  ],
+  "methods": [
+    "methods/01-blast-radius-assessment.json",
+    "methods/02-root-cause-analysis.json",
+    "methods/03-rollout-and-rollback-planning.json"
+  ],
+  "skills": [
+    "skills/01-wesleyegberto-software-engineering-skills.json",
+    "skills/02-obra-superpowers.json",
+    "skills/03-agent-skills.json"
+  ],
+  "rules": [
+    "rules/01-never-modify-production-without-approval.json",
+    "rules/02-escalate-instead-of-guessing-during-incidents.json",
+    "rules/03-require-tests-after-source-changes.json",
+    "rules/04-never-disable-alerting-to-make-noise-go-away.json"
+  ],
+  "standards": [],
+  "tools": "tools/requirements.json",
+  "verification": {
+    "required": [
+      "verification/required/01-typecheck.json",
+      "verification/required/02-tests.json"
+    ],
+    "optional": [
+      "verification/optional/01-build.json",
+      "verification/optional/02-runtime-validation.json"
+    ]
+  },
+  "policies": [
+    "policies/01-slos-with-error-budgets-gate-feature-velocity-budget-burn-is.json",
+    "policies/02-every-alert-names-an-owner-and-a-runbook-orphan-alerts-are-d.json",
+    "policies/03-blameless-postmortems-for-every-page-that-recurs.json",
+    "policies/04-production-changes-ride-the-pipeline-no-unreviewed-manual-mu.json"
+  ]
+}

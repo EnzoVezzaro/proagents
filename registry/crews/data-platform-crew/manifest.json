@@ -1,0 +1,60 @@
+{
+  "schema": "proagents/crew/v1",
+  "version": "1.0.0",
+  "crew": {
+    "id": "data-platform-crew",
+    "name": "Data Platform Crew",
+    "description": "Four-worker data platform crew, profile-backed: a database engineer owns the schema, a data engineer builds the pipelines, a backend engineer exposes the serving layer, and QA verifies data quality end to end.",
+    "author": "proagents",
+    "tags": [
+      "data",
+      "pipelines",
+      "schema",
+      "quality",
+      "profile-backed",
+      "multi-agent"
+    ]
+  },
+  "mission": "mission.json",
+  "members": [
+    "members/01-schema.json",
+    "members/02-pipelines.json",
+    "members/03-serving.json",
+    "members/04-quality.json"
+  ],
+  "coordination": [
+    "coordination/01-schema-publishes-schema-design-md-before-any.json",
+    "coordination/02-pipelines-and-serving-build-against-the-same.json",
+    "coordination/03-quality-receives-pipeline-notes-and-api-verif.json"
+  ],
+  "tasks": [
+    "tasks/01-schema-owns-tables-constraints-indexes-and.json",
+    "tasks/02-pipelines-owns-idempotent-backfillable-jobs.json",
+    "tasks/03-serving-owns-the-bounded-serving-api-limits.json",
+    "tasks/04-quality-owns-end-to-end-verification-of-pipel.json"
+  ],
+  "workflows": [
+    "workflows/01-standard-run-schema-parallel-pipelines-s.json",
+    "workflows/02-schema-change-expand-contract-migration-firs.json"
+  ],
+  "handoffs": [
+    "handoffs/01-schema-to-pipelines.json",
+    "handoffs/02-schema-to-serving.json",
+    "handoffs/03-pipelines-to-serving.json",
+    "handoffs/04-pipelines-to-quality.json",
+    "handoffs/05-serving-to-quality.json"
+  ],
+  "rules": [
+    "rules/01-every-migration-ships-with-a-rollback.json",
+    "rules/02-production-data-never-moves-through-test-syst.json",
+    "rules/03-personal-data-columns-are-named-and-minimized.json"
+  ],
+  "verification": [
+    "verification/01-pipeline-output-satisfies-schema-constraints.json",
+    "verification/02-serving-endpoints-respect-their-query-budgets.json",
+    "verification/03-quality-report-md-states-what-was-verified-an.json"
+  ],
+  "mcp": "mcp/servers.json",
+  "createdAt": "2026-09-18T00:00:00.000Z",
+  "updatedAt": "2026-09-18T00:00:00.000Z"
+}

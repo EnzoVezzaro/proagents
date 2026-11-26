@@ -1,10 +1,22 @@
+import fsSync from "node:fs";
+import path from "node:path";
 import type { CrewDefinition, CrewPermissions } from "./types.js";
 import { CrewError } from "./types.js";
+import { isCrewPathEntry } from "./hydrate.js";
 
 /**
  * Crew validation — deterministic, pure. The same invalid crew always
  * produces the same problems. Reuses the spec's normative permission
  * vocabulary so crews and generated agents speak the same language.
+ *
+ * Subagent-standard checks (PA043–PA048) mirror the agent-architecture
+ * rules in core/validation.ts (PA001–PA013):
+ *   PA043  production write without an approval gate     (= PA009, error)
+ *   PA044  secret access without an approval gate        (= PA010, warning)
+ *   PA045  orphaned worker in a multi-worker crew        (= PA007, warning)
+ *   PA046  excessive intake (>5 upstream sources)        (= PA006, warning)
+ *   PA047  folder standard: missing member file / id mismatch (error)
+ *   PA048  composition sections exist: declared section files load (error)
  */
 
 const ID_PATTERN = /^[a-z0-9][a-z0-9-]*[a-z0-9]$/;
@@ -17,6 +29,24 @@ const READ_LEVELS = ["none", "repo", "scoped", "world"];
 const WRITE_LEVELS = ["none", "repo", "scoped"];
 const PROD_LEVELS = ["none", "read", "write"];
 const SECRET_LEVELS = ["none", "named", "all"];
+
+/** Extra context for folder-standard validation (PA047, PA048). */
+export interface CrewProblemsOpts {
+  /** Absolute crew folder — enables worker-manifest existence checks. */
+  crewDir?: string;
+  /**
+   * Raw member/worker entries from the source manifest (paths for
+   * folder-standard crews). Needed for PA047 because hydration collapses
+   * paths to objects.
+   */
+  workerEntries?: string[];
+  /**
+   * Raw source manifest (folder-standard). Enables PA048: every declared
+   * section path (mission/coordination/tasks/workflows/handoffs/rules/
+   * verification/tools/mcp) must exist in the crew folder.
+   */
+  source?: unknown;
+}
 
 export function validatePermissions(perms: unknown, workerId: string, problems: string[]): void {
   const p = perms as CrewPermissions | undefined;
@@ -38,9 +68,10 @@ export function validatePermissions(perms: unknown, workerId: string, problems: 
  * Validate a crew definition. Returns all problems (empty = valid).
  * Graph rules: handoffs must reference existing workers and emit/receive
  * matching artifacts; entry points must exist; the graph must be acyclic
- * (DAG) so installs always produce a runnable pipeline.
+ * (DAG) so installs always produce a runnable pipeline. Pass `opts` for
+ * folder-standard checks (PA047).
  */
-export function crewProblems(crew: CrewDefinition): string[] {
+export function crewProblems(crew: CrewDefinition, opts?: CrewProblemsOpts): string[] {
   const problems: string[] = [];
 
   if (!crew.id || !ID_PATTERN.test(crew.id)) problems.push('crew.id must be a lowercase slug (a-z, 0-9, dashes)');
@@ -96,13 +127,6 @@ export function crewProblems(crew: CrewDefinition): string[] {
       }
     }
     if (!Array.isArray(w.receivesFrom)) problems.push(`worker ${w.id}: receivesFrom must be an array`);
-    else {
-      for (const upstream of w.receivesFrom) {
-        if (!ids.has(upstream) && upstream !== w.id) {
-          // Upstream may be declared later in the array; final check below.
-        }
-      }
-    }
     if (!Array.isArray(w.emits)) problems.push(`worker ${w.id}: emits must be an array`);
   }
 
@@ -180,6 +204,110 @@ export function crewProblems(crew: CrewDefinition): string[] {
     if (!visit(id)) {
       problems.push("crew graph must be acyclic (found a cycle)");
       break;
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Subagent standards (PA043–PA047) — the crew-side form of PA001–PA013.
+  // -------------------------------------------------------------------------
+
+  // PA043 — production write without a recorded approval gate (= PA009).
+  for (const w of crew.workers) {
+    const gates = w.permissions?.approvalGates ?? [];
+    if (w.permissions?.production === "write" && gates.length === 0) {
+      problems.push(
+        `[PA043] worker ${w.id}: production write without any approval gate — add a gate naming the tool, or reduce production to "none"/"read"`,
+      );
+    }
+  }
+
+  // PA044 — secret access without approval gates (= PA010, warning).
+  for (const w of crew.workers) {
+    const gates = w.permissions?.approvalGates ?? [];
+    if (w.permissions?.secrets !== "none" && gates.length === 0) {
+      problems.push(`[PA044] worker ${w.id}: secret access without approval gates — gate the secret-touching tools or set secrets: "none"`);
+    }
+  }
+
+  // PA045 — orphaned worker in a multi-worker crew (= PA007, warning).
+  if (crew.workers.length > 1) {
+    const connected = new Set<string>();
+    for (const w of crew.workers) {
+      if ((w.receivesFrom?.length ?? 0) > 0 || (w.emits?.length ?? 0) > 0) {
+        connected.add(w.id);
+        for (const up of w.receivesFrom ?? []) connected.add(up);
+      }
+    }
+    for (const h of crew.handoffs ?? []) {
+      connected.add(h.from);
+      connected.add(h.to);
+    }
+    for (const w of crew.workers) {
+      if (!connected.has(w.id)) {
+        problems.push(`[PA045] worker ${w.id}: orphaned — it exchanges no artifacts with any other worker; connect it to the graph or split it out`);
+      }
+    }
+  }
+
+  // PA046 — excessive intake: more than 5 upstream sources (= PA006, warning).
+  for (const w of crew.workers) {
+    const fanIn = (w.receivesFrom ?? []).length;
+    if (fanIn > 5) {
+      problems.push(`[PA046] worker ${w.id}: receives from ${fanIn} upstream workers (excessive intake) — introduce an intermediate coordinator`);
+    }
+  }
+
+  // PA047 — folder standard: every declared member/worker manifest must
+  // exist in the crew folder and load into a worker. Member files live in
+  // members/NN-<id>.json; legacy worker manifests in workers/<id>/.
+  if (opts?.workerEntries) {
+    for (const entry of opts.workerEntries) {
+      if (typeof entry !== "string" || !isCrewPathEntry(entry)) continue;
+      if (opts.crewDir) {
+        try {
+          fsSync.accessSync(path.resolve(opts.crewDir, entry));
+        } catch {
+          problems.push(`[PA047] member file "${entry}" does not exist in the crew folder`);
+          continue;
+        }
+      }
+      const isMemberFile = entry.startsWith("members/");
+      const stem = path.basename(entry, path.extname(entry)).replace(/^\d+-/, "");
+      const loaded = isMemberFile
+        ? crew.workers.find((w) => w.profile === stem || w.id === stem || w.id === entry)
+        : crew.workers.find((w) => w.instructions === entry || w.id === path.basename(path.dirname(entry)));
+      if (!loaded) {
+        problems.push(`[PA047] member file "${entry}" was not loaded — the file is missing or invalid`);
+        continue;
+      }
+    }
+  }
+
+  // PA048 — composition sections: every declared section file (mission,
+  // coordination, tasks, workflows, handoffs, rules, verification, tools,
+  // mcp) must exist in the crew folder. The index is a promise; a path that
+  // points nowhere means the crew half-shiped.
+  if (opts?.source && opts.crewDir) {
+    const src = opts.source as Record<string, unknown>;
+    const sectionPaths: string[] = [];
+    if (typeof src.mission === "string" && isCrewPathEntry(src.mission)) sectionPaths.push(src.mission);
+    if (typeof src.tools === "string" && isCrewPathEntry(src.tools)) sectionPaths.push(src.tools);
+    if (typeof src.mcp === "string" && isCrewPathEntry(src.mcp)) sectionPaths.push(src.mcp);
+    if (typeof src.graph === "string" && isCrewPathEntry(src.graph)) sectionPaths.push(src.graph);
+    for (const key of ["coordination", "tasks", "workflows", "rules", "verification", "handoffs"] as const) {
+      const list = src[key];
+      if (Array.isArray(list)) {
+        for (const e of list) {
+          if (typeof e === "string" && isCrewPathEntry(e)) sectionPaths.push(e);
+        }
+      }
+    }
+    for (const rel of sectionPaths) {
+      try {
+        fsSync.accessSync(path.resolve(opts.crewDir, rel));
+      } catch {
+        problems.push(`[PA048] section file "${rel}" is declared in the crew manifest but missing from the crew folder`);
+      }
     }
   }
 

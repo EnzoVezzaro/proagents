@@ -10,6 +10,19 @@ import type { ProfileManifest } from "./types.js";
 const SEMVER = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
+/** A section entry in path format: a relative .json path inside the profile folder. */
+const PATH_RE = /^[\w./-]+\.json$/;
+
+/**
+ * True when a section entry is a folder-standard path ("rules/01-x.json")
+ * rather than inline content. Registry-ref skill entries ("npm:…",
+ * "github:…") and inline drafts are not paths. Knowledge references
+ * ("knowledge/**") are checked by PA037, not this predicate.
+ */
+export function isPathEntry(entry: string): boolean {
+  return PATH_RE.test(entry) && !entry.includes("..") && !entry.startsWith("/") && !entry.startsWith("npm:") && !entry.startsWith("github:");
+}
+
 export interface ValidateProfileOpts {
   /** Other distinct slugs in the registry (PA038 duplicate detection). */
   registrySlugs?: Set<string>;
@@ -40,17 +53,20 @@ export function validateProfile(
   if (!manifest.version) push("PA030", "error", "missing top-level version", [slug]);
   if (!p.name) push("PA030", "error", "missing profile.name", [slug]);
   if (!p.slug) push("PA030", "error", "missing profile.slug", [slug]);
-  if (!p.version) push("PA030", "error", "missing profile.version", [slug]);
-  if (!manifest.identity?.title) push("PA030", "error", "missing identity.title", [slug]);
+  if ("version" in p) {
+    push("PA030", "error", "profile.version is removed — use the single top-level version", [slug], "Move the semver to the outermost \"version\" field.");
+  }
+  const identityTitle = typeof manifest.identity === "string" ? undefined : manifest.identity?.title;
+  if (!identityTitle) push("PA030", "error", "missing identity.title", [slug]);
 
   // PA031 — slug shape.
   if (p.slug && !SLUG.test(p.slug)) {
     push("PA031", "error", `slug "${p.slug}" is not kebab-case`, [slug], "Use lowercase words separated by hyphens.");
   }
 
-  // PA032 — semver.
-  if (p.version && !SEMVER.test(p.version)) {
-    push("PA032", "error", `profile.version "${p.version}" is not semver`, [slug], "Use major.minor.patch.");
+  // PA032 — semver (the single, outer version).
+  if (manifest.version && !SEMVER.test(manifest.version)) {
+    push("PA032", "error", `version "${manifest.version}" is not semver`, [slug], "Use major.minor.patch.");
   }
 
   // PA033 — expertise must say what makes this a profession.
@@ -58,8 +74,12 @@ export function validateProfile(
     push("PA033", "error", "expertise is empty — a profession needs at least one domain", [slug]);
   }
 
-  // PA034 — tools.
-  if (!manifest.tools?.required || manifest.tools.required.length === 0) {
+  // PA034 — tools (path format: hydrated before validation; a string here
+  // means the loader never hydrated it, so require the directory to check).
+  const toolsIsPath = typeof manifest.tools === "string";
+  if (!manifest.tools) {
+    push("PA034", "error", "tools is missing — declare what the profession needs", [slug]);
+  } else if (!toolsIsPath && (!manifest.tools.required || manifest.tools.required.length === 0)) {
     push("PA034", "error", "tools.required is empty — declare what the profession needs", [slug]);
   }
 
@@ -69,8 +89,8 @@ export function validateProfile(
   }
 
   // PA036 — forbidden tool also required.
-  const required = new Set((manifest.tools?.required ?? []).map((t) => t.trim().toLowerCase()));
-  for (const tool of manifest.tools?.forbidden ?? []) {
+  const required = new Set(toolsIsPath ? [] : (manifest.tools.required ?? []).map((t) => t.trim().toLowerCase()));
+  for (const tool of toolsIsPath ? [] : (manifest.tools.forbidden ?? [])) {
     if (required.has(tool.trim().toLowerCase())) {
       push("PA036", "error", `tool "${tool}" is both required and forbidden`, [slug, tool], "Remove it from one of the two lists.");
     }
@@ -92,6 +112,28 @@ export function validateProfile(
   // PA038 — the same slug defined by more than one source (one shadows the other).
   if (opts.duplicateSlugs?.has(slug)) {
     push("PA038", "warning", `slug "${slug}" is defined in more than one profile source — the last discovered wins`, [slug], "Rename one of the profiles or remove the shadowed file.");
+  }
+
+  // PA042 — folder-standard section paths must exist inside the profile
+  // directory (same deterministic-fs policy as PA037). The hydration step in
+  // the registry already left unhydratable paths in place; this reports them.
+  if (opts.profileDir) {
+    const checkPath = (section: string, entry: string): void => {
+      if (!isPathEntry(entry)) return;
+      try {
+        fsSync.accessSync(path.resolve(opts.profileDir!, entry));
+      } catch {
+        push("PA042", "warning", `${section} entry "${entry}" does not exist in the profile directory`, [slug, entry], "Create the file or fix the path — the entry is loaded verbatim until it resolves.");
+      }
+    };
+    if (typeof manifest.identity === "string") checkPath("identity", manifest.identity);
+    for (const section of ["expertise", "methods", "rules", "policies", "standards"] as const) {
+      for (const entry of manifest[section] ?? []) checkPath(section, entry);
+    }
+    for (const entry of manifest.skills ?? []) checkPath("skills", entry);
+    if (typeof manifest.tools === "string") checkPath("tools", manifest.tools);
+    for (const entry of manifest.verification?.required ?? []) checkPath("verification.required", entry);
+    for (const entry of manifest.verification?.optional ?? []) checkPath("verification.optional", entry);
   }
 
   // PA039 — MCP server entries must be well-formed and self-consistent.
@@ -128,6 +170,56 @@ export function validateProfile(
   for (const [i, sk] of (manifest.skills ?? []).entries()) {
     if (sk.includes(":") && !registryRef.test(sk)) {
       push("PA040", "error", `skills[${i}] "${sk}" looks like a registry reference but is not npm:/github:`, [slug], "Use npm:<package>[@version] or github:owner/repo[@ref].");
+    }
+  }
+
+  // skillsDetail keys must reference an entry of skills (no orphan details).
+  const skillsSet = new Set(manifest.skills ?? []);
+  for (const key of Object.keys(manifest.skillsDetail ?? {})) {
+    if (!skillsSet.has(key)) {
+      push("PA040", "error", `skillsDetail key "${key}" does not match any skills entry`, [slug, key], "Add the matching skills entry or rename the detail key.");
+    }
+  }
+
+  // PA043 — rule enforcement blocks must be well-formed machine-readable
+  // data: an object with only bash/tools/paths keys, each a non-empty array
+  // of non-empty strings, referencing a rule that actually exists. Malformed
+  // blocks hydrate through raw (tolerant loading) and land here.
+  const allowedKeys = new Set(["bash", "tools", "paths"]);
+  for (const [i, entry] of (manifest.ruleEnforcement ?? []).entries()) {
+    const label = entry && typeof entry.rule === "string" && entry.rule.trim() !== "" ? `"${entry.rule}"` : `ruleEnforcement[${i}]`;
+    if (!entry || typeof entry.rule !== "string" || entry.rule.trim() === "") {
+      push("PA043", "error", `ruleEnforcement[${i}] is missing its rule text`, [slug], "Each entry pairs one hydrated rule with its enforcement data.");
+      continue;
+    }
+    if (!(manifest.rules ?? []).includes(entry.rule)) {
+      push("PA043", "warning", `enforcement entry ${label} references a rule not present in rules`, [slug, entry.rule], "The enforcement block's rule must match a rules entry (both come from the same rule section file after hydration).");
+    }
+    const e = entry.enforcement;
+    if (typeof e !== "object" || e === null || Array.isArray(e)) {
+      push("PA043", "error", `enforcement on rule ${label} must be an object`, [slug, entry.rule], "Use { \"bash\": […], \"tools\": […], \"paths\": […] }.");
+      continue;
+    }
+    for (const key of Object.keys(e)) {
+      if (!allowedKeys.has(key)) {
+        push("PA043", "error", `enforcement on rule ${label} has unknown key "${key}"`, [slug, entry.rule], "Allowed keys: bash, tools, paths.");
+      }
+    }
+    for (const key of ["bash", "tools", "paths"] as const) {
+      const value = (e as Record<string, unknown>)[key];
+      if (value === undefined) continue;
+      if (!Array.isArray(value) || value.length === 0 || value.some((p) => typeof p !== "string" || p.trim() === "")) {
+        const example = key === "paths" ? '"**/.env"' : key === "tools" ? '"shell"' : '"git push --force*"';
+        push("PA043", "error", `enforcement.${key} on rule ${label} must be a non-empty array of non-empty strings`, [slug, entry.rule], `List concrete patterns (e.g. ${example}) or remove the key — an empty block compiles to nothing.`);
+      }
+    }
+  }
+
+  // PA041 — references must carry a credible authoritative URL.
+  const httpUrl = /^https:\/\/\S+$/;
+  for (const [name, ref] of Object.entries(manifest.references ?? {})) {
+    if (!ref || !httpUrl.test(ref.url ?? "")) {
+      push("PA041", "error", `references["${name}"] must carry an https:// URL for the standard/method/certification`, [slug, name], "Point to the official spec, body, or documentation page.");
     }
   }
 
