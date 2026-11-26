@@ -9,6 +9,7 @@ import type {
   RuntimeRequirements,
   SelfImprovementPolicy,
 } from "./types.js";
+import { matchProfessions, roleForProfession } from "./profession-index.js";
 
 // ---------------------------------------------------------------------------
 // Role derivation
@@ -326,15 +327,15 @@ function deriveSkills(role: Role, state: KnowledgeState): string[] {
 export function buildAgentSpec(
   state: KnowledgeState,
   role: Role,
-  opts: { scopeNote?: string; factIds?: string[]; questionIds?: string[] } = {},
+  opts: { scopeNote?: string; factIds?: string[]; questionIds?: string[]; profile?: string; purpose?: string; name?: string } = {},
 ): AgentSpec {
-  const name = deriveName(state, role);
+  const name = opts.name ?? deriveName(state, role);
   const answered = state.questions.filter((q) => q.status === "answered");
   return {
     id: name,
     name,
     role,
-    purpose: ROLE_PURPOSE[role],
+    purpose: opts.purpose ?? ROLE_PURPOSE[role],
     scope: opts.scopeNote ?? `Limited to the responsibilities implied by the captured intent: ${state.intent.slice(0, 120)}`,
     responsibilities: answered
       .flatMap((q) => q.answer?.facts ?? [])
@@ -350,6 +351,7 @@ export function buildAgentSpec(
     escalation: deriveEscalation(state),
     validation: deriveValidation(state),
     dependencies: [],
+    ...(opts.profile ? { profile: opts.profile } : {}),
     provenance: {
       sessionId: state.sessionId,
       derivedFromFacts: opts.factIds ?? state.facts.map((f) => f.id),
@@ -421,29 +423,77 @@ export function buildGraph(
   const operator = byRole("operations");
   const monitor = byRole("monitoring");
   const documenter = byRole("documentation");
-  const coordinator = agents[0];
+  const coordinator = agents[0]!;
+
+  // Self-edge guard: a coordinator that also fills a role must never be wired
+  // to itself (PA004 — the `documenter → coordinator` and `reviewer →
+  // coordinator` cases collapse this way).
+  const link = (from: string | undefined, to: string | undefined, kind: EdgeKind, artifacts: string[], contextScopes: string[], parallel: boolean) => {
+    if (from !== undefined && to !== undefined && from !== to) {
+      edges.push(edge(from, to, kind, artifacts, contextScopes, parallel));
+    }
+  };
 
   if (researcher && implementer) {
-    edges.push(edge(researcher.id, implementer.id, "handoff", ["research-findings"], ["architecture-relevant"], false));
+    link(researcher.id, implementer.id, "handoff", ["research-findings"], ["architecture-relevant"], false);
   }
   if (infra && researcher) {
-    edges.push(edge(researcher.id, infra.id, "delegates", ["diagnosis-questions"], ["infrastructure-config"], true));
+    link(researcher.id, infra.id, "delegates", ["diagnosis-questions"], ["infrastructure-config"], true);
   }
   if (implementer && reviewer) {
-    edges.push(edge(implementer.id, reviewer.id, "review", ["patches", "change-description"], ["diff-relevant"], false));
+    link(implementer.id, reviewer.id, "review", ["patches", "change-description"], ["diff-relevant"], false);
   }
-  if (reviewer && coordinator) {
-    edges.push(edge(reviewer.id, coordinator.id, "aggregates", ["review-verdict"], [], false));
+  if (reviewer) {
+    link(reviewer.id, coordinator.id, "aggregates", ["review-verdict"], [], false);
   }
   if (operator) {
     const source = reviewer ?? coordinator;
-    if (source) edges.push(edge(source.id, operator.id, "handoff", ["approved-change-plan"], ["runbook"], false));
+    link(source?.id, operator.id, "handoff", ["approved-change-plan"], ["runbook"], false);
   }
-  if (monitor && coordinator) {
-    edges.push(edge(monitor.id, coordinator.id, "escalates", ["anomaly-report"], ["metrics", "logs"], true));
+  if (monitor) {
+    link(monitor.id, coordinator.id, "escalates", ["anomaly-report"], ["metrics", "logs"], true);
   }
-  if (documenter && coordinator) {
-    edges.push(edge(documenter.id, coordinator.id, "aggregates", ["documentation-update"], [], true));
+  if (documenter) {
+    link(documenter.id, coordinator.id, "aggregates", ["documentation-update"], [], true);
+  }
+
+  // Duplicate role matches (PA007): the catalog can legitimately map several
+  // professions onto one role, and `byRole` above only wires the first. Give
+  // every extra member a peer: reviewers review the implementer, extra
+  // operators receive the release handoff, anything else aggregates to the
+  // coordinator.
+  const connected = new Set(edges.flatMap((e) => [e.from, e.to]));
+  for (const agent of agents) {
+    if (connected.has(agent.id)) continue;
+    let pushed: AgentGraphEdge | null = null;
+    if (agent.role === "review") {
+      if (implementer && agent.id !== implementer.id) {
+        pushed = edge(implementer.id, agent.id, "review", ["patches", "change-description"], ["diff-relevant"], false);
+      }
+    } else if (agent.role === "operations") {
+      const source = reviewer ?? coordinator;
+      if (source && agent.id !== source.id) {
+        pushed = edge(source.id, agent.id, "handoff", ["approved-change-plan"], ["runbook"], false);
+      }
+    } else if (coordinator && agent.id !== coordinator.id) {
+      pushed = edge(agent.id, coordinator.id, "aggregates", [`${agent.role}-report`], [], true);
+    }
+    if (pushed) {
+      edges.push(pushed);
+      connected.add(pushed.from);
+      connected.add(pushed.to);
+      connected.add(agent.id);
+    }
+  }
+
+  // The coordinator itself must never be orphaned (PA007): when every would-be
+  // edge toward it collapsed into a self-edge, peer it into the first non-self
+  // member so it stays a routing hub.
+  if (coordinator && agents.length > 1 && !edges.some((e) => e.from === coordinator.id || e.to === coordinator.id)) {
+    const peer = agents.find((a) => a.id !== coordinator.id);
+    if (peer) {
+      edges.push(edge(peer.id, coordinator.id, "aggregates", ["findings-report"], [], true));
+    }
   }
   return edges;
 }
@@ -497,32 +547,54 @@ export function buildArchitecture(
     };
   }
 
-  // Multi-agent: derive roles from facts, always include review when split.
+  // Multi-agent: the catalog is the matching source. When the intent names   // professions the registry actually ships (by name, slug or tag), the
+  // crew is derived as profile-bound members — the deliverable is the crew
+  // the project needs, not a research team modeling the interview. The
+  // interview process itself is never part of the output.
   const text = state.facts.map((f) => f.statement).join(" ") + " " + state.intent;
   const readOnly = isReadOnlySystem(state);
-  const roles = new Set<Role>();
-  for (const { role, patterns } of ROLE_SIGNALS) {
-    if (patterns.some((p) => p.test(text))) roles.add(role);
-  }
-  if (readOnly) {
-    // A read-only system must not plan agents that produce or execute changes.
-    for (const role of [...roles]) {
-      if (!READ_ONLY_SAFE_ROLES.has(role)) roles.delete(role);
-    }
-  }
-  // Ensure a sensible minimal topology.
-  if (!roles.has("research")) roles.add("research");
-  if (!readOnly && !roles.has("implementation") && (roles.has("research") || roles.has("infrastructure"))) {
-    roles.add("implementation");
-  }
-  if (roles.size >= 2) roles.add("review");
+  const professions = matchProfessions(text, process.cwd());
 
   const agents: AgentSpec[] = [];
-  for (const role of roles) {
-    const spec = buildAgentSpec(state, role, {
-      scopeNote: `Owns only the ${role} responsibilities of: ${state.intent.slice(0, 100)}`,
-    });
-    agents.push(spec);
+  if (professions.length >= 2) {
+    for (const p of professions) {
+      const role = roleForProfession(p) as Role;
+      if (readOnly && !READ_ONLY_SAFE_ROLES.has(role)) continue;
+      agents.push(
+        buildAgentSpec(state, role, {
+          profile: p.slug,
+          name: p.slug,
+          purpose: p.description || ROLE_PURPOSE[role],
+          scopeNote: `Operates as the ${p.name} profession for: ${state.intent.slice(0, 100)}`,
+        }),
+      );
+    }
+  }
+
+  if (agents.length < 2) {
+    // Fall back to the generic role derivation when the catalog cannot
+    // supply at least two matching professions.
+    const roles = new Set<Role>();
+    for (const { role, patterns } of ROLE_SIGNALS) {
+      if (patterns.some((p) => p.test(text))) roles.add(role);
+    }
+    if (readOnly) {
+      for (const role of [...roles]) {
+        if (!READ_ONLY_SAFE_ROLES.has(role)) roles.delete(role);
+      }
+    }
+    if (!roles.has("research")) roles.add("research");
+    if (!readOnly && !roles.has("implementation") && (roles.has("research") || roles.has("infrastructure"))) {
+      roles.add("implementation");
+    }
+    if (roles.size >= 2) roles.add("review");
+    agents.length = 0;
+    for (const role of roles) {
+      const spec = buildAgentSpec(state, role, {
+        scopeNote: `Owns only the ${role} responsibilities of: ${state.intent.slice(0, 100)}`,
+      });
+      agents.push(spec);
+    }
   }
 
   // First agent (or a dedicated one) becomes the coordinator.

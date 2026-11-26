@@ -1,0 +1,21 @@
+schema: proagents/registry-source/v1
+
+id: github
+
+name: GitHub
+
+type: git
+
+capabilities:
+  search: true
+  metadata: true
+  resolve: false
+  install: false
+
+artifact_types:
+  - agent
+  - skill
+  - tool
+
+policy:
+  allowed: true

@@ -1,0 +1,39 @@
+{
+  "id": "remediation",
+  "profile": "sre",
+  "role": "operator",
+  "name": "Remediation Engineer",
+  "permissions": {
+    "read": "repo",
+    "write": "scoped",
+    "production": "write",
+    "secrets": "named",
+    "tools": [
+      "read_file",
+      "write_file",
+      "restart_service",
+      "runbook_exec"
+    ],
+    "approvalGates": [
+      "restart_service",
+      "runbook_exec"
+    ]
+  },
+  "mcpServers": [
+    "github",
+    "kubernetes"
+  ],
+  "context": [
+    {
+      "framework": "filesystem",
+      "scope": "docs/runbooks/**"
+    }
+  ],
+  "receivesFrom": [
+    "triage"
+  ],
+  "emits": [
+    "mitigation-plan.md",
+    "mitigation-log.md"
+  ]
+}

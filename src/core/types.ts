@@ -127,6 +127,31 @@ export type CoverageAreaName =
   | "validation"
   | "runtime";
 
+/**
+ * Registry-discovered tooling staged during the interview (provenance-tagged;
+ * consumed by spec/build so the finished profile carries its full toolkit).
+ */
+export interface DiscoveredTooling {
+  /** Discriminator consumed by profile/crew builders. */
+  kind: "mcp" | "npm" | "skill" | "github";
+  name: string;
+  description: string;
+  /** Which registry produced this finding. */
+  source: "mcp-registry" | "npm" | "skills.sh" | "github";
+  /** Stable reference: registry detail URL, package spec, or repo slug. */
+  reference: string;
+  /** The query that surfaced this finding (audit trail). */
+  query: string;
+}
+
+/** Registry tooling staged on a session, with the queries that produced it. */
+export interface ToolingStage {
+  queries: string[];
+  findings: DiscoveredTooling[];
+  /** ISO timestamp of the last discovery run (session metadata only). */
+  discoveredAt?: string;
+}
+
 /** Full persistent interview state. Serialized to .proagent/session.json. */
 export interface KnowledgeState {
   version: 1;
@@ -143,6 +168,8 @@ export interface KnowledgeState {
   readiness: Readiness;
   /** Optional self-improvement configuration captured at init time. */
   selfImprovement?: SelfImprovementPolicy;
+  /** Registry tooling staged by discovery (empty until `discover` runs). */
+  tooling?: ToolingStage;
 }
 
 export interface ContextSourceRef {
@@ -192,6 +219,14 @@ export interface AgentSpec {
   escalation: string[];
   validation: string[];
   dependencies: string[];
+  /**
+   * Catalog profession this agent operates as (Professional Profile slug).
+   * Set when the intent names a real profession — the crew member then
+   * binds to that profile instead of shipping hand-rolled instructions.
+   * The engine never loads the manifest (deterministic core, no IO); the
+   * binding resolves at build/install time.
+   */
+  profile?: string;
   provenance: {
     sessionId: string;
     derivedFromFacts: string[];

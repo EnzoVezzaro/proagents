@@ -17,7 +17,7 @@ jobs:
         node: [20, 22, 24]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node }}
           cache: npm
@@ -29,23 +29,34 @@ jobs:
         run: |
           node ./dist/cli/index.js --version
           node ./dist/cli/index.js --help
+      - name: Benchmark guardrails suites (deterministic, offline)
+        run: |
+          node ./dist/cli/index.js benchmark validate privacy-guardrails
+          node ./dist/cli/index.js benchmark validate release-guardrails
+          node ./dist/cli/index.js benchmark run privacy-guardrails --json > /tmp/pg.json
+          node ./dist/cli/index.js benchmark run release-guardrails --json > /tmp/rg.json
+          node scripts/check-benchmarks.mjs /tmp/pg.json /tmp/rg.json
 
   site:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Build the site (docs + marketplace island + assembly)
+      - name: Build the site (docs + Studio island + assembly)
         run: npm run site:build
       - name: Artifact sanity checks
         run: |
           test -f site/index.html
+          test -f site/studio.html
+          test -f site/marketplace.html
           test -f site/404.html
           test -f site/app/index.html
           test -f site/guide/what-is-proagents.html
-          test -f site/.marketplace/catalog.json
-          grep -q "pa-app" site/index.html || (echo 'island marker missing' && exit 1)
+          test -f site/registry/catalog.json
+          grep -q "pa-mp-head" site/studio.html || (echo 'studio page header missing' && exit 1)
+          grep -q "studio" site/marketplace.html || (echo 'marketplace redirect missing' && exit 1)
+          grep -rq "pa-app" site/assets/ || (echo 'island code missing from the bundle' && exit 1)

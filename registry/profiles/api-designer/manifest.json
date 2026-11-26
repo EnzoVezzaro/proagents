@@ -1,0 +1,76 @@
+{
+  "schema": "proagents/profile/v1",
+  "version": "2.1.0",
+  "profile": {
+    "name": "API Designer",
+    "slug": "api-designer",
+    "description": "Professional profile: contract-first API design — resources before endpoints, versioned evolution without breaking clients, and error contracts that let consumers recover.",
+    "author": "proagents",
+    "tags": [
+      "api",
+      "rest",
+      "graphql",
+      "contracts",
+      "versioning"
+    ]
+  },
+  "identity": "identity.json",
+  "expertise": [
+    "expertise/01-resource-modeling.json",
+    "expertise/02-contract-first-workflows.json",
+    "expertise/03-compatibility-analysis.json",
+    "expertise/04-error-design.json",
+    "expertise/05-pagination-filtering-and-sorting-contracts.json",
+    "expertise/06-api-ergonomics.json"
+  ],
+  "knowledge": [
+    "knowledge/api/resource-modeling.json",
+    "knowledge/api/contract-first-workflows.json",
+    "knowledge/api/compatibility-analysis.json",
+    "knowledge/api/error-design.json",
+    "knowledge/api/pagination-filtering-sorting.json",
+    "knowledge/api/api-ergonomics.json",
+    "knowledge/api/contract-first-design.json",
+    "knowledge/api/breaking-change-review.json",
+    "knowledge/api/verification-checklist.json"
+  ],
+  "methods": [
+    "methods/01-contract-first-design.json",
+    "methods/02-breaking-change-review.json"
+  ],
+  "rules": [
+    "rules/01-never-modify-the-meaning-of-an-existing-field-or-endpoint-wi.json",
+    "rules/02-never-return-an-error-without-a-machine-readable-code-the-cl.json",
+    "rules/03-never-introduce-an-endpoint-that-cannot-be-answered-from-the.json",
+    "rules/04-never-design-pagination-without-choosing-cursor-or-offset-ex.json",
+    "rules/05-never-deprecate-without-a-documented-sunset-path-alternative.json"
+  ],
+  "standards": [
+    "standards/01-openapi-3-x-graphql-spec-conformance.json",
+    "standards/02-rfc-9457-problem-details-for-http-apis.json",
+    "standards/03-semantic-versioning-for-api-versions.json"
+  ],
+  "tools": "tools/requirements.json",
+  "verification": {
+    "required": [
+      "verification/required/01-contract-tests-cover-every-new-or-changed-endpoint-pass-and.json",
+      "verification/required/02-compatibility-check-ran-against-the-previous-published-contr.json",
+      "verification/required/03-every-error-response-demonstrated-or-unit-tested-with-its-co.json",
+      "verification/required/04-walk-the-verification-checklist-in-knowledge-api-verificatio.json"
+    ],
+    "optional": [
+      "verification/optional/01-example-curl-script-for-each-new-endpoint-added-to-the-contr.json"
+    ]
+  },
+  "skills": [
+    "skills/01-wesleyegberto-software-engineering-skills.json",
+    "skills/02-agent-skills.json",
+    "skills/03-awesome-copilot.json"
+  ],
+  "policies": [
+    "policies/01-breaking-changes-require-deprecation-windows-migration-notes.json",
+    "policies/02-apis-collect-the-minimum-data-needed-pii-in-payloads-is-just.json",
+    "policies/03-error-messages-never-leak-internals-stacks-sql-infrastructur.json",
+    "policies/04-contract-is-the-source-of-truth-undocumented-endpoints-do-no.json"
+  ]
+}

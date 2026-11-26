@@ -1,3 +1,7 @@
+---
+description: 'Context is a pluggable subsystem: filesystem, git and optional adapters feed the question engine scoped, provenance-tagged knowledge.'
+---
+
 # Context frameworks
 
 Context is a **pluggable subsystem**, not a hardcoded mechanism. The questioning engine

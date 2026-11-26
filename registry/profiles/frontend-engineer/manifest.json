@@ -1,0 +1,61 @@
+{
+  "schema": "proagents/profile/v1",
+  "version": "1.1.0",
+  "profile": {
+    "name": "Frontend Engineer",
+    "slug": "frontend-engineer",
+    "description": "User-facing interfaces: accessibility, responsive behavior, and interaction quality.",
+    "author": "proagents",
+    "tags": [
+      "frontend",
+      "ui",
+      "accessibility"
+    ]
+  },
+  "identity": "identity.json",
+  "expertise": [
+    "expertise/01-component-architecture.json",
+    "expertise/02-accessibility-wcag.json",
+    "expertise/03-responsive-design.json",
+    "expertise/04-web-performance.json",
+    "expertise/05-state-management.json"
+  ],
+  "methods": [
+    "methods/01-progressive-enhancement.json",
+    "methods/02-mobile-first-design.json",
+    "methods/03-component-boundary-analysis.json"
+  ],
+  "skills": [
+    "skills/01-anthropics-skills.json",
+    "skills/02-wesleyegberto-software-engineering-skills.json",
+    "skills/03-obra-superpowers.json",
+    "skills/04-agent-skills.json",
+    "skills/05-skills.json"
+  ],
+  "rules": [
+    "rules/01-preserve-public-api-compatibility.json",
+    "rules/02-require-tests-after-source-changes.json",
+    "rules/03-never-ship-keyboard-inaccessible-interactions.json",
+    "rules/04-respect-user-motion-preferences.json"
+  ],
+  "standards": [
+    "standards/01-wcag.json"
+  ],
+  "tools": "tools/requirements.json",
+  "verification": {
+    "required": [
+      "verification/required/01-typecheck.json",
+      "verification/required/02-tests.json"
+    ],
+    "optional": [
+      "verification/optional/01-lint.json",
+      "verification/optional/02-build.json"
+    ]
+  },
+  "policies": [
+    "policies/01-accessibility-is-a-ship-gate-keyboard-contrast-semantics-wca.json",
+    "policies/02-performance-budgets-core-web-vitals-guard-every-landing-path.json",
+    "policies/03-user-input-is-validated-at-the-boundary-no-secrets-in-client.json",
+    "policies/04-progressive-enhancement-core-flows-survive-js-failure.json"
+  ]
+}

@@ -15,6 +15,8 @@ import { CATALOG_URL } from "../../catalog.js";
 import { issueBody, issueTitle } from "../../proposal.js";
 import { newWorker, renameMcpServer, stripEmptyContexts, validateCrewDraft } from "../../crew-draft.js";
 import { btnSoft } from "../tokens.js";
+import { ListField } from "../ListField.js";
+import { SettingsModal } from "../SettingsModal.js";
 
 /**
  * Crew builder — the GUI counterpart of the CLI interview. Agentic-first:
@@ -28,11 +30,13 @@ const btn: React.CSSProperties = { background: "var(--grad)", color: "#ffffff", 
 const btnGhost: React.CSSProperties = { background: "transparent", color: "var(--cream-dim)", border: "1px solid var(--line)", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 13 };
 const field: React.CSSProperties = { width: "100%", boxSizing: "border-box", background: "var(--ink)", color: "var(--cream)", border: "1px solid var(--line)", borderRadius: 8, padding: "8px 10px", fontSize: 13 };
 const label: React.CSSProperties = { display: "block", fontSize: 11, color: "var(--cream-dim)", marginBottom: 4, marginTop: 10, textTransform: "uppercase" as const, letterSpacing: 0.4 };
+const hint: React.CSSProperties = { color: "var(--cream-dim)", fontSize: 12, lineHeight: 1.55, marginTop: 8 };
 
 /** Client-side mirror of crewProblems lives in crew-draft.ts (tested). */
 
 export function BuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
-  const { settings, navigate } = props.ctx;
+  const { settings, navigate, user } = props.ctx;
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [crew, setCrew] = useState<CrewDefinition>(() => {
     // A draft from the build-entry (repo analysis) lands here via sessionStorage;
     // otherwise restore the in-progress draft so reloads don't lose work.
@@ -104,7 +108,7 @@ export function BuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
   };
 
   /**
-   * Publish = file a marketplace proposal issue on the catalog repo. The
+   * Publish = file a registry proposal issue on the catalog repo. The
    * repository's CI validates the embedded JSON instantly; a maintainer merge
    * comment (`/publish`) commits it to the catalog and Pages serves it.
    */
@@ -116,12 +120,12 @@ export function BuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
       setPublishState("Sign in with GitHub in Settings to publish — publishing files a proposal issue on the catalog repo.");
       return;
     }
-    setPublishState("Filing marketplace proposal…");
+    setPublishState("Filing registry proposal…");
     try {
       const { createIssue } = await import("../../github.js");
       const repo = (import.meta.env.VITE_MARKET_REPO as string | undefined) ?? "EnzoVezzaro/proagents";
       const res = await createIssue(settings.githubToken, repo, issueTitle(crew), issueBody(crew), ["crew-proposal"]);
-      setPublishState(`✓ Proposal filed: ${res.html_url}\nCI validates it within seconds. A maintainer merges it with /publish and it appears in the marketplace.`);
+      setPublishState(`✓ Proposal filed: ${res.html_url}\nCI validates it within seconds. A maintainer merges it with /publish and it appears in the registry.`);
     } catch (err) {
       const msg = (err as Error).message;
       setPublishState(
@@ -164,7 +168,11 @@ export function BuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
       {tab === "workers" && <WorkersTab crew={crew} update={update} updateWorker={updateWorker} />}
       {tab === "mcp" && <McpTab crew={crew} update={update} />}
       {tab === "graph" && <GraphTab crew={crew} update={update} />}
-      {tab === "ship" && <ShipTab crew={crew} problems={problems} publish={publish} publishState={publishState} exportJson={exportJson} navigate={navigate} />}
+      {tab === "ship" && <ShipTab crew={crew} problems={problems} publish={publish} publishState={publishState} exportJson={exportJson} navigate={navigate} signedIn={Boolean(settings.githubToken)} onSignIn={() => setSettingsOpen(true)} />}
+
+      {/* GitHub sign-in gate modal — saving a device-flow sign-in fires the
+          settings-changed event, which re-loads settings and enables publish. */}
+      {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} user={user ?? null} />}
     </div>
   );
 }
@@ -198,7 +206,7 @@ function IdentityTab(props: { crew: CrewDefinition; update: (p: Partial<CrewDefi
       <label style={label}>Description</label>
       <textarea style={{ ...field, minHeight: 70 }} value={crew.description} onChange={(e) => update({ description: e.target.value })} placeholder="What does this crew do, for whom, and what does it refuse to do?" />
       <label style={label}>Tags (comma-separated)</label>
-      <input style={field} value={crew.tags.join(", ")} onChange={(e) => update({ tags: e.target.value.split(",").map((t) => t.trim()).filter(Boolean) })} />
+      <ListField separator="," style={field} value={crew.tags} onChange={(tags) => update({ tags })} />
     </Card>
   );
 }
@@ -211,7 +219,7 @@ function WorkersTab(props: {
   const { crew, update, updateWorker } = props;
 
   // Load the catalog once so workers can pick a profession (profile spec)
-  // from the marketplace. Profiles are the atoms; workers reference them.
+  // from the registry. Profiles are the atoms; workers reference them.
   const [catalog, setCatalog] = React.useState<MarketplaceCatalog | null>(null);
   React.useEffect(() => {
     let cancelled = false;
@@ -233,7 +241,7 @@ function WorkersTab(props: {
     <div style={{ display: "grid", gap: 14 }}>
       <p style={{ color: "var(--cream-dim)", fontSize: 13, lineHeight: 1.6, margin: 0 }}>
         A worker is a role in the pipeline plus a <strong>profession</strong>. Pick a profile spec
-        from the marketplace (or type a built-in slug like <code>security-engineer</code>) and the
+        from the registry (or type a built-in slug like <code>security-engineer</code>) and the
         profession's expertise, methods, rules and verification are wired in at install time —
         no hand-crafted agent config needed.
       </p>
@@ -290,7 +298,7 @@ function WorkersTab(props: {
             style={field}
             value={w.profile ?? ""}
             onChange={(e) => updateWorker(w.id, { profile: slugify(e.target.value) || undefined })}
-            placeholder="or type a profile slug — built-in (security-engineer), marketplace, or local profiles/"
+            placeholder="or type a profile slug — registry (security-engineer)"
           />
           {w.profile && (
             <p style={{ color: "var(--warn)", fontSize: 12, margin: "8px 0 0" }}>
@@ -328,7 +336,7 @@ function WorkersTab(props: {
           </div>
 
           <label style={label}>Emits — artifacts this worker hands downstream (comma-separated)</label>
-          <input style={field} value={w.emits.join(", ")} onChange={(e) => updateWorker(w.id, { emits: e.target.value.split(",").map((t) => t.trim()).filter(Boolean) })} placeholder="e.g. draft-docs, review-notes" />
+          <ListField separator="," style={field} value={w.emits} onChange={(emits) => updateWorker(w.id, { emits })} placeholder="e.g. draft-docs, review-notes" />
 
           <label style={label}>Context bindings — where this worker retrieves knowledge (NOT artifacts)</label>
           {w.context.map((c, ci) => (
@@ -367,7 +375,7 @@ function WorkersTab(props: {
             ))}
           </div>
           <label style={label}>Tools — allowlist for this worker (comma-separated)</label>
-          <input style={field} value={w.permissions.tools.join(", ")} onChange={(e) => updateWorker(w.id, { permissions: { ...w.permissions, tools: e.target.value.split(",").map((t) => t.trim()).filter(Boolean) } })} placeholder="e.g. filesystem, shell, git" aria-label={`Worker ${w.id} tool allowlist`} />
+          <ListField separator="," style={field} value={w.permissions.tools} onChange={(tools) => updateWorker(w.id, { permissions: { ...w.permissions, tools } })} placeholder="e.g. filesystem, shell, git" aria-label={`Worker ${w.id} tool allowlist`} />
 
           <label style={label}>Extra instructions — optional with a profession (SKILL.md body)</label>
           <textarea
@@ -422,7 +430,7 @@ function McpTab(props: { crew: CrewDefinition; update: (p: Partial<CrewDefinitio
             </div>
           </div>
           <label style={label}>Allowed tools (empty = all)</label>
-          <input style={field} value={(m.allowedTools ?? []).join(", ")} onChange={(e) => setServer(m.name, { allowedTools: e.target.value.split(",").map((t) => t.trim()).filter(Boolean) })} />
+          <ListField separator="," style={field} value={m.allowedTools ?? []} onChange={(allowedTools) => setServer(m.name, { allowedTools })} />
         </Card>
       ))}
       <button
@@ -484,8 +492,10 @@ function ShipTab(props: {
   publishState: string;
   exportJson: () => void;
   navigate: (to: string) => void;
+  signedIn: boolean;
+  onSignIn: () => void;
 }): React.JSX.Element {
-  const { crew, problems, publish, publishState, exportJson, navigate } = props;
+  const { crew, problems, publish, publishState, exportJson, navigate, signedIn, onSignIn } = props;
   const [copied, setCopied] = useState("");
   const copy = async (text: string, what: string) => {
     try {
@@ -521,18 +531,25 @@ function ShipTab(props: {
       </Card>
 
       <Card>
-        <label style={label}>2 · Share it on the marketplace</label>
+        <label style={label}>2 · Share it on the registry</label>
         <p style={{ color: "var(--cream-dim)", fontSize: 13, lineHeight: 1.6, margin: "4px 0 12px" }}>
           Everything published here is <strong style={{ color: "var(--ok)", textDecoration: "none" }}>free and MIT-licensed</strong>.
           Publishing files a <strong>proposal issue</strong> on the ProAgents repo — CI validates
           your crew automatically, and a maintainer merge (<code>/publish</code>) puts it in the
-          marketplace. Nothing goes live without a human review.
+          registry. Nothing goes live without a human review.
         </p>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <button onClick={publish} style={btn}>File marketplace proposal</button>
+          {/* Disabled until GitHub sign-in — same gate as the profile builder. */}
+          <button onClick={publish} disabled={!signedIn} title={signedIn ? undefined : "Sign in with GitHub first"} style={signedIn ? btn : { ...btn, opacity: 0.5, cursor: "not-allowed" }}>File registry proposal</button>
           <button onClick={() => copy(issueBody(crew), "json")} style={btnGhost}>{copied === "json" ? "✓ Copied proposal" : "Copy proposal markdown"}</button>
           <button onClick={() => navigate("catalog")} style={btnGhost}>Back to catalog</button>
         </div>
+        {!signedIn && (
+          <p style={{ ...hint, color: "var(--warn, #b98700)" }}>
+            Publishing needs a GitHub account — the proposal issue is created through the GitHub API on your behalf.{"\n"}
+            <button onClick={onSignIn} style={{ ...btnGhost, padding: "4px 10px", marginLeft: 8, verticalAlign: "middle" }}>Sign in with GitHub</button>
+          </p>
+        )}
         {publishState && (
           <p style={{ marginTop: 12, fontSize: 13, color: publishState.startsWith("✓") ? "var(--ok)" : "var(--cream-dim)", whiteSpace: "pre-wrap" }}>
             {publishState.includes("http") ? (
@@ -551,6 +568,7 @@ function ShipTab(props: {
           </p>
         )}
         <div style={{ display: "flex", gap: 14, fontSize: 12, marginTop: 14 }}>
+          <a href="https://buy.stripe.com/6oU6oI4XIdDs80t6701Nu02" target="_blank" rel="noreferrer" style={{ color: "var(--cream-dim)" }}>Donate (Stripe)</a>
           <a href="https://github.com/sponsors/EnzoVezzaro" target="_blank" rel="noreferrer" style={{ color: "var(--cream-dim)" }}>Sponsor the project</a>
           <a href="https://ko-fi.com/enzojuniorvezzaro" target="_blank" rel="noreferrer" style={{ color: "var(--cream-dim)" }}>Ko-fi</a>
         </div>

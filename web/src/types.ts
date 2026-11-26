@@ -1,4 +1,4 @@
-/** Marketplace SPA types — mirror src/crew/types.ts and src/profiles/types.ts (kept in sync manually). */
+/** Studio SPA types — mirror src/crew/types.ts and src/profiles/types.ts (kept in sync manually). */
 
 /** Mirror of src/profiles/types.ts ProfileMcpServer. */
 export interface ProfileMcpServer {
@@ -19,13 +19,18 @@ export interface ProfilePackage {
   reason?: string;
 }
 
-/** Mirror of src/profiles/types.ts ProfileManifest — profile catalog items. */
+/**
+ * Mirror of src/profiles/types.ts ProfileManifest — profile catalog items.
+ * Catalog manifests in the folder standard hold section paths (identity is a
+ * "identity/01-x.md" string, tools is "tools/requirements.md"); those are
+ * hydrated client-side before rendering — see hydrateProfile in
+ * profile-hydrate.ts.
+ */
 export interface ProfileManifest {
   version: string;
   profile: {
     name: string;
     slug: string;
-    version: string;
     description?: string;
     author?: string;
     tags?: string[];
@@ -35,9 +40,12 @@ export interface ProfileManifest {
   knowledge?: string[];
   methods?: string[];
   skills?: string[];
+  skillsDetail?: Record<string, { skills: string[]; install?: string; note?: string }>;
   skillBodies?: Record<string, { description: string; body: string }>;
   rules?: string[];
+  policies?: string[];
   standards?: string[];
+  references?: Record<string, { url: string; note?: string }>;
   tools: {
     required: string[];
     optional?: string[];
@@ -46,6 +54,21 @@ export interface ProfileManifest {
     packages?: ProfilePackage[];
   };
   verification: { required: string[]; optional?: string[] };
+}
+
+/**
+ * On-disk/catalog manifest in the folder standard: sections hold .md paths;
+ * hydration turns this into a plain ProfileManifest. Inline drafts (builder)
+ * are a ProfileManifest with content instead of paths.
+ */
+export type ProfileManifestSource = Omit<ProfileManifest, "identity" | "tools"> & {
+  identity?: ProfileManifest["identity"] | string;
+  tools?: ProfileManifest["tools"] | string;
+};
+
+/** True when a section entry is a folder-standard .md path. */
+export function isPathEntry(entry: string): boolean {
+  return /^[\w./-]+\.md$/.test(entry) && !entry.includes("..") && !entry.startsWith("/") && !entry.startsWith("npm:") && !entry.startsWith("github:");
 }
 
 export interface CrewPermissions {
@@ -105,8 +128,81 @@ export interface CrewDefinition {
   mcpServers: CrewMcpServer[];
   handoffs: CrewHandoff[];
   entryPoints: string[];
+  mission?: string;
+  coordination?: string[];
+  tasks?: string[];
+  workflows?: string[];
+  rules?: string[];
+  verification?: string[];
   createdAt: string;
   updatedAt: string;
+}
+
+/** A crew member — a profile binding with an explicit permission model. */
+export interface CrewMemberSource {
+  profile: string;
+  role: string;
+  id?: string;
+  name?: string;
+  permissions: CrewPermissions;
+  mcpServers?: string[];
+  context?: CrewContext[];
+  receivesFrom?: string[];
+  emits?: string[];
+}
+
+export interface CrewDefinitionSource {
+  version: string;
+  crew: {
+    id: string;
+    name: string;
+    description: string;
+    author: string;
+    tags: string[];
+  };
+  /** Paths to member files (composition) or inline members (builders). */
+  members?: string[] | CrewMemberSource[];
+  /** Legacy: paths to worker.json manifests, or inline worker objects. */
+  workers?: string[] | CrewWorker[];
+  mission?: string;
+  coordination?: string[];
+  tasks?: string[];
+  workflows?: string[];
+  handoffs?: (string | CrewHandoff)[];
+  rules?: string[];
+  verification?: string[];
+  tools?: string;
+  /** Path to mcp/servers.json, or an inline list (legacy/builder). */
+  mcp?: string;
+  mcpServers?: CrewMcpServer[];
+  /** Path to graph.json, or inline (legacy/builder). */
+  graph?: string;
+  entryPoints?: string[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/** Every artifact kind the registry models (mirror of src/crew/types.ts ArtifactKind). */
+export type ArtifactKind =
+  | "profile"
+  | "crew"
+  | "agent"
+  | "workflow"
+  | "capability"
+  | "skill"
+  | "tool"
+  | "mcp"
+  | "prompt"
+  | "hook"
+  | "adapter"
+  | "policy"
+  | "template"
+  | "extension";
+
+/** Abstract abilities an artifact provides or needs (mirror of ArtifactRequires). */
+export interface ArtifactRequires {
+  capabilities?: string[];
+  artifacts?: string[];
 }
 
 export interface MarketplaceItem {
@@ -116,16 +212,62 @@ export interface MarketplaceItem {
   description: string;
   author: string;
   tags: string[];
-  kind: "profile" | "crew" | "agent";
+  kind: ArtifactKind;
   downloads: number;
   createdAt: string;
   updatedAt: string;
+  provides?: string[];
+  requires?: ArtifactRequires;
+  compatibility?: string[];
+  source?: string;
 }
 
 export interface MarketplaceCatalog {
   schemaVersion: 1;
   updatedAt: string;
   items: MarketplaceItem[];
+}
+
+// ---------------------------------------------------------------------------
+// Project spec (proagents.yaml) — mirror of src/registry/types.ts (PA5xx)
+// ---------------------------------------------------------------------------
+
+/** Schema literal of proagents.yaml (mirror of SPEC_SCHEMA). */
+export const SPEC_SCHEMA = "proagents/v1" as const;
+
+/** Environment sections of the spec (mirror of SpecEnvironment). */
+export interface SpecEnvironment {
+  profiles?: string[];
+  crews?: string[];
+  agents?: string[];
+  workflows?: string[];
+  capabilities?: string[];
+  skills?: string[];
+  tools?: string[];
+  mcp?: string[];
+}
+
+/** The human-authored portable environment spec (mirror of SpecDocument). */
+export interface SpecDocument {
+  schema: typeof SPEC_SCHEMA;
+  project: { name: string };
+  environment: SpecEnvironment;
+  policies?: {
+    filesystem?: { "workspace-only"?: boolean };
+    network?: { allowed?: string[] };
+  };
+  harness?: {
+    mode?: "compatible";
+    compatibility?: string[];
+  };
+}
+
+/** A client-side validation finding (mirror of SpecFinding; PA5xx codes). */
+export interface SpecFinding {
+  code: "PA501" | "PA502" | "PA505" | "PA506";
+  severity: "error" | "warning";
+  message: string;
+  suggestion?: string;
 }
 
 export function emptyCrew(author: string): CrewDefinition {
@@ -153,8 +295,8 @@ export function slugify(text: string): string {
 /** Minimal ProfileManifest for new profile drafts (validator defaults fill the rest). */
 export function emptyProfile(): ProfileManifest {
   return {
-    version: "1",
-    profile: { name: "", slug: "", version: "1.0.0" },
+    version: "1.0.0",
+    profile: { name: "", slug: "" },
     identity: { title: "" },
     expertise: [],
     tools: { required: ["filesystem", "shell", "git"], mcp: [], packages: [] },

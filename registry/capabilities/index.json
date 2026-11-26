@@ -1,0 +1,170 @@
+[
+  {
+    "id": "source-control",
+    "title": "Source Control",
+    "description": "Version repositories, branches and history; interact with Git hosting platforms.",
+    "aliases": ["git", "vcs", "scm", "version-control"],
+    "implHints": ["git", "github", "github mcp", "gitlab"]
+  },
+  {
+    "id": "browser-automation",
+    "title": "Browser Automation",
+    "description": "Drive a real browser: navigate, click, fill forms, screenshot, scrape.",
+    "aliases": ["browser", "web-automation", "ui-automation"],
+    "implHints": ["playwright", "browser-use", "browser mcp", "puppeteer"]
+  },
+  {
+    "id": "frontend-development",
+    "title": "Frontend Development",
+    "description": "Build user interfaces: components, layouts, styling, client state.",
+    "aliases": ["frontend", "ui-development", "web-frontend"],
+    "implHints": ["react", "vue", "svelte", "frontend skill"]
+  },
+  {
+    "id": "backend-development",
+    "title": "Backend Development",
+    "description": "Build server-side logic: APIs, services, business rules, integrations.",
+    "aliases": ["backend", "server-development", "api-development"],
+    "implHints": ["api design", "express", "fastify", "backend skill"]
+  },
+  {
+    "id": "database-access",
+    "title": "Database Access",
+    "description": "Query and manage relational or document databases; schema work.",
+    "aliases": ["database", "db-access", "sql"],
+    "implHints": ["postgres mcp", "database cli", "prisma", "sqlite"]
+  },
+  {
+    "id": "javascript-runtime",
+    "title": "JavaScript Runtime",
+    "description": "Execute and manage JavaScript/TypeScript toolchains and package managers.",
+    "aliases": ["node", "nodejs", "node-runtime", "typescript-runtime"],
+    "implHints": ["node", "npm", "pnpm"]
+  },
+  {
+    "id": "python-runtime",
+    "title": "Python Runtime",
+    "description": "Execute and manage Python environments and packaging.",
+    "aliases": ["python", "py-runtime"],
+    "implHints": ["python", "pip", "poetry"]
+  },
+  {
+    "id": "testing",
+    "title": "Testing",
+    "description": "Run and interpret automated tests; TDD loops; coverage analysis.",
+    "aliases": ["test", "test-runner", "automated-testing"],
+    "implHints": ["vitest", "jest", "pytest", "test skill"]
+  },
+  {
+    "id": "frontend-testing",
+    "title": "Frontend Testing",
+    "description": "Component, story and end-to-end browser tests for UI work.",
+    "aliases": ["ui-testing", "component-testing", "e2e-testing"],
+    "implHints": ["testing library", "playwright testing", "storybook test"]
+  },
+  {
+    "id": "api-testing",
+    "title": "API Testing",
+    "description": "Contract, integration and load tests against HTTP APIs.",
+    "aliases": ["contract-testing", "integration-testing"],
+    "implHints": ["supertest", "postman", "hurl"]
+  },
+  {
+    "id": "code-review",
+    "title": "Code Review",
+    "description": "Systematic review of diffs for correctness, clarity and conventions.",
+    "aliases": ["review", "peer-review"],
+    "implHints": ["code review skill", "review checklist"]
+  },
+  {
+    "id": "security-review",
+    "title": "Security Review",
+    "description": "Threat modeling, vulnerability scanning and OWASP-aligned review.",
+    "aliases": ["security", "security-audit", "appsec"],
+    "implHints": ["security scanner", "owasp skill", "security-engineer profile"]
+  },
+  {
+    "id": "ci-cd",
+    "title": "CI/CD",
+    "description": "Continuous integration and delivery: pipelines, build gates, releases.",
+    "aliases": ["ci", "cd", "continuous-integration", "continuous-delivery"],
+    "implHints": ["github actions", "ci pipeline skill"]
+  },
+  {
+    "id": "documentation",
+    "title": "Documentation",
+    "description": "Write and maintain READMEs, guides, ADRs and API references.",
+    "aliases": ["docs", "technical-writing"],
+    "implHints": ["documentation skill", "adr template"]
+  },
+  {
+    "id": "planning",
+    "title": "Planning",
+    "description": "Break work down, estimate, sequence and track execution plans.",
+    "aliases": ["task-breakdown", "project-planning", "roadmapping"],
+    "implHints": ["planning skill", "task breakdown skill"]
+  },
+  {
+    "id": "observability",
+    "title": "Observability",
+    "description": "Logging, metrics, tracing and dashboards for production systems.",
+    "aliases": ["monitoring", "telemetry"],
+    "implHints": ["observability skill", "logging mcp"]
+  },
+  {
+    "id": "containerization",
+    "title": "Containerization",
+    "description": "Docker/OCI images, compose stacks and Kubernetes manifests.",
+    "aliases": ["docker", "kubernetes", "containers"],
+    "implHints": ["dockerfile skill", "kubernetes skill"]
+  },
+  {
+    "id": "cloud-deploy",
+    "title": "Cloud Deployment",
+    "description": "Deploy and operate services on cloud platforms.",
+    "aliases": ["deployment", "cloud", "hosting"],
+    "implHints": ["aws", "vercel", "cloudflare", "deploy skill"]
+  },
+  {
+    "id": "data-pipelines",
+    "title": "Data Pipelines",
+    "description": "ETL/ELT, warehouse modeling and batch/stream data processing.",
+    "aliases": ["etl", "data-engineering"],
+    "implHints": ["airflow", "dbt", "data pipeline skill"]
+  },
+  {
+    "id": "ml-training",
+    "title": "ML Training",
+    "description": "Train, evaluate and version machine-learning models.",
+    "aliases": ["machine-learning", "ml-ops", "model-training"],
+    "implHints": ["pytorch", "tensorflow", "ml skill"]
+  },
+  {
+    "id": "accessibility",
+    "title": "Accessibility",
+    "description": "WCAG-aligned, screen-reader and keyboard-first interface work.",
+    "aliases": ["a11y", "wcag"],
+    "implHints": ["accessibility skill", "axe"]
+  },
+  {
+    "id": "performance",
+    "title": "Performance",
+    "description": "Profiling, benchmarks and optimization across frontend and backend.",
+    "aliases": ["optimization", "profiling"],
+    "implHints": ["performance skill", "lighthouse"]
+  },
+  {
+    "id": "privacy",
+    "title": "Privacy",
+    "description": "GDPR/CCPA-aligned data handling, PII minimization, consent flows.",
+    "aliases": ["data-privacy", "gdpr"],
+    "implHints": ["privacy skill", "pii redaction"]
+  },
+  {
+    "id": "communication",
+    "title": "Communication",
+    "description": "Structured reporting, stakeholder updates and handoff documents.",
+    "aliases": ["reporting", "stakeholder-communication"],
+    "implHints": ["communication skill", "status report skill"]
+  }
+]

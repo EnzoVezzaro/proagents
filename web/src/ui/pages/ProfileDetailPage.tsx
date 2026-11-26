@@ -18,7 +18,7 @@ export function ProfileDetail(props: { manifest: ProfileManifest }): React.JSX.E
         </div>
         <div style={{ background: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 14, padding: 20, minWidth: 240 }}>
           <div style={{ fontSize: 22, fontWeight: 800, color: "var(--ok)", textDecoration: "none" }}>Free · MIT</div>
-          <div style={{ color: "var(--cream-dim)", fontSize: 12, marginBottom: 14 }}>v{m.profile.version} · by {m.profile.author ?? "community"}</div>
+          <div style={{ color: "var(--cream-dim)", fontSize: 12, marginBottom: 14 }}>v{m.version} · by {m.profile.author ?? "community"}</div>
           <p style={{ color: "var(--cream-dim)", fontSize: 12, margin: "0 0 10px" }}>Equip the coding agent you already use with this profession:</p>
           <pre style={{ background: "var(--ink)", border: "1px solid var(--line)", borderRadius: 10, padding: "10px 12px", fontSize: 13, margin: 0, overflowX: "auto" }}>
             <code>proagent equip {m.profile.slug}</code>

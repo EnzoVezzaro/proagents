@@ -1,7 +1,7 @@
 import type { CrewDefinition, ProfileManifest } from "./types.js";
 
 /**
- * Marketplace proposal — publishing files a GitHub issue on the catalog repo
+ * Registry proposal — publishing files a GitHub issue on the catalog repo
  * with the full crew JSON in a fenced block. The repo's CI parses and
  * validates that block on every proposal; `/publish` commits it. Keep the
  * markers exactly in sync with .github/workflows/crew-submission.yml.
@@ -16,7 +16,7 @@ export function issueTitle(crew: CrewDefinition): string {
 
 export function issueBody(crew: CrewDefinition): string {
   const json = JSON.stringify(crew, null, 2);
-  return `## Marketplace proposal: ${crew.name}
+  return `## Registry proposal: ${crew.name}
 
 ${crew.description}
 
@@ -49,7 +49,7 @@ ${JSON_END}
 ---
 
 Maintainers: CI validates this proposal automatically. If the check is green and the
-design is sound, comment \`/publish\` to commit it to the marketplace catalog.
+design is sound, comment \`/publish\` to commit it to the registry catalog.
 `;
 }
 
@@ -62,19 +62,19 @@ export const PROFILE_JSON_BEGIN = "<!-- PROFILE-JSON-BEGIN -->";
 export const PROFILE_JSON_END = "<!-- PROFILE-JSON-END -->";
 
 export function profileIssueTitle(profile: ProfileManifest): string {
-  return `[profile-proposal] ${profile.profile.slug} v${profile.profile.version}`;
+  return `[profile-proposal] ${profile.profile.slug} v${profile.version}`;
 }
 
 export function profileIssueBody(profile: ProfileManifest): string {
   const json = JSON.stringify(profile, null, 2);
-  return `## Marketplace proposal: ${profile.profile.name}
+  return `## Registry proposal: ${profile.profile.name}
 
 ${profile.identity.summary ?? ""}
 
 | | |
 |---|---|
 | Slug | \`${profile.profile.slug}\` |
-| Version | ${profile.profile.version} |
+| Version | ${profile.version} |
 | Kind | profile |
 | Expertise | ${profile.expertise.length} areas |
 | Rules | ${(profile.rules ?? []).length} normative |
@@ -92,6 +92,6 @@ ${PROFILE_JSON_END}
 ---
 
 Maintainers: CI validates this proposal automatically. If the check is green and the
-profession is sound, comment \`/publish\` to commit it to the marketplace catalog.
+profession is sound, comment \`/publish\` to commit it to the registry catalog.
 `;
 }

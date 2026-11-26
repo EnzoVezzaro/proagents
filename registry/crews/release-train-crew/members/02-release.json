@@ -1,0 +1,37 @@
+{
+  "profile": "release-engineer",
+  "role": "operator",
+  "name": "Release Engineer",
+  "permissions": {
+    "read": "repo",
+    "write": "scoped",
+    "production": "none",
+    "secrets": "none",
+    "tools": [
+      "read_file",
+      "write_file",
+      "git_log"
+    ],
+    "approvalGates": []
+  },
+  "mcpServers": [
+    "github"
+  ],
+  "context": [
+    {
+      "framework": "filesystem",
+      "scope": "CHANGELOG.md, package.json, docs/release/**"
+    },
+    {
+      "framework": "git",
+      "scope": "tags and release history"
+    }
+  ],
+  "receivesFrom": [
+    "verifier"
+  ],
+  "emits": [
+    "release-plan.md",
+    "release-notes.md"
+  ]
+}

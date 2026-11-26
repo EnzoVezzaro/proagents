@@ -1,0 +1,60 @@
+{
+  "schema": "proagents/profile/v1",
+  "version": "1.1.0",
+  "profile": {
+    "name": "Accessibility Engineer",
+    "slug": "accessibility-engineer",
+    "description": "Inclusive interfaces: WCAG conformance, assistive technology, and perceptible feedback.",
+    "author": "proagents",
+    "tags": [
+      "accessibility",
+      "wcag",
+      "a11y",
+      "ui"
+    ]
+  },
+  "identity": "identity.json",
+  "expertise": [
+    "expertise/01-wcag-conformance.json",
+    "expertise/02-assistive-technologies.json",
+    "expertise/03-keyboard-interaction.json",
+    "expertise/04-semantic-html.json",
+    "expertise/05-accessible-color-and-contrast.json"
+  ],
+  "methods": [
+    "methods/01-progressive-enhancement.json",
+    "methods/02-boundary-value-analysis.json",
+    "methods/03-assistive-technology-testing.json"
+  ],
+  "skills": [
+    "skills/01-anthropics-skills.json",
+    "skills/02-obra-superpowers.json",
+    "skills/03-web-quality-skills.json",
+    "skills/04-agent-plugins.json"
+  ],
+  "rules": [
+    "rules/01-never-ship-keyboard-inaccessible-interactions.json",
+    "rules/02-respect-user-motion-preferences.json",
+    "rules/03-require-tests-after-source-changes.json",
+    "rules/04-preserve-public-api-compatibility.json"
+  ],
+  "standards": [
+    "standards/01-wcag.json"
+  ],
+  "tools": "tools/requirements.json",
+  "verification": {
+    "required": [
+      "verification/required/01-typecheck.json",
+      "verification/required/02-tests.json"
+    ],
+    "optional": [
+      "verification/optional/01-accessibility-scan.json"
+    ]
+  },
+  "policies": [
+    "policies/01-wcag-2-2-aa-is-the-floor-not-the-goal.json",
+    "policies/02-assistive-technology-testing-screen-reader-switch-magnificat.json",
+    "policies/03-accessibility-defects-are-functional-defects-same-severity-l.json",
+    "policies/04-motion-and-flashing-respect-vestibular-sensitivity-prefers-r.json"
+  ]
+}

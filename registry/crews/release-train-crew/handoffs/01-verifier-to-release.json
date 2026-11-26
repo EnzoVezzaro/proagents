@@ -1,0 +1,6 @@
+{
+  "from": "verifier",
+  "to": "release",
+  "artifact": "signoff-report.md",
+  "body": "`verifier` hands **signoff-report.md** to `release`."
+}

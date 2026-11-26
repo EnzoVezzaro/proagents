@@ -13,7 +13,7 @@ import type { ProfileManifest } from "../profiles/types.js";
  * Resolve a worker's profession manifest by slug. Optional: crews without
  * profiles install exactly as before. The resolver is injected so the core
  * stays deterministic and provider-agnostic (the CLI wires it to the
- * profile registry / marketplace; tests pass stubs).
+ * profile registry; tests pass stubs).
  */
 export type ProfileResolver = (slug: string) => Promise<ProfileManifest | null>;
 
@@ -24,7 +24,7 @@ export type ProfileResolver = (slug: string) => Promise<ProfileManifest | null>;
 export function profileSections(manifest: ProfileManifest): string[] {
   const lines: string[] = [];
   const profile = manifest.profile;
-  if (profile) lines.push(`**Profession:** ${profile.name} v${profile.version} (profile: \`${profile.slug}\`)`);
+  if (profile) lines.push(`**Profession:** ${profile.name} v${manifest.version} (profile: \`${profile.slug}\`)`);
   const identity = manifest.identity;
   if (identity?.summary) {
     lines.push("");
@@ -55,14 +55,14 @@ export function profileSections(manifest: ProfileManifest): string[] {
 /**
  * Crew installer — writes a crew into a repo root, deterministically:
  *
- *   .agents/crews/<id>/crew.json                 the full definition (source of truth)
+ *   .agents/crews/<id>/manifest.json             the full definition (source of truth)
  *   .agents/crews/<id>/SKILL.md                  crew-level operating skill
  *   .agents/crews/<id>/workers/<worker>/SKILL.md per-worker skill
  *   .agents/crews/<id>/workers/<worker>/agent.json  machine-readable contract
  *   .mcp.json                                    MCP servers merged (never clobbered)
  *
  * The installed crew is runnable by any agent runtime that reads .agents/
- * skills and .mcp.json — the marketplace's "pull the crew into my repo" flow.
+ * skills and .mcp.json — the registry's "pull the crew into my repo" flow.
  */
 
 export function crewSkillMarkdown(crew: CrewDefinition): string {
@@ -75,16 +75,33 @@ export function crewSkillMarkdown(crew: CrewDefinition): string {
   lines.push(`# Crew: ${crew.name} (v${crew.version})`);
   lines.push("");
   lines.push(crew.description);
+  if (crew.mission?.trim()) {
+    lines.push("");
+    lines.push("## Mission");
+    lines.push("");
+    lines.push(crew.mission.trim());
+  }
   lines.push("");
-  lines.push("## Workers");
+  lines.push("## Members");
   lines.push("");
-  lines.push("| Worker | Role | Reads | Emits |");
-  lines.push("|---|---|---|---|");
+  lines.push("| Member | Operates as | Role | Reads | Emits |");
+  lines.push("|---|---|---|---|---|");
   for (const w of crew.workers) {
     const reads = w.receivesFrom.length > 0 ? w.receivesFrom.join(", ") : "—";
     const emits = w.emits.length > 0 ? w.emits.join(", ") : "—";
-    lines.push(`| ${w.name} (\`${w.id}\`) | ${w.role} | ${reads} | ${emits} |`);
+    lines.push(`| ${w.name} (\`${w.id}\`) | ${w.profile ? `\`${w.profile}\`` : "—"} | ${w.role} | ${reads} | ${emits} |`);
   }
+  const pushList = (title: string, items: string[] | undefined) => {
+    if (items && items.length > 0) {
+      lines.push("");
+      lines.push(`## ${title}`);
+      lines.push("");
+      for (const item of items) lines.push(`- ${item.replace(/\s*\n\s*/g, " ")}`);
+    }
+  };
+  pushList("Coordination", crew.coordination);
+  pushList("Tasks", crew.tasks);
+  pushList("Workflows", crew.workflows);
   lines.push("");
   lines.push("## Pipeline");
   lines.push("");
@@ -94,11 +111,13 @@ export function crewSkillMarkdown(crew: CrewDefinition): string {
   for (const h of crew.handoffs) {
     lines.push(`- \`${h.from}\` hands **${h.artifact}** to \`${h.to}\`.`);
   }
+  pushList("Rules", crew.rules);
+  pushList("Verification", crew.verification);
   lines.push("");
-  lines.push("## Rules");
+  lines.push("## Rules (normative baseline)");
   lines.push("");
   lines.push("- Handoffs pass named artifacts only — never a shared context pool.");
-  lines.push("- Every worker stays inside its permission model; approval-gated tools");
+  lines.push("- Every member stays inside its permission model; approval-gated tools");
   lines.push("  require a recorded human approval before the call.");
   lines.push("");
   return lines.join("\n");
@@ -205,7 +224,7 @@ export function planInstall(crew: CrewDefinition): InstallPlan {
   };
 
   const base = path.join(".agents", "crews", crew.id);
-  push(path.join(base, "crew.json"), JSON.stringify(crew, null, 2) + "\n");
+  push(path.join(base, "manifest.json"), JSON.stringify(crew, null, 2) + "\n");
   push(path.join(base, "SKILL.md"), crewSkillMarkdown(crew));
   for (const w of crew.workers) {
     const wdir = path.join(base, "workers", w.id);
@@ -277,7 +296,7 @@ export async function installCrew(
         throw new CrewError(
           "CREW_INSTALL_ERROR",
           `worker "${w.id}" references profile "${slug}" which could not be resolved ` +
-            `(equip it first: proagent equip ${slug}, or reference a built-in/marketplace profile)`,
+            `(equip it first: proagent equip ${slug}, or reference a built-in/registry profile)`,
         );
       }
       profiles.set(w.id, manifest);
@@ -291,7 +310,7 @@ export async function installCrew(
     const abs = path.join(root, entry.path);
     await fs.mkdir(path.dirname(abs), { recursive: true });
     let content: string;
-    if (entry.path.endsWith("crew.json")) {
+    if (entry.path.endsWith("manifest.json")) {
       content = JSON.stringify(crew, null, 2) + "\n";
     } else if (entry.path.endsWith("SKILL.md") && entry.path.endsWith(path.join(".agents", "crews", crew.id, "SKILL.md"))) {
       content = crewSkillMarkdown(crew);

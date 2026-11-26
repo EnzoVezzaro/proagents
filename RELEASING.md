@@ -22,11 +22,11 @@ records what each needs before a release.
 - Docs must build (`npm run site:build`) before tagging; broken
   docs block CI on main.
 
-## Marketplace SPA
+## Studio SPA
 
 - **Flow:** `web/` builds during the Pages deployment; the catalog
-  (`.marketplace/`) is served as static JSON from the repo root.
-- Catalog changes (new profiles/crews) go through the marketplace proposal
+  (`registry/`) is served as static JSON from the repo root.
+- Catalog changes (new profiles/crews) go through the registry proposal
   pipeline — a reviewable commit, never a manual edit on main.
 
 ## Release checklist
@@ -44,4 +44,4 @@ records what each needs before a release.
 - The CLI reads its version from `package.json` at runtime (`--version`).
 - Profile manifests carry their own `profile.version` (semver) — independent of
   the package version; a profile change bumps the profile, not the package.
-- The marketplace catalog is schema-versioned (`schemaVersion: 1`), additive only.
+- The registry catalog is schema-versioned (`schemaVersion: 1`), additive only.

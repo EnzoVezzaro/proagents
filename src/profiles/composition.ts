@@ -3,6 +3,7 @@ import type {
   ProfileConflict,
   ProfileManifest,
 } from "./types.js";
+import { mapToCapabilities } from "../registry/capabilities.js";
 
 /**
  * Composition engine — merge one or more professional profiles into a single
@@ -74,8 +75,18 @@ export function composeProfiles(manifests: ProfileManifest[]): {
     knowledge: dedupe(unique.flatMap((m) => m.knowledge ?? [])),
     methods: dedupe(unique.flatMap((m) => m.methods ?? [])),
     skills: dedupe(unique.flatMap((m) => m.skills ?? [])),
+    skillsDetail: Object.fromEntries(unique.flatMap((m) => Object.entries(m.skillsDetail ?? {}))),
     rules: dedupe(unique.flatMap((m) => m.rules ?? [])),
+    // Enforcement is deny-only, so the union across profiles is always safe
+    // (never a conflict — PA022 covers prose polarity). Dedupe exact
+    // duplicates of the same rule + same enforcement data.
+    ruleEnforcement: dedupeBy(
+      unique.flatMap((m) => m.ruleEnforcement ?? []),
+      (e) => `${conceptualKey(e.rule)}\0${JSON.stringify(e.enforcement)}`,
+    ),
+    policies: dedupe(unique.flatMap((m) => m.policies ?? [])),
     standards: dedupe(unique.flatMap((m) => m.standards ?? [])),
+    references: Object.fromEntries(unique.flatMap((m) => Object.entries(m.references ?? {}))),
     tools: {
       required: dedupe(unique.flatMap((m) => m.tools.required)),
       optional: dedupe(unique.flatMap((m) => m.tools.optional ?? [])),
@@ -140,8 +151,15 @@ export function composeProfiles(manifests: ProfileManifest[]): {
     }
   }
 
-  // PA025 — capability gap: verification requires a capability none of the
-  // required tools provide.
+  // PA025 — capability gap: verification names a concrete capability that
+  // none of the required tools provide. Two satisfiability paths, ORed:
+  //   1. capability model (registry mapper): the verification keyword maps to
+  //      a taxonomy capability ("tests" → testing) and some required tool
+  //      implies that capability;
+  //   2. legacy keyword table below (lint/build/typecheck/… have no taxonomy
+  //      capability but map to known tool keywords).
+  // Prose outcomes ("CI green on the release commit") are not capability
+  // names — they are executed by the agent within the session and never warn.
   const toolKeys = new Set(effective.tools.required.map(conceptualKey));
   const verificationSatisfiers: Record<string, string[]> = {
     tests: ["test-runner", "tests", "shell"],
@@ -151,10 +169,22 @@ export function composeProfiles(manifests: ProfileManifest[]): {
     typecheck: ["typechecker", "typecheck", "shell"],
     "runtime-validation": ["runtime", "shell"],
   };
+  /** Verification keyword → taxonomy capability (registry capability model). */
+  const verificationNeeds: Record<string, string> = {
+    tests: "testing",
+    test: "testing",
+    "security-scan": "security-review",
+  };
+  const impliesCapability = (tool: string, capability: string): boolean =>
+    mapToCapabilities({ tools: [tool], mcp: [], packages: [], expertise: [] }).includes(capability);
   for (const req of effective.verification.required) {
-    const satisfiers = verificationSatisfiers[conceptualKey(req)] ?? [conceptualKey(req)];
-    const satisfiable = satisfiers.some((s) => toolKeys.has(s));
-    if (!satisfiable && effective.tools.required.length > 0) {
+    const key = conceptualKey(req);
+    const need = verificationNeeds[key];
+    const satisfiers = verificationSatisfiers[key];
+    if (!need && !satisfiers) continue; // prose outcome, not a tool capability
+    const viaLegacy = satisfiers?.some((s) => toolKeys.has(s)) ?? false;
+    const viaCapability = need !== undefined && effective.tools.required.some((t) => impliesCapability(t, need));
+    if (!viaLegacy && !viaCapability) {
       conflicts.push({
         code: "PA025",
         severity: "warning",

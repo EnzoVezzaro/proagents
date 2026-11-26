@@ -1,0 +1,6 @@
+{
+  "from": "triage",
+  "to": "comms",
+  "artifact": "triage-summary.md",
+  "body": "`triage` hands **triage-summary.md** to `comms`."
+}

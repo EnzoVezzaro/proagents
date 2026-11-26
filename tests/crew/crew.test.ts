@@ -1,5 +1,4 @@
 import { describe, expect, it, afterAll } from "vitest";
-import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -8,12 +7,11 @@ import { installCrew, planInstall, mergeMcpConfig, crewSkillMarkdown } from "../
 import { readCatalogLocal, emptyCatalog } from "../../src/crew/registry.js";
 import { CrewError } from "../../src/crew/types.js";
 import type { CrewDefinition } from "../../src/crew/types.js";
+import { runCli } from "../helpers/run-cli.js";
 
 /**
- * CREW-* — tests for the crew/marketplace subsystem. All offline.
+ * CREW-* — tests for the crew/registry subsystem. All offline.
  */
-
-const CLI = path.resolve("dist/cli/index.js");
 
 function baseCrew(): CrewDefinition {
   return {
@@ -122,7 +120,7 @@ describe("crew install (CREW-INSTALL)", () => {
   it("CREW-INSTALL-001: plan covers crew skill, worker skills and agent contracts", () => {
     const plan = planInstall(baseCrew());
     const paths = plan.entries.map((e) => e.path);
-    expect(paths).toContain(path.join(".agents", "crews", "test-crew", "crew.json"));
+    expect(paths).toContain(path.join(".agents", "crews", "test-crew", "manifest.json"));
     expect(paths).toContain(path.join(".agents", "crews", "test-crew", "SKILL.md"));
     expect(paths.filter((p) => p.endsWith("SKILL.md"))).toHaveLength(3);
     expect(paths.filter((p) => p.endsWith("agent.json"))).toHaveLength(2);
@@ -133,15 +131,15 @@ describe("crew install (CREW-INSTALL)", () => {
     try {
       fs.writeFileSync(path.join(root, ".mcp.json"), JSON.stringify({ mcpServers: { existing: { command: "echo" } } }, null, 2));
       const result = await installCrew(baseCrew(), root);
-      // crew.json + crew SKILL.md + 2 worker SKILL.md + 2 agent.json = 6
+      // manifest.json + crew SKILL.md + 2 worker SKILL.md + 2 agent.json = 6
       expect(result.filesWritten).toHaveLength(6);
       for (const f of result.filesWritten) {
         expect(fs.existsSync(path.join(root, f))).toBe(true);
       }
       const mcp = JSON.parse(fs.readFileSync(path.join(root, ".mcp.json"), "utf8")) as { mcpServers: Record<string, unknown> };
       expect(Object.keys(mcp.mcpServers).sort()).toEqual(["existing", "github"]);
-      // crew.json content matches the definition
-      const written = JSON.parse(fs.readFileSync(path.join(root, ".agents", "crews", "test-crew", "crew.json"), "utf8")) as CrewDefinition;
+      // manifest.json content matches the definition
+      const written = JSON.parse(fs.readFileSync(path.join(root, ".agents", "crews", "test-crew", "manifest.json"), "utf8")) as CrewDefinition;
       expect(written.id).toBe("test-crew");
       // worker skill contains the normative permission table
       const betaSkill = fs.readFileSync(path.join(root, ".agents", "crews", "test-crew", "workers", "beta", "SKILL.md"), "utf8");
@@ -189,9 +187,9 @@ describe("crew registry (CREW-REGISTRY)", () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), "crew-registry-"));
     try {
       expect(await readCatalogLocal(root)).toEqual(emptyCatalog());
-      fs.mkdirSync(path.join(root, ".marketplace"), { recursive: true });
+      fs.mkdirSync(path.join(root, "registry"), { recursive: true });
       fs.writeFileSync(
-        path.join(root, ".marketplace", "catalog.json"),
+        path.join(root, "registry", "catalog.json"),
         JSON.stringify({ schemaVersion: 1, updatedAt: "2026-09-15T00:00:00.000Z", items: [] }),
       );
       const catalog = await readCatalogLocal(root);
@@ -204,8 +202,8 @@ describe("crew registry (CREW-REGISTRY)", () => {
   it("CREW-REGISTRY-002: invalid catalog JSON raises CREW_REGISTRATION_ERROR", async () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), "crew-registry-bad-"));
     try {
-      fs.mkdirSync(path.join(root, ".marketplace"), { recursive: true });
-      fs.writeFileSync(path.join(root, ".marketplace", "catalog.json"), "{ nope");
+      fs.mkdirSync(path.join(root, "registry"), { recursive: true });
+      fs.writeFileSync(path.join(root, "registry", "catalog.json"), "{ nope");
       try {
         await readCatalogLocal(root);
         expect.unreachable();
@@ -234,7 +232,7 @@ function cliProject(): string {
 
 function cli(args: string[], expectFailure = false): { stdout: string; status: number } {
   try {
-    return { stdout: execFileSync("node", [CLI, ...args], { cwd: cliProject(), encoding: "utf8" }), status: 0 };
+    return { stdout: runCli(cliProject(), args), status: 0 };
   } catch (err) {
     const e = err as { stdout?: string; status?: number };
     if (!expectFailure) throw err;
@@ -247,8 +245,8 @@ afterAll(() => {
 });
 
 describe("crew CLI (CREW-CLI)", () => {
-  it("CREW-CLI-001: validate accepts a shipped catalog item file", () => {
-    const file = path.resolve(".marketplace", "items", "incidere-incident-response.json");
+  it("CREW-CLI-001: validate accepts a shipped catalog crew folder", () => {
+    const file = path.resolve("registry", "crews", "incidere-incident-response");
     const { stdout } = cli(["crew", "validate", file, "--json"]);
     const parsed = JSON.parse(stdout);
     expect(parsed.status).toBe("ok");
@@ -267,8 +265,8 @@ describe("crew CLI (CREW-CLI)", () => {
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
-  it("CREW-CLI-003: install from a local file writes the full layout", () => {
-    const file = path.resolve(".marketplace", "items", "test-healer.json");
+  it("CREW-CLI-003: install from a local crew folder writes the full layout", () => {
+    const file = path.resolve("registry", "crews", "test-healer");
     const { stdout } = cli(["crew", "install", file, "--json"]);
     const parsed = JSON.parse(stdout);
     expect(parsed.installed.crewId).toBe("test-healer");
@@ -276,7 +274,7 @@ describe("crew CLI (CREW-CLI)", () => {
   });
 
   it("CREW-CLI-004: dry-run prints the plan without writing", () => {
-    const file = path.resolve(".marketplace", "items", "pr-review-gate.json");
+    const file = path.resolve("registry", "crews", "pr-review-gate");
     const { stdout } = cli(["crew", "install", file, "--dry-run", "--json"]);
     const parsed = JSON.parse(stdout);
     expect(parsed.dryRun).toBe(true);
@@ -284,30 +282,195 @@ describe("crew CLI (CREW-CLI)", () => {
     expect(fs.existsSync(path.join(cliProject(), ".agents", "crews", "pr-review-gate"))).toBe(false);
   });
 
-  it("CREW-CLI-005b: crew build installs from a local builder JSON", () => {
+  it("CREW-CLI-005b: crew build installs from a local builder JSON", async () => {
     const root = cliProject();
-    const crewFile = path.join(root, "crew.json");
-    const crew = JSON.parse(fs.readFileSync(path.resolve(".marketplace", "items", "test-healer.json"), "utf8"));
+    const crewFile = path.join(root, "manifest.json");
+    // Builder output is inline: hydrate the shipped folder item and write it
+    // as a flat definition, exactly what the SPA builder exports.
+    const { loadCrewFile } = await import("../../src/crew/hydrate.js");
+    const crew = await loadCrewFile(path.resolve("registry", "crews", "test-healer", "manifest.json"));
     fs.writeFileSync(crewFile, JSON.stringify(crew));
     const { stdout } = cli(["crew", "build", crewFile, "--json"]);
     const parsed = JSON.parse(stdout);
     expect(parsed.status).toBe("ok");
-    expect(fs.existsSync(path.join(root, ".agents", "crews", "test-healer", "crew.json"))).toBe(true);
+    expect(fs.existsSync(path.join(root, ".agents", "crews", "test-healer", "manifest.json"))).toBe(true);
     expect(fs.existsSync(path.join(root, ".agents", "crews", "test-healer", "workers", "healer", "SKILL.md"))).toBe(true);
   });
 
-  it("CREW-CLI-005: all shipped catalog items validate", () => {
-    const itemsDir = path.resolve(".marketplace", "items");
-    const catalog = JSON.parse(fs.readFileSync(path.resolve(".marketplace", "catalog.json"), "utf8")) as {
+  it("CREW-CLI-005a: crew create maps --role flags to members in order", () => {
+    const root = cliProject();
+    const { stdout } = cli([
+      "crew", "create", "database-engineer", "backend-engineer", "qa-engineer",
+      "--name", "Role Order Crew", "--id", "role-order-crew",
+      "--role", "schema-owner", "--role", "serving", "--role", "quality",
+      "--json",
+    ]);
+    const parsed = JSON.parse(stdout);
+    expect(parsed.status).toBe("ok");
+    const dir = path.join(root, ".proagent", "crews", "role-order-crew");
+    const first = JSON.parse(fs.readFileSync(path.join(dir, "members", "01-database-engineer.json"), "utf8")) as { role: string };
+    const second = JSON.parse(fs.readFileSync(path.join(dir, "members", "02-backend-engineer.json"), "utf8")) as { role: string };
+    const third = JSON.parse(fs.readFileSync(path.join(dir, "members", "03-qa-engineer.json"), "utf8")) as { role: string };
+    // Order matters: roles apply positionally, not last-wins to every member.
+    expect(first.role).toBe("schema-owner");
+    expect(second.role).toBe("serving");
+    expect(third.role).toBe("quality");
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it("CREW-CLI-005: all shipped catalog crew folders validate", () => {
+    const crewsDir = path.resolve("registry", "crews");
+    const catalog = JSON.parse(fs.readFileSync(path.resolve("registry", "catalog.json"), "utf8")) as {
       items: Array<{ id: string; kind: string }>;
     };
     const crewKinds = new Set(catalog.items.filter((i) => i.kind !== "profile").map((i) => i.id));
-    for (const file of fs.readdirSync(itemsDir)) {
+    for (const entry of fs.readdirSync(crewsDir, { withFileTypes: true })) {
       // Profile items are validated by the profiles pipeline, not crew validate.
-      if (!crewKinds.has(file.replace(/\.json$/, ""))) continue;
-      const { stdout } = cli(["crew", "validate", path.join(itemsDir, file), "--json"]);
+      if (!entry.isDirectory() || !crewKinds.has(entry.name)) continue;
+      const { stdout } = cli(["crew", "validate", path.join(crewsDir, entry.name), "--json"]);
       expect(JSON.parse(stdout).status).toBe("ok");
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// CREW-STANDARD — subagent-standard checks PA043–PA047 (mirror PA006–PA010)
+// ---------------------------------------------------------------------------
+
+describe("crew subagent standards (CREW-STANDARD)", () => {
+  it("CREW-STANDARD-001: PA043 — production write without an approval gate is an error", () => {
+    const crew = baseCrew();
+    crew.workers[0]!.permissions.production = "write";
+    const joined = crewProblems(crew).join(" ");
+    expect(joined).toContain("[PA043]");
+    expect(joined).toContain("worker alpha");
+    // Adding a gate clears it.
+    crew.workers[0]!.permissions.approvalGates = ["restart_service"];
+    expect(crewProblems(crew).join(" ")).not.toContain("[PA043]");
+  });
+
+  it("CREW-STANDARD-002: PA044 — secret access without gates is flagged", () => {
+    const crew = baseCrew();
+    crew.workers[0]!.permissions.secrets = "named";
+    expect(crewProblems(crew).join(" ")).toContain("[PA044]");
+    crew.workers[0]!.permissions.approvalGates = ["read_secret"];
+    expect(crewProblems(crew).join(" ")).not.toContain("[PA044]");
+  });
+
+  it("CREW-STANDARD-003: PA045 — an unconnected worker in a multi-worker crew is flagged", () => {
+    const crew = baseCrew();
+    crew.workers.push({
+      id: "gamma", name: "Gamma", role: "observer", description: "Watches",
+      permissions: { read: "repo", write: "none", production: "none", secrets: "none", tools: [] },
+      mcpServers: [], context: [], instructions: "Watch.",
+      receivesFrom: [], emits: [],
+    });
+    const joined = crewProblems(crew).join(" ");
+    expect(joined).toContain("[PA045]");
+    expect(joined).toContain("worker gamma");
+  });
+
+  it("CREW-STANDARD-004: PA046 — more than 5 upstream sources is flagged", () => {
+    const crew = baseCrew();
+    // Add 6 upstream workers, all feeding beta.
+    for (let i = 1; i <= 6; i++) {
+      crew.workers.push({
+        id: `src${i}`, name: `Src${i}`, role: "researcher", description: "Feeds",
+        permissions: { read: "repo", write: "none", production: "none", secrets: "none", tools: [] },
+        mcpServers: [], context: [], instructions: "Feed.",
+        receivesFrom: [], emits: [`out-${i}.md`],
+      });
+      crew.workers[1]!.receivesFrom.push(`src${i}`);
+    }
+    expect(crewProblems(crew).join(" ")).toContain("[PA046]");
+  });
+
+  it("CREW-STANDARD-005: PA047 — a missing worker manifest path is flagged (folder standard)", () => {
+    const crew = baseCrew();
+    const problems = crewProblems(crew, { workerEntries: ["workers/ghost/worker.json"] });
+    expect(problems.join(" ")).toContain("[PA047]");
+    expect(problems.join(" ")).toContain("workers/ghost/worker.json");
+  });
+
+  it("CREW-STANDARD-006: shipped crews pass every subagent-standard check", () => {
+    // Every catalog crew must be exemplary: manifest id matches the folder,
+    // graph connects, permissions follow the subagent standards.
+    const crewsDir = path.resolve("registry", "crews");
+    const catalog = JSON.parse(fs.readFileSync(path.resolve("registry", "catalog.json"), "utf8")) as {
+      items: Array<{ id: string; kind: string }>;
+    };
+    for (const item of catalog.items.filter((i) => i.kind !== "profile")) {
+      const raw = fs.readFileSync(path.join(crewsDir, item.id, "manifest.json"), "utf8");
+      expect(JSON.parse(raw).crew.id).toBe(item.id);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// CREW-CATALOG — the shipped catalog as a dataset: every crew folder is real,
+// registered, and its profile bindings resolve.
+// ---------------------------------------------------------------------------
+
+describe("CREW-CATALOG — shipped crews as a dataset", () => {
+  interface CatalogEntry {
+    id: string;
+    kind: string;
+    version: string;
+    description: string;
+    author: string;
+    tags: string[];
+  }
+
+  const catalog = JSON.parse(
+    fs.readFileSync(path.resolve("registry", "catalog.json"), "utf8"),
+  ) as { items: CatalogEntry[] };
+  const crewItems = catalog.items.filter((i) => i.kind !== "profile");
+  const profileIds = new Set(catalog.items.filter((i) => i.kind === "profile").map((i) => i.id));
+
+  it("CREW-CATALOG-001: every catalog crew has a folder-standard folder that hydrates and validates", async () => {
+    expect(crewItems.length).toBeGreaterThanOrEqual(8);
+    const { loadCrewFile } = await import("../../src/crew/hydrate.js");
+    const { crewProblems, crewWarnings } = await import("../../src/crew/validate.js");
+    for (const item of crewItems) {
+      const crew = await loadCrewFile(path.resolve("registry", "crews", item.id, "manifest.json"));
+      expect(crew.id).toBe(item.id);
+      expect(crew.version).toBe(item.version);
+      expect(crewProblems(crew)).toEqual([]);
+      expect(crewWarnings(crew)).toEqual([]);
+    }
+  });
+
+  it("CREW-CATALOG-002: every worker's profile binding resolves to a real catalog profile", async () => {
+    const { loadCrewFile } = await import("../../src/crew/hydrate.js");
+    for (const item of crewItems) {
+      const crew = await loadCrewFile(path.resolve("registry", "crews", item.id, "manifest.json"));
+      for (const w of crew.workers) {
+        if (!w.profile) continue;
+        // Crews may only bind profiles that exist in the registry — a
+        // dangling slug would fail every install with a resolver error.
+        expect(profileIds.has(w.profile)).toBe(true);
+      }
+    }
+  });
+
+  it("CREW-CATALOG-003: catalog index metadata stays consistent with the crew manifests", async () => {
+    const { loadCrewFile } = await import("../../src/crew/hydrate.js");
+    for (const item of crewItems) {
+      const crew = await loadCrewFile(path.resolve("registry", "crews", item.id, "manifest.json"));
+      expect(item.name).toBe(crew.name);
+      expect(item.author).toBe(crew.author);
+      expect(item.description).toBe(crew.description);
+      expect(item.tags).toEqual(crew.tags);
+      // Multi-worker crews are "crew", single-worker ones are "agent" —
+      // mirroring publishCrew's derivation.
+      expect(item.kind).toBe(crew.workers.length > 1 ? "crew" : "agent");
+    }
+  });
+
+  it("CREW-CATALOG-004: catalog stays canonically sorted by id (publishCrew order)", () => {
+    const ids = catalog.items.map((i) => i.id);
+    const sorted = [...ids].sort((a, b) => a.localeCompare(b));
+    expect(ids).toEqual(sorted);
   });
 });
 
@@ -329,8 +492,8 @@ describe("CREW-PROFILE — profile-backed workers", () => {
   };
 
   const securityProfile = {
-    version: "1",
-    profile: { name: "Security Engineer", slug: "security-engineer", version: "1.0.0" },
+    version: "1.0.0",
+    profile: { name: "Security Engineer", slug: "security-engineer" },
     identity: { title: "Security Engineer", summary: "You operate as a security engineer." },
     expertise: ["application security"],
     tools: { required: ["filesystem", "shell", "git"] },
@@ -461,7 +624,7 @@ describe("CREW-WARN — crewWarnings (non-blocking findings)", () => {
   it("CREW-WARN-003: crew validate --json surfaces warnings in the machine contract (additive pin)", () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), "crew-warn-"));
     const crew = crewWithContext("draft-docs");
-    const file = path.join(root, "crew.json");
+    const file = path.join(root, "manifest.json");
     fs.writeFileSync(file, JSON.stringify(crew));
     const { stdout } = cli(["crew", "validate", file, "--json"]);
     const parsed = JSON.parse(stdout);

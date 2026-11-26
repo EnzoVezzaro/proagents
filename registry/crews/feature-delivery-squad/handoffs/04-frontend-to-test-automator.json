@@ -1,0 +1,6 @@
+{
+  "from": "frontend",
+  "to": "test-automator",
+  "artifact": "frontend-implementation.md",
+  "body": "`frontend` hands **frontend-implementation.md** to `test-automator`."
+}

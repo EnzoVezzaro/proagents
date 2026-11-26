@@ -5,6 +5,8 @@ import { emptyProfile, slugify, type ProfileManifest, type ProfileMcpServer } fr
 import { profileIssueBody, profileIssueTitle } from "../../proposal.js";
 import { validateProfileDraft, checkMcpHealth, type McpHealth } from "../../profile-draft.js";
 import { CATALOG_URL } from "../../catalog.js";
+import { ListField } from "../ListField.js";
+import { SettingsModal } from "../SettingsModal.js";
 
 /**
  * Profile builder — the primary creation flow. A guided walkthrough:
@@ -32,7 +34,7 @@ const STEPS = [
 type StepId = (typeof STEPS)[number]["id"] | "ship";
 
 export function ProfileBuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
-  const { settings, navigate } = props.ctx;
+  const { settings, navigate, user } = props.ctx;
   const [profile, setProfile] = useState<ProfileManifest>(() => {
     // Restore an in-progress draft across reloads/accidental navigation.
     try {
@@ -48,6 +50,7 @@ export function ProfileBuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
   const [, setProblems] = useState<string[] | null>(null);
   const [publishState, setPublishState] = useState("");
   const [takenSlugs, setTakenSlugs] = useState<ReadonlySet<string>>(() => new Set());
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const draftKey = "proagents-profile-draft";
   useEffect(() => {
@@ -57,7 +60,7 @@ export function ProfileBuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
     } catch { /* storage unavailable */ }
   }, [profile, step]);
 
-  // Load the marketplace catalog once so slug collisions are caught at typing
+  // Load the registry catalog once so slug collisions are caught at typing
   // time (block a slug that already exists — publishing would collide).
   useEffect(() => {
     let cancelled = false;
@@ -99,10 +102,10 @@ export function ProfileBuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
     setProblems(errs);
     if (errs.length > 0) return;
     if (!settings.githubToken) {
-      setPublishState("Sign in with GitHub in Settings to publish — publishing opens a pull request on the marketplace repo.");
+      setPublishState("Sign in with GitHub in Settings to publish — publishing opens a pull request on the registry repo.");
       return;
     }
-    setPublishState("Opening a publish PR on the marketplace repo…");
+    setPublishState("Opening a publish PR on the registry repo…");
     try {
       const { publishProfileAsPr } = await import("../../github.js");
       const repo = (import.meta.env.VITE_MARKET_REPO as string | undefined) ?? "EnzoVezzaro/proagents";
@@ -112,7 +115,7 @@ export function ProfileBuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
       const entry = {
         id: profile.profile.slug,
         name: profile.identity.title,
-        version: profile.profile.version,
+        version: profile.version,
         description: profile.profile.description ?? profile.identity.summary ?? "",
         author: profile.profile.author ?? "community",
         tags: ["profile", ...(profile.profile.tags ?? [])],
@@ -123,7 +126,7 @@ export function ProfileBuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
       };
       const catalogJson = JSON.stringify({ schemaVersion: 1, updatedAt: new Date().toISOString(), items: [...existing, entry].sort((a: { id: string }, b: { id: string }) => a.id.localeCompare(b.id)) }, null, 2) + "\n";
       const res = await publishProfileAsPr(settings.githubToken, repo, profile.profile.slug, JSON.stringify(profile, null, 2) + "\n", catalogJson);
-      setPublishState(`✓ Publish PR opened: ${res.url}\nCI validates it; a maintainer merge publishes it to the marketplace. Until then, use the downloaded JSON locally (npx proagent equip).`);
+      setPublishState(`✓ Publish PR opened: ${res.url}\nCI validates it; a maintainer merge publishes it to the registry. Until then, use the downloaded JSON locally (npx proagent equip).`);
     } catch (err) {
       setPublishState(`Publish failed: ${(err as Error).message}\n\nFallback: download the JSON and file a proposal issue instead.`);
     }
@@ -137,12 +140,12 @@ export function ProfileBuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
       setPublishState("Sign in with GitHub in Settings to file a proposal issue.");
       return;
     }
-    setPublishState("Filing marketplace proposal issue…");
+    setPublishState("Filing registry proposal issue…");
     try {
       const { createIssue } = await import("../../github.js");
       const repo = (import.meta.env.VITE_MARKET_REPO as string | undefined) ?? "EnzoVezzaro/proagents";
       const res = await createIssue(settings.githubToken, repo, profileIssueTitle(profile), profileIssueBody(profile), ["profile-proposal"]);
-      setPublishState(`✓ Proposal filed: ${res.html_url}\nCI validates it within seconds. A maintainer merges it with /publish and it appears in the marketplace.`);
+      setPublishState(`✓ Proposal filed: ${res.html_url}\nCI validates it within seconds. A maintainer merges it with /publish and it appears in the registry.`);
     } catch (err) {
       setPublishState(`Proposal failed: ${(err as Error).message}`);
     }
@@ -204,7 +207,7 @@ export function ProfileBuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
           {step === "tools" && <ToolsTab profile={profile} update={update} />}
           {step === "skills" && <SkillsTab profile={profile} update={update} />}
           {step === "verification" && <VerificationTab profile={profile} update={update} />}
-          {step === "ship" && <ShipTab profile={profile} problems={errs} publish={publish} fileIssue={fileIssue} publishState={publishState} exportJson={exportJson} navigate={navigate} />}
+          {step === "ship" && <ShipTab profile={profile} problems={errs} publish={publish} fileIssue={fileIssue} publishState={publishState} exportJson={exportJson} navigate={navigate} signedIn={Boolean(settings.githubToken)} onSignIn={() => setSettingsOpen(true)} />}
 
           {/* Next / Back walkthrough controls */}
           {step !== "ship" && (
@@ -223,6 +226,11 @@ export function ProfileBuilderPage(props: { ctx: AppCtx }): React.JSX.Element {
         <button onClick={startOver} style={btnDanger}>Start over</button>
         {step !== "ship" && <button onClick={() => setStep("ship")} style={btnGhost}>Skip to ship</button>}
       </div>
+
+      {/* GitHub sign-in gate: publishing needs the API. The modal portals
+          above everything; saving settings fires the settings-changed event,
+          which updates `settings` and flips the publish buttons back on. */}
+      {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} user={user ?? null} />}
     </div>
   );
 }
@@ -245,17 +253,17 @@ function IdentityTab(props: { profile: ProfileManifest; update: (p: Partial<Prof
           <input style={field} value={p.slug} onChange={(e) => update({ profile: { ...p, slug: slugify(e.target.value) } })} placeholder="security-engineer" aria-invalid={slugTaken} />
           {slugTaken && (
             <p style={{ color: "var(--danger)", fontSize: 12, margin: "4px 0 0" }}>
-              “{p.slug}” already exists in the marketplace — pick another (PA038).
+              “{p.slug}” already exists in the registry — pick another (PA038).
             </p>
           )}
         </div>
         <div>
           <label style={label}>Version (semver)</label>
-          <input style={field} value={p.version} onChange={(e) => update({ profile: { ...p, version: e.target.value } })} />
+          <input style={field} value={profile.version} onChange={(e) => update({ version: e.target.value })} />
         </div>
         <div>
           <label style={label}>Tags (comma-separated)</label>
-          <input style={field} value={(p.tags ?? []).join(", ")} onChange={(e) => update({ profile: { ...p, tags: e.target.value.split(",").map((t) => t.trim()).filter(Boolean) } })} />
+          <ListField separator="," style={field} value={p.tags ?? []} onChange={(tags) => update({ profile: { ...p, tags } })} />
         </div>
         <div>
           <label style={label}>Author (GitHub handle)</label>
@@ -263,7 +271,7 @@ function IdentityTab(props: { profile: ProfileManifest; update: (p: Partial<Prof
         </div>
         <div>
           <label style={label}>One-line description</label>
-          <input style={field} value={p.description ?? ""} onChange={(e) => update({ profile: { ...p, description: e.target.value } })} placeholder="Shown in the marketplace catalog" />
+          <input style={field} value={p.description ?? ""} onChange={(e) => update({ profile: { ...p, description: e.target.value } })} placeholder="Shown in the registry catalog" />
         </div>
       </div>
       <label style={label}>Identity summary — how should the agent operate?</label>
@@ -281,17 +289,16 @@ function IdentityTab(props: { profile: ProfileManifest; update: (p: Partial<Prof
 
 function ExpertiseTab(props: { profile: ProfileManifest; update: (p: Partial<ProfileManifest>) => void }): React.JSX.Element {
   const { profile, update } = props;
-  const lines = (v: string) => v.split("\n").map((s) => s.trim()).filter(Boolean);
   return (
     <Card>
       <label style={label}>Expertise (one per line)</label>
-      <textarea style={{ ...field, minHeight: 90 }} value={profile.expertise.join("\n")} onChange={(e) => update({ expertise: lines(e.target.value) })} placeholder={"application security\nthreat modeling"} />
+      <ListField multiline separator={"\n"} style={{ ...field, minHeight: 90 }} value={profile.expertise} onChange={(expertise) => update({ expertise })} placeholder={"application security\nthreat modeling"} />
       <label style={label}>Methods (one per line, kebab-case)</label>
-      <textarea style={{ ...field, minHeight: 80 }} value={(profile.methods ?? []).join("\n")} onChange={(e) => update({ methods: lines(e.target.value) })} placeholder={"threat-modeling\nroot-cause-analysis"} />
+      <ListField multiline separator={"\n"} style={{ ...field, minHeight: 80 }} value={profile.methods ?? []} onChange={(methods) => update({ methods })} placeholder={"threat-modeling\nroot-cause-analysis"} />
       <label style={label}>Rules — normative, enforced where the harness allows (one per line)</label>
-      <textarea style={{ ...field, minHeight: 110 }} value={(profile.rules ?? []).join("\n")} onChange={(e) => update({ rules: lines(e.target.value) })} placeholder={"Never expose secrets.\nRequire security verification before claiming completion."} />
+      <ListField multiline separator={"\n"} style={{ ...field, minHeight: 110 }} value={profile.rules ?? []} onChange={(rules) => update({ rules })} placeholder={"Never expose secrets.\nRequire security verification before claiming completion."} />
       <label style={label}>Standards followed (one per line — add as many as apply)</label>
-      <textarea style={{ ...field, minHeight: 70 }} value={(profile.standards ?? []).join("\n")} onChange={(e) => update({ standards: lines(e.target.value) })} placeholder={"OWASP ASVS\nISO 27001\nNIST SSDF"} />
+      <ListField multiline separator={"\n"} style={{ ...field, minHeight: 70 }} value={profile.standards ?? []} onChange={(standards) => update({ standards })} placeholder={"OWASP ASVS\nISO 27001\nNIST SSDF"} />
       <p style={hint}>Standards are free-form: bodies, frameworks, or specific revisions. Each renders as a bullet in the equipped SKILL.md.</p>
     </Card>
   );
@@ -299,7 +306,6 @@ function ExpertiseTab(props: { profile: ProfileManifest; update: (p: Partial<Pro
 
 function ToolsTab(props: { profile: ProfileManifest; update: (p: Partial<ProfileManifest>) => void }): React.JSX.Element {
   const { profile, update } = props;
-  const csv = (v: string) => v.split(",").map((s) => s.trim()).filter(Boolean);
   const mcp = profile.tools.mcp ?? [];
   const packages = profile.tools.packages ?? [];
 
@@ -316,11 +322,11 @@ function ToolsTab(props: { profile: ProfileManifest; update: (p: Partial<Profile
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
         <div>
           <label style={label}>Required tools (comma-separated)</label>
-          <input style={field} value={profile.tools.required.join(", ")} onChange={(e) => update({ tools: { ...profile.tools, required: csv(e.target.value) } })} placeholder="filesystem, shell, git" />
+          <ListField separator="," style={field} value={profile.tools.required} onChange={(required) => update({ tools: { ...profile.tools, required } })} placeholder="filesystem, shell, git" />
         </div>
         <div>
           <label style={label}>Forbidden tools</label>
-          <input style={field} value={(profile.tools.forbidden ?? []).join(", ")} onChange={(e) => update({ tools: { ...profile.tools, forbidden: csv(e.target.value) } })} placeholder="leave empty if none" />
+          <ListField separator="," style={field} value={profile.tools.forbidden ?? []} onChange={(forbidden) => update({ tools: { ...profile.tools, forbidden } })} placeholder="leave empty if none" />
         </div>
       </div>
 
@@ -482,9 +488,9 @@ function VerificationTab(props: { profile: ProfileManifest; update: (p: Partial<
   return (
     <Card>
       <label style={label}>Verification — required before the agent claims completion (one per line)</label>
-      <textarea style={{ ...field, minHeight: 90 }} value={profile.verification.required.join("\n")} onChange={(e) => update({ verification: { required: e.target.value.split("\n").map((s) => s.trim()).filter(Boolean) } })} placeholder={"tests pass\nno new lint errors"} />
+      <ListField multiline separator={"\n"} style={{ ...field, minHeight: 90 }} value={profile.verification.required} onChange={(required) => update({ verification: { ...profile.verification, required } })} placeholder={"tests pass\nno new lint errors"} />
       <label style={label}>Optional verification (when relevant)</label>
-      <textarea style={{ ...field, minHeight: 60 }} value={(profile.verification.optional ?? []).join("\n")} onChange={(e) => update({ verification: { ...profile.verification, optional: e.target.value.split("\n").map((s) => s.trim()).filter(Boolean) } })} placeholder={"coverage did not decrease"} />
+      <ListField multiline separator={"\n"} style={{ ...field, minHeight: 60 }} value={profile.verification.optional ?? []} onChange={(optional) => update({ verification: { ...profile.verification, optional } })} placeholder={"coverage did not decrease"} />
       <p style={hint}>
         Verification is what makes a profile enforceable: these become required-before-completion steps in every equipped agent (PA035).
       </p>
@@ -500,8 +506,10 @@ function ShipTab(props: {
   publishState: string;
   exportJson: () => void;
   navigate: (to: string) => void;
+  signedIn: boolean;
+  onSignIn: () => void;
 }): React.JSX.Element {
-  const { profile, problems, publish, fileIssue, publishState, exportJson, navigate } = props;
+  const { profile, problems, publish, fileIssue, publishState, exportJson, navigate, signedIn, onSignIn } = props;
   const [copied, setCopied] = useState("");
   const copy = async (text: string, what: string) => {
     try {
@@ -536,16 +544,26 @@ function ShipTab(props: {
       <Card>
         <label style={label}>2 · Publish it (so <code>npx proagent equip</code> works for everyone)</label>
         <p style={{ color: "var(--cream-dim)", fontSize: 13, lineHeight: 1.6, margin: "4px 0 12px" }}>
-          Remote equip resolves from the marketplace repo — your profile only works remotely after it is
+          Remote equip resolves from the registry repo — your profile only works remotely after it is
           merged there. Publishing opens a <strong>pull request</strong> adding it to the catalog
           (GitHub sign-in required): CI validates the PR, and a maintainer merge publishes it. MIT-licensed, like everything here.
         </p>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <button onClick={publish} style={btn}>Publish via pull request</button>
-          <button onClick={fileIssue} style={btnGhost}>File proposal issue instead</button>
+          {/* Disabled until GitHub sign-in: the publish PR is created through
+              the GitHub API, and silently doing nothing would leave the user
+              guessing. The hint + Sign in button make the requirement (and
+              the fix) visible at the exact moment it blocks someone. */}
+          <button onClick={publish} disabled={!signedIn} title={signedIn ? undefined : "Sign in with GitHub first"} style={signedIn ? btn : { ...btn, opacity: 0.5, cursor: "not-allowed" }}>Publish via pull request</button>
+          <button onClick={fileIssue} disabled={!signedIn} title={signedIn ? undefined : "Sign in with GitHub first"} style={signedIn ? btnGhost : { ...btnGhost, opacity: 0.5, cursor: "not-allowed" }}>File proposal issue instead</button>
           <button onClick={() => copy(profileIssueBody(profile), "json")} style={btnGhost}>{copied === "json" ? "✓ Copied proposal" : "Copy proposal markdown"}</button>
           <button onClick={() => navigate("catalog")} style={btnGhost}>Back to catalog</button>
         </div>
+        {!signedIn && (
+          <p style={{ ...hint, color: "var(--warn, #b98700)" }}>
+            Publishing needs a GitHub account — the PR/issue is created through the GitHub API on your behalf.{"\n"}
+            <button onClick={onSignIn} style={{ ...btnGhost, padding: "4px 10px", marginLeft: 8, verticalAlign: "middle" }}>Sign in with GitHub</button>
+          </p>
+        )}
         {publishState && (
           <p style={{ marginTop: 12, fontSize: 13, color: publishState.startsWith("✓") ? "var(--ok)" : "var(--cream-dim)", whiteSpace: "pre-wrap" }}>
             {publishState.includes("http") ? (

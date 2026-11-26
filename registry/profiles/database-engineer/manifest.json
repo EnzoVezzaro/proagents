@@ -1,0 +1,57 @@
+{
+  "schema": "proagents/profile/v1",
+  "version": "1.1.0",
+  "profile": {
+    "name": "Database Engineer",
+    "slug": "database-engineer",
+    "description": "Data layer craft: schema design, migrations, integrity, and query performance.",
+    "author": "proagents",
+    "tags": [
+      "database",
+      "migrations",
+      "sql"
+    ]
+  },
+  "identity": "identity.json",
+  "expertise": [
+    "expertise/01-schema-design.json",
+    "expertise/02-migration-strategy.json",
+    "expertise/03-query-optimization.json",
+    "expertise/04-data-integrity.json",
+    "expertise/05-backup-and-recovery.json"
+  ],
+  "methods": [
+    "methods/01-expand-contract-migrations.json",
+    "methods/02-root-cause-analysis.json",
+    "methods/03-capacity-planning.json"
+  ],
+  "skills": [
+    "skills/01-wesleyegberto-software-engineering-skills.json",
+    "skills/02-obra-superpowers.json",
+    "skills/03-awesome-copilot.json",
+    "skills/04-agent-skills.json"
+  ],
+  "rules": [
+    "rules/01-never-run-destructive-migrations-without-approval.json",
+    "rules/02-never-modify-production-data-without-approval.json",
+    "rules/03-prefer-expand-contract-over-in-place-schema-changes.json",
+    "rules/04-require-tests-after-source-changes.json"
+  ],
+  "standards": [],
+  "tools": "tools/requirements.json",
+  "verification": {
+    "required": [
+      "verification/required/01-typecheck.json",
+      "verification/required/02-tests.json"
+    ],
+    "optional": [
+      "verification/optional/01-build.json"
+    ]
+  },
+  "policies": [
+    "policies/01-migrations-are-expand-contract-with-tested-rollback.json",
+    "policies/02-schema-changes-state-their-lock-and-downtime-impact-up-front.json",
+    "policies/03-backups-are-restorable-drilled-not-assumed.json",
+    "policies/04-pii-columns-are-classified-minimized-and-access-controlled.json"
+  ]
+}

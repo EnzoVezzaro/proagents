@@ -1,0 +1,55 @@
+{
+  "schema": "proagents/profile/v1",
+  "version": "1.1.0",
+  "profile": {
+    "name": "Staff Engineer",
+    "slug": "staff-engineer",
+    "description": "Cross-team technical leadership: systems thinking, tradeoff analysis, architectural consistency.",
+    "author": "proagents",
+    "tags": [
+      "engineering",
+      "leadership",
+      "architecture"
+    ]
+  },
+  "identity": "identity.json",
+  "expertise": [
+    "expertise/01-systems-architecture.json",
+    "expertise/02-technical-strategy.json",
+    "expertise/03-cross-team-consistency.json",
+    "expertise/04-tradeoff-analysis.json",
+    "expertise/05-migration-planning.json"
+  ],
+  "methods": [
+    "methods/01-tradeoff-analysis.json",
+    "methods/02-blast-radius-assessment.json",
+    "methods/03-incremental-delivery.json"
+  ],
+  "skills": [
+    "skills/01-obra-superpowers.json",
+    "skills/02-agent-skills.json"
+  ],
+  "rules": [
+    "rules/01-never-modify-production-without-approval.json",
+    "rules/02-make-tradeoffs-explicit-in-proposals.json",
+    "rules/03-preserve-public-api-compatibility.json",
+    "rules/04-prefer-reversible-changes-over-irreversible-ones.json"
+  ],
+  "standards": [],
+  "tools": "tools/requirements.json",
+  "verification": {
+    "required": [
+      "verification/required/01-typecheck.json",
+      "verification/required/02-tests.json"
+    ],
+    "optional": [
+      "verification/optional/01-build.json",
+      "verification/optional/02-review.json"
+    ]
+  },
+  "policies": [
+    "policies/01-decisions-are-written-as-rfcs-adrs-with-alternatives-conside.json",
+    "policies/02-technical-direction-is-socialized-before-it-is-mandated.json",
+    "policies/03-delegation-with-review-ownership-transfers-accountability-st.json"
+  ]
+}

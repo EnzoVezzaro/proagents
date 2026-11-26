@@ -35,12 +35,69 @@ export interface ProfilePackage {
   reason?: string;
 }
 
+/** Depth for a named standard, method, certification, or specification. */
+export interface ProfileReference {
+  /** Authoritative URL for the standard/method/certification. */
+  url: string;
+  /** Why this profile uses it / what part applies. */
+  note?: string;
+}
+
+/**
+ * Machine-readable enforcement attached to a normative rule — the bridge
+ * between "rules are prose" and "runtime boundaries enforce" (invariant 6).
+ * Harness-agnostic by design: only src/adapters knows how each target
+ * compiles these into its own mechanisms.
+ */
+export interface RuleEnforcement {
+  /**
+   * Shell command patterns the rule forbids. Glob syntax: `*` any run of
+   * characters, `?` exactly one (e.g. "git push --force*"). Matched against
+   * the command string; adapters translate per target.
+   */
+  bash?: string[];
+  /**
+   * Semantic tool names the rule forbids — the profile tools vocabulary
+   * ("shell", "filesystem", "git", "web", "network"), never a harness's own
+   * tool id. Adapters map them; unmappable names surface as limitations.
+   */
+  tools?: string[];
+  /**
+   * File path globs the rule forbids modifying. A leading double-star acts
+   * like a directory wildcard: it matches any number of directories,
+   * including none. A single `*` stays within one path segment, `?` is one
+   * character (e.g. root-or-nested ".env" protection).
+   */
+  paths?: string[];
+}
+
+/** One rule's hydrated prose paired with its machine-readable enforcement. */
+export interface RuleEnforcementEntry {
+  /** The rule's prose — matches an entry of `rules` after hydration. */
+  rule: string;
+  /** Raw as authored; PA043 validates the shape (tolerant loading). */
+  enforcement: RuleEnforcement;
+}
+
+/**
+ * Which skills inside a referenced skills repository/package this profile
+ * composes. Keys mirror entries of `skills` (the registry ref); the named
+ * skills stay in their repo — referenced, never duplicated.
+ */
+export interface ProfileSkillsDetail {
+  /** Skill names inside the referenced repo/package. */
+  skills: string[];
+  /** How to install the referenced skills (e.g. the npx skills add command). */
+  install?: string;
+  note?: string;
+}
+
 export interface ProfileManifest {
-  version: string; // schema version, "1"
+  /** The profile's own semver — the single, outer version. */
+  version: string;
   profile: {
     name: string;
     slug: string;
-    version: string; // semver of the profile itself
     description?: string;
     author?: string;
     tags?: string[];
@@ -56,12 +113,25 @@ export interface ProfileManifest {
   methods?: string[];
   /** Reusable skills the profile composes: "npm:<pkg>[@v]", "github:o/r", or a written skill's kebab-case name. */
   skills?: string[];
+  /** Per-ref detail: which skills inside the referenced repo this profile uses. */
+  skillsDetail?: Record<string, ProfileSkillsDetail>;
   /** Written skill bodies for skills entries that are not registry refs. */
   skillBodies?: Record<string, { description: string; body: string }>;
   /** Normative constraints — enforced by the harness where supported. */
   rules?: string[];
+  /**
+   * Machine-readable enforcement paired with the rules above, collected from
+   * `enforcement` blocks inside rule section files (or authored inline).
+   * The compiler turns these into runtime boundaries where the target
+   * harness supports them; PA043 validates the shape.
+   */
+  ruleEnforcement?: RuleEnforcementEntry[];
+  /** Governing policies of the profession (data handling, disclosure, safety). */
+  policies?: string[];
   /** Standards bodies / frameworks the profile follows (OWASP, ISO…). */
   standards?: string[];
+  /** Depth for named standards, methods, certifications: authoritative URLs. */
+  references?: Record<string, ProfileReference>;
   tools: {
     required: string[];
     optional?: string[];
@@ -76,6 +146,20 @@ export interface ProfileManifest {
     optional?: string[];
   };
 }
+
+/**
+ * On-disk manifest in the folder standard: every section holds a path to its
+ * file inside the profile folder (`identity/01-x.md`, `rules/01-y.md`, …);
+ * `skills` entries are `skills/NN-*.md` paths and `tools` is the
+ * `tools/requirements.md` path. The loader hydrates every path to content at
+ * read time, producing a plain {@link ProfileManifest}. Inline manifests
+ * (web builder drafts, legacy files) are the same type with content instead
+ * of paths — both validate and load identically.
+ */
+export type ProfileManifestSource = Omit<ProfileManifest, "identity" | "tools"> & {
+  identity?: ProfileManifest["identity"] | string;
+  tools?: ProfileManifest["tools"] | string;
+};
 
 // ---------------------------------------------------------------------------
 // Composition
@@ -116,8 +200,13 @@ export interface EffectiveProfile {
   knowledge: string[];
   methods: string[];
   skills: string[];
+  skillsDetail: Record<string, ProfileSkillsDetail>;
   rules: string[];
+  /** Merged rule enforcement entries (deny-only, so the union is always safe). */
+  ruleEnforcement?: RuleEnforcementEntry[];
+  policies: string[];
   standards: string[];
+  references: Record<string, ProfileReference>;
   tools: {
     required: string[];
     optional: string[];
@@ -151,7 +240,10 @@ export type ProfileValidationCode =
   | "PA037" // knowledge reference missing from profile directory
   | "PA038" // duplicate slug in registry
   | "PA039" // invalid MCP server entry (name/transport/url/command)
-  | "PA040"; // invalid package registry ref (not npm:/github:)
+  | "PA040" // invalid package registry ref (not npm:/github:)
+  | "PA041" // reference entry without an https:// URL
+  | "PA042" // section path entry missing from the profile directory
+  | "PA043"; // malformed or dangling rule enforcement block
 
 export interface ProfileValidationReport {
   ok: boolean;

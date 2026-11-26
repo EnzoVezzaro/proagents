@@ -1,0 +1,6 @@
+{
+  "from": "test-automator",
+  "to": "reviewer",
+  "artifact": "test-report.md",
+  "body": "`test-automator` hands **test-report.md** to `reviewer`."
+}

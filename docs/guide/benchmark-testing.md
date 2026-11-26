@@ -1,3 +1,7 @@
+---
+description: 'The offline test framework that validates the benchmark itself — trust the evaluation before trusting the score.'
+---
+
 # Testing the benchmark
 
 A benchmark is only useful if you can **trust it**. ProAgents ships a testing framework that validates the benchmark infrastructure itself — not just that functions execute, but that the evaluation is *correct*. The full suite runs offline: no network, no API keys, no external LLMs.

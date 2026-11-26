@@ -1,0 +1,4 @@
+{
+  "title": "Offline/airplane-mode behavior demonstrated for every networked cha…",
+  "body": "Offline/airplane-mode behavior demonstrated for every networked change (drop mid-request, reconcile, retry)"
+}
